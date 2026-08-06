@@ -1,9 +1,8 @@
 :root {
-  --ink: #fff4ea;
-  --muted: #d2b59a;
-  --bg1: #1a0f08;
-  --bg2: #3b1d0f;
-  --accent: #ff8a3d;
+  --ink: #f4f7ff;
+  --muted: #9aa8c7;
+  --bg: #070b14;
+  --accent: #ff6a3d;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,55 +13,80 @@ html, body {
   touch-action: manipulation;
   font-family: "DM Sans", system-ui, sans-serif;
   color: var(--ink);
-  background: linear-gradient(180deg, #120b07 0%, var(--bg2) 50%, #5a2a12 100%);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 106, 61, 0.22), transparent 55%),
+    linear-gradient(180deg, #070b14, #10182b 55%, #0a1020);
 }
 
 .bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 12px 16px;
 }
-.back { color: var(--accent); font-weight: 700; text-decoration: none; }
-.brand { font-family: Syne, sans-serif; font-weight: 800; font-size: 1.25rem; }
+.back { color: #ff9b73; font-weight: 700; text-decoration: none; }
+.brand { font-family: Syne, sans-serif; font-weight: 800; font-size: 1.25rem; letter-spacing: -0.03em; }
 
 .wrap {
   max-width: 440px;
   margin: 0 auto;
-  padding: 8px 16px 32px;
+  padding: 4px 14px 28px;
 }
 
 .hud {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
 }
 .pill {
-  flex: 1;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
-  padding: 10px 12px;
+  padding: 8px 6px;
   text-align: center;
 }
-.pill span { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.pill strong { font-family: Syne, sans-serif; font-size: 1.4rem; }
+.pill span {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pill strong {
+  font-family: Syne, sans-serif;
+  font-size: 1.15rem;
+}
+
+.stage {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.08);
+}
 
 #canvas {
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #6ec8ff 0%, #b8e4ff 42%, #7ecf6a 42%, #5bb85a 100%);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.28);
+  background: #0b1220;
   touch-action: none;
+  user-select: none;
 }
 
-.hint {
-  margin: 12px 0;
+.touch-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
   text-align: center;
-  color: var(--muted);
-  font-weight: 600;
-  min-height: 1.2em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.78);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  pointer-events: none;
 }
 
 .btn {
@@ -76,28 +100,36 @@ html, body {
   cursor: pointer;
   text-align: center;
   text-decoration: none;
-  margin-top: 8px;
+  margin-top: 12px;
 }
-.btn.primary { background: linear-gradient(180deg, #ffb067, #ff8a3d); color: #3b1208; }
-.btn.ghost { background: rgba(255,255,255,0.1); color: var(--ink); }
+.btn.primary {
+  background: linear-gradient(180deg, #ff8f5c, #ff6a3d);
+  color: #2a0d04;
+  box-shadow: 0 10px 24px rgba(255, 106, 61, 0.28);
+}
+.btn.ghost {
+  background: rgba(255,255,255,0.08);
+  color: var(--ink);
+}
 
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 10, 5, 0.72);
+  background: rgba(4, 8, 16, 0.78);
   display: grid;
   place-items: center;
   padding: 20px;
-  z-index: 20;
+  z-index: 30;
 }
 .overlay[hidden] { display: none; }
 .card {
   width: min(360px, 100%);
-  background: #3b1d0f;
-  border-radius: 18px;
+  background: linear-gradient(180deg, #162038, #0e1528);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
   padding: 22px;
   text-align: center;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+  box-shadow: 0 22px 50px rgba(0,0,0,0.45);
 }
-.card h2 { font-family: Syne, sans-serif; font-size: 1.6rem; margin-bottom: 6px; }
+.card h2 { font-family: Syne, sans-serif; font-size: 1.7rem; margin-bottom: 6px; }
 .card p { color: var(--muted); margin-bottom: 14px; }

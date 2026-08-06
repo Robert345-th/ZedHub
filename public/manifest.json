@@ -55,8 +55,8 @@
       "icons": [{ "src": "/icons/2048.png", "sizes": "192x192" }]
     },
     {
-      "name": "Runner",
-      "short_name": "Runner",
+      "name": "Rush",
+      "short_name": "Rush",
       "url": "/games/runner/",
       "icons": [{ "src": "/icons/runner.png", "sizes": "192x192" }]
     }

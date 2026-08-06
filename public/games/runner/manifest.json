@@ -1,13 +1,14 @@
 {
   "id": "/games/runner/",
-  "name": "Runner",
-  "short_name": "Runner",
+  "name": "Rush",
+  "short_name": "Rush",
+  "description": "Subway-style 3-lane endless runner.",
   "start_url": "/games/runner/",
   "scope": "/games/runner/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#1a0f08",
-  "background_color": "#1a0f08",
+  "theme_color": "#0b1220",
+  "background_color": "#070b14",
   "icons": [
     { "src": "/icons/runner.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icons/runner.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
