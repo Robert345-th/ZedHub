@@ -71,10 +71,65 @@
 
   // Installing / opening Nexus downloads all apps into cache.
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(function (reg) {
-      if (reg && reg.installing) {
-        // SW install precaches Events, Ludo, Fruits, icons, etc.
+    navigator.serviceWorker.register('/sw.js').catch(function () {});
+  }
+
+  // —— Download Nexus (install whole home + all apps) ——
+  const nexusBtn = document.getElementById('nexusDownloadBtn');
+  let nexusPrompt = null;
+
+  function isStandalone() {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function isIos() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  }
+
+  if (nexusBtn) {
+    if (isStandalone()) {
+      nexusBtn.textContent = 'Installed';
+      nexusBtn.disabled = true;
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      nexusPrompt = e;
+      if (!isStandalone()) {
+        nexusBtn.textContent = 'Download';
+        nexusBtn.disabled = false;
       }
-    }).catch(function () {});
+    });
+
+    window.addEventListener('appinstalled', () => {
+      nexusPrompt = null;
+      nexusBtn.textContent = 'Installed';
+      nexusBtn.disabled = true;
+    });
+
+    nexusBtn.addEventListener('click', async () => {
+      if (isStandalone() || nexusBtn.disabled) return;
+
+      if (nexusPrompt) {
+        nexusPrompt.prompt();
+        const choice = await nexusPrompt.userChoice;
+        nexusPrompt = null;
+        if (choice && choice.outcome === 'accepted') {
+          nexusBtn.textContent = 'Installed';
+          nexusBtn.disabled = true;
+        }
+        return;
+      }
+
+      if (isIos()) {
+        alert('Install Nexus:\n1) Tap Share\n2) Add to Home Screen\n3) Add');
+        return;
+      }
+
+      alert('Tap the browser menu ⋮ → Install app / Add to Home screen');
+    });
   }
 })();
