@@ -214,7 +214,7 @@ let cityChunks = [];
 let characterReady = false;
 let bobT = 0;
 // Visual-only blend weights (does not change jump/slide gameplay flags)
-const animBlend = { slide: 0, jump: 0, runAmp: 1 };
+const animBlend = { slide: 0, jump: 0, runAmp: 1, lean: 0, stretch: 0 };
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -489,36 +489,56 @@ function animateHero(dt) {
   const p = player.parts;
   if (!p) return;
 
-  animBlend.slide = damp(animBlend.slide, player.sliding ? 1 : 0, 14, dt);
-  animBlend.jump = damp(animBlend.jump, player.jumping ? 1 : 0, 11, dt);
-  const grounded = 1 - Math.max(animBlend.slide, animBlend.jump);
-  animBlend.runAmp = damp(animBlend.runAmp, grounded, 10, dt);
+  animBlend.slide = damp(animBlend.slide, player.sliding ? 1 : 0, 12, dt);
+  animBlend.jump = damp(animBlend.jump, player.jumping ? 1 : 0, 10, dt);
+  const grounded = 1 - Math.max(animBlend.slide, animBlend.jump * 0.85);
+  animBlend.runAmp = damp(animBlend.runAmp, grounded, 9, dt);
 
-  const pace = player.jumping ? 0 : speed * 0.55;
+  // Lean into lane changes (visual only — player.x / collision unchanged)
+  const laneDelta = LANE_X[player.lane] - player.x;
+  animBlend.lean = damp(animBlend.lean, THREE.MathUtils.clamp(laneDelta * 0.42, -0.5, 0.5), 11, dt);
+
+  // Jump stretch from vertical velocity (visual only)
+  const stretchTarget = player.jumping
+    ? THREE.MathUtils.clamp(player.jumpV * 0.035, -0.12, 0.14)
+    : 0;
+  animBlend.stretch = damp(animBlend.stretch, stretchTarget, 14, dt);
+
+  const pace = player.jumping ? 0 : speed * 0.58;
   bobT += dt * pace;
 
-  const swing = Math.sin(bobT * 2.15) * animBlend.runAmp;
-  const bob = Math.abs(Math.sin(bobT * 2.15)) * 0.045 * animBlend.runAmp;
+  const swing = Math.sin(bobT * 2.2) * animBlend.runAmp;
+  const bob = Math.abs(Math.sin(bobT * 2.2)) * 0.055 * animBlend.runAmp;
   const s = animBlend.slide;
   const j = animBlend.jump;
+  const lean = animBlend.lean;
 
-  // Meshy GLB has no skeleton — animate as a stylized rigid dancer body
+  // Meshy mesh is a static dancer — bob, lean, jump & slide as one body
   if (player.glb) {
     const rig = p.rig;
-    const bodyBob = bob * 1.15 + 0.02 * Math.sin(bobT * 4.2) * animBlend.runAmp;
-    rig.position.y = damp(rig.position.y, bodyBob - 0.08 * s + 0.06 * j, 18, dt);
-    rig.rotation.x = damp(rig.rotation.x, 0.1 * animBlend.runAmp + 0.95 * s - 0.18 * j, 14, dt);
-    rig.rotation.z = damp(rig.rotation.z, swing * 0.12, 12, dt);
-    rig.scale.y = damp(rig.scale.y, 1 - 0.12 * s + 0.04 * j, 14, dt);
-    rig.scale.x = damp(rig.scale.x, 1 + 0.06 * s - 0.02 * j, 14, dt);
-    rig.scale.z = damp(rig.scale.z, 1 + 0.04 * s, 14, dt);
+    const bodyBob = bob * 1.35 + 0.025 * Math.sin(bobT * 4.4) * animBlend.runAmp;
+    const yTarget = bodyBob - 0.1 * s + 0.08 * j + animBlend.stretch * 0.15;
+    const rxTarget = 0.12 * animBlend.runAmp + 1.05 * s - 0.22 * j;
+    const rzTarget = swing * 0.14 + lean;
+    const ryTarget = lean * 0.55;
+    const syTarget = 1 - 0.18 * s + 0.06 * j + animBlend.stretch;
+    const sxTarget = 1 + 0.1 * s - animBlend.stretch * 0.5 + Math.abs(lean) * 0.08;
+    const szTarget = 1 + 0.06 * s - animBlend.stretch * 0.35;
+
+    rig.position.y = damp(rig.position.y, yTarget, 16, dt);
+    rig.rotation.x = damp(rig.rotation.x, rxTarget, 12, dt);
+    rig.rotation.y = damp(rig.rotation.y, ryTarget, 12, dt);
+    rig.rotation.z = damp(rig.rotation.z, rzTarget, 12, dt);
+    rig.scale.y = damp(rig.scale.y, syTarget, 13, dt);
+    rig.scale.x = damp(rig.scale.x, sxTarget, 13, dt);
+    rig.scale.z = damp(rig.scale.z, szTarget, 13, dt);
     return;
   }
 
   const hipsY = 0.95 + bob - 0.32 * s + 0.04 * j;
   const hipsRx = 0.06 * animBlend.runAmp + 1.05 * s - 0.12 * j;
   const torsoRx = 0.05 * animBlend.runAmp + 0.18 * s + 0.04 * j;
-  const torsoRz = swing * 0.045;
+  const torsoRz = swing * 0.045 + lean * 0.6;
   const headRx = -0.04 * animBlend.runAmp - 0.32 * s + 0.08 * j;
 
   p.hips.position.y = damp(p.hips.position.y, hipsY, 18, dt);
@@ -543,8 +563,118 @@ function animateHero(dt) {
   p.rightShin.rotation.x = damp(p.rightShin.rotation.x, Math.max(0, swing) * 0.65 * animBlend.runAmp + 0.45 * s + 0.15 * j, 14, dt);
 }
 
+/**
+ * Meshy "Neon City Dancers" packs 3 figures in one mesh.
+ * Keep only the center dancer by clustering triangle centroids on X.
+ */
+function extractSingleDancer(geometry) {
+  const src = geometry.index ? geometry.toNonIndexed() : geometry.clone();
+  const pos = src.attributes.position;
+  const triCount = pos.count / 3;
+  if (triCount < 3) return geometry;
+
+  const centroids = new Float32Array(triCount);
+  let xmin = Infinity;
+  let xmax = -Infinity;
+  for (let t = 0; t < triCount; t++) {
+    const i = t * 3;
+    const cx = (pos.getX(i) + pos.getX(i + 1) + pos.getX(i + 2)) / 3;
+    centroids[t] = cx;
+    if (cx < xmin) xmin = cx;
+    if (cx > xmax) xmax = cx;
+  }
+
+  // 3-means on X
+  let c0 = xmin + (xmax - xmin) * 0.2;
+  let c1 = (xmin + xmax) * 0.5;
+  let c2 = xmin + (xmax - xmin) * 0.8;
+  for (let iter = 0; iter < 10; iter++) {
+    let s0 = 0;
+    let s1 = 0;
+    let s2 = 0;
+    let n0 = 0;
+    let n1 = 0;
+    let n2 = 0;
+    for (let t = 0; t < triCount; t++) {
+      const x = centroids[t];
+      const d0 = Math.abs(x - c0);
+      const d1 = Math.abs(x - c1);
+      const d2 = Math.abs(x - c2);
+      if (d0 <= d1 && d0 <= d2) {
+        s0 += x;
+        n0++;
+      } else if (d1 <= d2) {
+        s1 += x;
+        n1++;
+      } else {
+        s2 += x;
+        n2++;
+      }
+    }
+    if (n0) c0 = s0 / n0;
+    if (n1) c1 = s1 / n1;
+    if (n2) c2 = s2 / n2;
+  }
+
+  const centers = [
+    { c: c0, i: 0 },
+    { c: c1, i: 1 },
+    { c: c2, i: 2 },
+  ].sort((a, b) => a.c - b.c);
+  const midId = centers[1].i;
+  const midC = centers[1].c;
+
+  const keep = [];
+  for (let t = 0; t < triCount; t++) {
+    const x = centroids[t];
+    const d0 = Math.abs(x - c0);
+    const d1 = Math.abs(x - c1);
+    const d2 = Math.abs(x - c2);
+    let id = 2;
+    if (d0 <= d1 && d0 <= d2) id = 0;
+    else if (d1 <= d2) id = 1;
+    if (id === midId) keep.push(t);
+  }
+
+  // Fallback: keep triangles near median center if clustering failed
+  if (keep.length < triCount * 0.15) {
+    keep.length = 0;
+    for (let t = 0; t < triCount; t++) {
+      if (Math.abs(centroids[t] - midC) < (xmax - xmin) * 0.18) keep.push(t);
+    }
+  }
+  if (!keep.length) return geometry;
+
+  const newPos = new Float32Array(keep.length * 9);
+  for (let k = 0; k < keep.length; k++) {
+    const t = keep[k];
+    const srcI = t * 9;
+    const dstI = k * 9;
+    for (let j = 0; j < 9; j++) newPos[dstI + j] = pos.array[srcI + j];
+  }
+
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.BufferAttribute(newPos, 3));
+  out.computeVertexNormals();
+  out.computeBoundingBox();
+  // Center on X/Z so the single dancer sits in-lane
+  const bb = out.boundingBox;
+  const ox = (bb.min.x + bb.max.x) * 0.5;
+  const oz = (bb.min.z + bb.max.z) * 0.5;
+  const arr = out.attributes.position.array;
+  for (let i = 0; i < arr.length; i += 3) {
+    arr[i] -= ox;
+    arr[i + 2] -= oz;
+  }
+  out.attributes.position.needsUpdate = true;
+  out.computeBoundingBox();
+  out.computeVertexNormals();
+  return out;
+}
+
 /** Paint neon vertex colors on Meshy geometry (export has no materials/UVs). */
 function styleMeshyMesh(mesh) {
+  mesh.geometry = extractSingleDancer(mesh.geometry);
   const geo = mesh.geometry;
   if (!geo.attributes.normal) geo.computeVertexNormals();
   const pos = geo.attributes.position;
@@ -557,7 +687,6 @@ function styleMeshyMesh(mesh) {
     if (y > maxY) maxY = y;
   }
   const span = Math.max(0.001, maxY - minY);
-  // Neon city dancer palette: magenta → violet → cyan
   const cA = new THREE.Color(0xff2d95);
   const cB = new THREE.Color(0x7c3aed);
   const cC = new THREE.Color(0x22d3ee);
@@ -575,7 +704,7 @@ function styleMeshyMesh(mesh) {
     vertexColors: true,
     gradientMap: toonGrad,
     emissive: new THREE.Color(0x3b0764),
-    emissiveIntensity: 0.35,
+    emissiveIntensity: 0.4,
   });
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -591,7 +720,6 @@ function fitGlbToTrack(model) {
   model.scale.setScalar(s);
   model.updateMatrixWorld(true);
   box = new THREE.Box3().setFromObject(model);
-  // Plant feet on local y=0; face down the track (-Z)
   model.position.y = -box.min.y + 0.02;
   model.rotation.y = Math.PI;
 }
@@ -606,8 +734,16 @@ function mountProceduralHero() {
 function mountGlbHero(sceneRoot) {
   const rig = new THREE.Group();
   const wrap = new THREE.Group();
+  // Only keep / style the first mesh (single dancer after extract)
+  let used = false;
   sceneRoot.traverse((c) => {
-    if (c.isMesh) styleMeshyMesh(c);
+    if (!c.isMesh) return;
+    if (used) {
+      c.visible = false;
+      return;
+    }
+    styleMeshyMesh(c);
+    used = true;
   });
   wrap.add(sceneRoot);
   fitGlbToTrack(wrap);
@@ -620,13 +756,10 @@ function mountGlbHero(sceneRoot) {
 
 function syncPlayerPose() {
   const baseY = GROUND_Y + player.y;
-  if (player.sliding) {
-    player.root.position.set(player.x, baseY + 0.05, 0);
-    player.hitH = 0.7;
-  } else {
-    player.root.position.set(player.x, baseY, 0);
-    player.hitH = HERO_H;
-  }
+  // Soft visual settle into slide height without changing hit logic abruptly
+  const slideLift = 0.05 * animBlend.slide;
+  player.root.position.set(player.x, baseY + slideLift, 0);
+  player.hitH = player.sliding ? 0.7 : HERO_H;
 }
 
 function finishHeroReady() {
@@ -844,6 +977,8 @@ function reset() {
   animBlend.slide = 0;
   animBlend.jump = 0;
   animBlend.runAmp = 1;
+  animBlend.lean = 0;
+  animBlend.stretch = 0;
   syncPlayerPose();
   score = 0;
   coins = 0;
@@ -937,7 +1072,8 @@ function update(dt) {
   scoreEl.textContent = String(Math.floor(score));
 
   const targetX = LANE_X[player.lane];
-  player.x += (targetX - player.x) * Math.min(1, 16 * dt);
+  // Same lane targeting — damp feels smoother than a hard lerp factor
+  player.x = damp(player.x, targetX, 14, dt);
 
   if (player.jumping) {
     player.jumpV -= 28 * dt;
