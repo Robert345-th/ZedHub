@@ -18,19 +18,27 @@
 <body>
   <header class="top">
     <div class="brand">ZedHub</div>
-    <p class="sub">Choose an app</p>
+    <p class="sub">Choose a category, then open an app</p>
   </header>
 
-  <main class="list" aria-label="Apps">
+  <nav class="cats" aria-label="Categories">
+    <button type="button" class="cat active" data-cat="markets">Markets</button>
+    <button type="button" class="cat" data-cat="games">Games</button>
+  </nav>
+
+  <main class="list" id="appList" aria-label="Apps"></main>
+
+  <p class="foot" id="footHint">Tap an app to open it.</p>
+
+  <template id="tpl-markets">
     <a class="row" href="/events/">
       <span class="icon events" aria-hidden="true">E</span>
       <span class="meta">
         <span class="name">Events</span>
-        <span class="desc">Find services for weddings, parties &amp; more</span>
+        <span class="desc">Weddings, parties, services &amp; more</span>
       </span>
       <span class="chev" aria-hidden="true">›</span>
     </a>
-
     <a class="row" href="https://zedmarket.app" target="_blank" rel="noopener noreferrer">
       <span class="icon market" aria-hidden="true">M</span>
       <span class="meta">
@@ -39,14 +47,15 @@
       </span>
       <span class="chev" aria-hidden="true">›</span>
     </a>
-  </main>
+  </template>
 
-  <p class="foot">Tap an app to open it.</p>
+  <template id="tpl-games">
+    <div class="empty">
+      <div class="empty-title">Games coming soon</div>
+      <div class="empty-desc">New games will show up here. Check back later.</div>
+    </div>
+  </template>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(function () {});
-    }
-  </script>
+  <script src="/home.js"></script>
 </body>
 </html>
