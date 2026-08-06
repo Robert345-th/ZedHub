@@ -50,6 +50,7 @@
     // Brief Nexus mark, then Savanna for 2 seconds
     setTimeout(() => {
       nexus.hidden = true;
+      splash.classList.add('savanna-mode');
       savanna.hidden = false;
       setTimeout(() => {
         splash.classList.add('hide');
