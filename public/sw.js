@@ -1,4 +1,4 @@
-const CACHE = "nexus-v38";
+const CACHE = "nexus-v39";
 
 // Everything users need offline after installing Nexus once.
 const PRECACHE = [
@@ -13,10 +13,7 @@ const PRECACHE = [
   "/icons/savanna-splash.png",
   "/icons/zedmarket.png",
   "/icons/zedevents.png",
-  "/icons/ludo.png",
   "/icons/fruits.png",
-  "/icons/2048.png",
-  "/icons/runner.png",
   // Events
   "/events/",
   "/events/index.html",
@@ -33,40 +30,12 @@ const PRECACHE = [
   "/events/account.html",
   "/events/favorites.html",
   "/events/chats.html",
-  // Ludo
-  "/games/ludo/",
-  "/games/ludo/index.html",
-  "/games/ludo/ludo.css",
-  "/games/ludo/ludo.js",
-  "/games/ludo/engine.js",
-  "/games/ludo/board.js",
-  "/games/ludo/manifest.json",
-  // Fruits
+  // Fruits (only game)
   "/games/fruits/",
   "/games/fruits/index.html",
   "/games/fruits/fruits.css",
   "/games/fruits/fruits.js",
   "/games/fruits/manifest.json",
-  // 2048
-  "/games/2048/",
-  "/games/2048/index.html",
-  "/games/2048/game.css",
-  "/games/2048/game.js",
-  "/games/2048/manifest.json",
-  // Runner 3D — single Mixamo skinned runner
-  "/games/runner/",
-  "/games/runner/index.html",
-  "/games/runner/game.css",
-  "/games/runner/game.js",
-  "/games/runner/manifest.json",
-  "/games/runner/vendor/three.module.min.js",
-  "/games/runner/vendor/addons/loaders/FBXLoader.js",
-  "/games/runner/vendor/addons/libs/fflate.module.js",
-  "/games/runner/vendor/addons/curves/NURBSCurve.js",
-  "/games/runner/vendor/addons/curves/NURBSUtils.js",
-  "/games/runner/models/run.fbx",
-  "/games/runner/models/jump.fbx",
-  "/games/runner/models/bigjump.fbx",
 ];
 
 self.addEventListener("install", (event) => {

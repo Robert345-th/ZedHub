@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Nexus",
   "short_name": "Nexus",
-  "description": "Install once — Events, Fruits, 2048, Runner and more.",
+  "description": "Install once — Events, Market, and Fruits.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
@@ -47,18 +47,6 @@
       "short_name": "Fruits",
       "url": "/games/fruits/?mode=offline",
       "icons": [{ "src": "/icons/fruits.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "2048",
-      "short_name": "2048",
-      "url": "/games/2048/",
-      "icons": [{ "src": "/icons/2048.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Rush",
-      "short_name": "Rush",
-      "url": "/games/runner/",
-      "icons": [{ "src": "/icons/runner.png", "sizes": "192x192" }]
     }
   ]
 }
