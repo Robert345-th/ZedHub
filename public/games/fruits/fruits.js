@@ -17,10 +17,17 @@
   }
 
   const params = new URLSearchParams(location.search);
-  const startMode = ['campaign', 'daily', 'versus'].includes(params.get('mode'))
+  const startMode = ['campaign', 'daily', 'versus', 'weekly'].includes(params.get('mode'))
     ? params.get('mode')
     : 'campaign';
   const startLevelNum = Math.min(100, Math.max(1, parseInt(params.get('level') || '1', 10) || 1));
+
+  const WEEKLY = [
+    { id: 'ice', name: 'Ice Week', iceChance: 0.48, movesMod: 0, goalMod: 2, fruitCount: null, mono: false },
+    { id: 'mono', name: 'Berry Rush', iceChance: 0.08, movesMod: 0, goalMod: 6, fruitCount: 1, mono: true },
+    { id: 'speed', name: 'Speed Clear', iceChance: 0.12, movesMod: -4, goalMod: 0, fruitCount: null, mono: false },
+    { id: 'mega', name: 'Mega Goal', iceChance: 0.18, movesMod: 2, goalMod: 14, fruitCount: null, mono: false },
+  ];
 
   function shapeMask(level) {
     // 1 = playable, 0 = hole
@@ -75,8 +82,10 @@
     play: document.getElementById('playScreen'),
     result: document.getElementById('resultScreen'),
     livesVal: document.getElementById('livesVal'),
+    coinsVal: document.getElementById('coinsVal'),
     board: document.getElementById('board'),
     fx: document.getElementById('fx'),
+    comboBanner: document.getElementById('comboBanner'),
     flyLayer: document.getElementById('flyLayer'),
     movesVal: document.getElementById('movesVal'),
     levelChip: document.getElementById('levelChip'),
@@ -103,6 +112,7 @@
   let levelIndex = startLevelNum - 1;
   let mode = startMode;
   let fruitPool = 6;
+  let monoType = null;
   let mask = Array(SIZE * SIZE).fill(1);
   let grid = [];
   let moves = 0;
@@ -126,13 +136,20 @@
       boosters: { hammer: 3, shuffle: 2, moves: 2 },
       theme: 'meadow',
       daily: {},
+      coins: 120,
+      playerName: 'You',
+      leaderboard: {},
     };
   }
 
   function loadProgress() {
     try {
       const raw = localStorage.getItem('fruits_offline_v2') || localStorage.getItem('fruits_offline');
-      return raw ? { ...defaultProgress(), ...JSON.parse(raw) } : defaultProgress();
+      const p = raw ? { ...defaultProgress(), ...JSON.parse(raw) } : defaultProgress();
+      if (typeof p.coins !== 'number') p.coins = 120;
+      if (!p.leaderboard) p.leaderboard = {};
+      if (!p.playerName) p.playerName = 'You';
+      return p;
     } catch (_) {
       return defaultProgress();
     }
@@ -158,6 +175,7 @@
       }
     }
     els.livesVal.textContent = String(progress.lives);
+    if (els.coinsVal) els.coinsVal.textContent = String(progress.coins || 0);
   }
 
   function spendLife() {
@@ -252,7 +270,8 @@
   }
 
   function randFruit() {
-    return Math.floor(Math.random() * fruitPool);
+    if (monoType != null) return monoType;
+    return Math.floor(Math.random() * Math.max(1, fruitPool));
   }
 
   function playable(i) {
@@ -269,7 +288,8 @@
 
   function createGrid(level) {
     mask = level.mask || Array(SIZE * SIZE).fill(1);
-    fruitPool = level.fruitCount;
+    fruitPool = level.fruitCount || 6;
+    monoType = level.mono ? level.goalType : null;
     grid = new Array(SIZE * SIZE).fill(null);
     for (let r = 0; r < SIZE; r++) {
       for (let c = 0; c < SIZE; c++) {
@@ -354,6 +374,52 @@
     els.fx.classList.add('show');
   }
 
+  function flashCombo(kind, label) {
+    if (!els.comboBanner) {
+      flashFx(label);
+      return;
+    }
+    els.comboBanner.textContent = label;
+    els.comboBanner.className = 'combo-banner show ' + kind;
+    els.comboBanner.hidden = false;
+    clearTimeout(flashCombo._t);
+    flashCombo._t = setTimeout(() => {
+      els.comboBanner.classList.remove('show');
+      els.comboBanner.hidden = true;
+    }, 900);
+  }
+
+  function isoWeek(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+  }
+
+  function weekEvent() {
+    return WEEKLY[isoWeek(new Date()) % WEEKLY.length];
+  }
+
+  function pushDailyScore(sc) {
+    const level = dailyLevel();
+    const key = level.dailyKey;
+    if (!progress.leaderboard[key]) progress.leaderboard[key] = [];
+    progress.leaderboard[key].push({
+      name: progress.playerName || 'You',
+      score: sc,
+      at: Date.now(),
+    });
+    progress.leaderboard[key].sort((a, b) => b.score - a.score);
+    progress.leaderboard[key] = progress.leaderboard[key].slice(0, 10);
+    // prune old days
+    const keys = Object.keys(progress.leaderboard);
+    if (keys.length > 14) {
+      keys.sort();
+      keys.slice(0, keys.length - 14).forEach((k) => delete progress.leaderboard[k]);
+    }
+  }
+
   function starsFromScore(level, sc) {
     const [a, b, c] = level.starScores;
     if (sc >= c) return 3;
@@ -370,6 +436,7 @@
     els.movesVal.textContent = String(moves);
     if (mode === 'daily') els.levelChip.textContent = 'Daily';
     else if (mode === 'versus') els.levelChip.textContent = '2P';
+    else if (mode === 'weekly') els.levelChip.textContent = weekEvent().name;
     else els.levelChip.textContent = 'Lv ' + (levelIndex + 1);
     els.goalEmoji.textContent = FRUITS[level.goalType].emoji;
     els.goalCount.textContent = `${collected}/${level.goalNeed}`;
@@ -446,6 +513,7 @@
 
   function currentLevel() {
     if (mode === 'daily') return dailyLevel();
+    if (mode === 'weekly') return weeklyLevel();
     return LEVELS[levelIndex];
   }
 
@@ -460,6 +528,24 @@
       goalNeed: Math.min(42, base.goalNeed + 4),
       iceChance: Math.min(0.32, base.iceChance + 0.06),
       dailyKey: String(seed),
+    };
+  }
+
+  function weeklyLevel() {
+    const ev = weekEvent();
+    const w = isoWeek(new Date());
+    const base = LEVELS[w % 100];
+    const goalType = ev.mono ? (w % FRUITS.length) : base.goalType;
+    return {
+      ...base,
+      moves: Math.max(10, base.moves + ev.movesMod),
+      goalNeed: Math.min(50, base.goalNeed + ev.goalMod),
+      iceChance: ev.iceChance,
+      fruitCount: ev.fruitCount || base.fruitCount,
+      goalType,
+      mono: ev.mono,
+      weeklyId: ev.id,
+      weeklyName: ev.name,
     };
   }
 
@@ -557,9 +643,12 @@
     score += gained;
     if (mode === 'versus') pScores[pTurn] += gained;
     soundMatch(combo);
-    if (combo >= 3) flashFx('SUPER x' + combo);
-    else if (combo === 2) flashFx('COMBO!');
-    else if (clearSet.size >= 5) flashFx('MEGA!');
+    if (combo >= 5) flashCombo('perfect', 'PERFECT');
+    else if (combo >= 4) flashCombo('amazing', 'AMAZING');
+    else if (combo >= 3) flashCombo('super', 'SUPER x' + combo);
+    else if (combo === 2) flashCombo('combo', 'COMBO!');
+    else if (clearSet.size >= 6) flashCombo('mega', 'MEGA!');
+    else if (clearSet.size >= 5) flashFx('NICE!');
 
     await sleep(260);
 
@@ -739,6 +828,10 @@
 
     if (won) {
       soundWin();
+      const coinReward = 12 + stars * 8 + (mode === 'weekly' ? 15 : 0) + (mode === 'daily' ? 10 : 0);
+      progress.coins = (progress.coins || 0) + coinReward;
+      if (els.coinsVal) els.coinsVal.textContent = String(progress.coins);
+
       if (mode === 'campaign') {
         progress.stars[levelIndex] = Math.max(progress.stars[levelIndex] || 0, stars);
         progress.level = Math.max(progress.level || 0, Math.min(99, levelIndex + 1));
@@ -746,26 +839,32 @@
         progress.boosters.shuffle = (progress.boosters.shuffle || 0) + (stars >= 3 ? 1 : 0);
         progress.boosters.moves = (progress.boosters.moves || 0) + 1;
         advanceOnNext = levelIndex < 99;
-        saveProgress();
         els.resultTitle.textContent = levelIndex >= 99 ? 'All 100 cleared!' : 'Level clear!';
-        els.resultExtra.textContent = stars === 3 ? 'Perfect! Boosters earned' : 'Boosters topped up';
+        els.resultExtra.textContent = `+${coinReward} coins` + (stars === 3 ? ' · Perfect!' : '');
         els.nextBtn.textContent = levelIndex >= 99 ? 'Stages' : 'Next level';
+      } else if (mode === 'weekly') {
+        els.resultTitle.textContent = level.weeklyName + ' cleared!';
+        els.resultExtra.textContent = `+${coinReward} coins · weekly event`;
+        els.nextBtn.textContent = 'Stages';
       } else {
         const key = level.dailyKey;
         progress.daily[key] = Math.max(progress.daily[key] || 0, score);
-        saveProgress();
+        pushDailyScore(score);
         els.resultTitle.textContent = 'Daily cleared!';
-        els.resultExtra.textContent = 'Come back tomorrow for a new board';
+        els.resultExtra.textContent = `+${coinReward} coins · score posted locally`;
         els.nextBtn.textContent = 'Stages';
       }
+      saveProgress();
       const shown = Math.max(0, Math.min(3, stars));
       els.resultStars.textContent = '★'.repeat(shown) + '☆'.repeat(3 - shown);
     } else {
       soundFail();
-      if (mode === 'campaign' || mode === 'daily') {
+      if (mode === 'campaign' || mode === 'daily' || mode === 'weekly') {
         spendLife();
         finish._spentLife = true;
       }
+      if (mode === 'daily') pushDailyScore(score);
+      saveProgress();
       els.resultTitle.textContent = 'Out of moves';
       els.resultExtra.textContent = progress.lives > 0 ? 'Retry free, or continue (−1 ♥ for +5 moves)' : 'Lives empty — wait to refill';
       els.resultStars.textContent = '💔';
@@ -794,9 +893,12 @@
     els.hintBar.textContent =
       mode === 'versus'
         ? 'Pass & play — highest score wins'
-        : `Collect ${level.goalNeed} ${FRUITS[level.goalType].emoji}`;
+        : mode === 'weekly'
+          ? `${level.weeklyName}: collect ${level.goalNeed} ${FRUITS[level.goalType].emoji}`
+          : `Collect ${level.goalNeed} ${FRUITS[level.goalType].emoji}`;
     renderBoard();
     updateBoostUi();
+    if (els.coinsVal) els.coinsVal.textContent = String(progress.coins || 0);
     show(els.play);
     beep(440, 0.05);
   }
@@ -848,7 +950,7 @@
 
   // —— UI wiring ——
   els.retryBtn.addEventListener('click', () => {
-    if ((mode === 'campaign' || mode === 'daily') && progress.lives <= 0) {
+    if ((mode === 'campaign' || mode === 'daily' || mode === 'weekly') && progress.lives <= 0) {
       goStages();
       return;
     }
@@ -867,7 +969,7 @@
       startLevel();
       return;
     }
-    if (mode === 'daily') {
+    if (mode === 'daily' || mode === 'weekly') {
       goStages();
       return;
     }

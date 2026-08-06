@@ -21,7 +21,10 @@
   <header class="bar">
     <a class="back" href="./" aria-label="Back to stages">‹</a>
     <div class="title">Fruits</div>
-    <div class="lives-pill" id="livesPill" title="Lives">♥ <span id="livesVal">5</span></div>
+    <div class="bar-stats">
+      <div class="coin-pill">🪙 <strong id="coinsVal">0</strong></div>
+      <div class="lives-pill" id="livesPill" title="Lives">♥ <span id="livesVal">5</span></div>
+    </div>
   </header>
 
   <div class="theme-row" aria-label="Themes">
@@ -54,6 +57,7 @@
     <div class="board-frame">
       <div class="board" id="board" role="grid" aria-label="Fruit board"></div>
       <div class="fx" id="fx" aria-hidden="true"></div>
+      <div class="combo-banner" id="comboBanner" hidden aria-hidden="true"></div>
       <div class="fly-layer" id="flyLayer" aria-hidden="true"></div>
     </div>
 

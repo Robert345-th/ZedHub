@@ -22,8 +22,17 @@
     <header class="topbar">
       <a class="back" href="/">‹</a>
       <button type="button" class="hero-pill" id="explorePill">Explore many themes</button>
-      <div class="coins" id="hubCoins" title="Coins">🪙 <strong>0</strong></div>
+      <div class="hub-stats">
+        <div class="streak" id="streakBadge" title="Daily streak">🔥 <strong>0</strong></div>
+        <div class="coins" id="hubCoins" title="Coins">🪙 <strong>0</strong></div>
+      </div>
     </header>
+
+    <button type="button" class="daily-card" id="dailyBtn">
+      <span class="daily-kicker">Today</span>
+      <strong>Daily puzzle</strong>
+      <span id="dailyMeta">One shared grid · streak bonus</span>
+    </button>
 
     <div class="diff-row" id="diffRow" role="tablist" aria-label="Difficulty">
       <button type="button" class="diff" data-diff="easy">Easy</button>
@@ -53,8 +62,8 @@
 
     <div class="tools">
       <button type="button" class="tool" id="btnShuffle" title="New puzzle" aria-label="New puzzle">↻</button>
-      <button type="button" class="tool" id="btnHint" title="Hint" aria-label="Hint">✨</button>
-      <button type="button" class="tool" id="btnReveal" title="Reveal a letter" aria-label="Reveal">🔍</button>
+      <button type="button" class="tool" id="btnHint" title="Hint · 5 coins" aria-label="Hint">✨<small>5</small></button>
+      <button type="button" class="tool" id="btnReveal" title="Reveal word · 15 coins" aria-label="Reveal">🔍<small>15</small></button>
       <button type="button" class="tool" id="btnHome" title="Themes" aria-label="Themes">★</button>
     </div>
   </section>

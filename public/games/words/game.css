@@ -89,6 +89,50 @@ html, body {
   font-size: 0.85rem;
   white-space: nowrap;
 }
+.hub-stats {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.streak {
+  background: rgba(255, 246, 238, 0.9);
+  border-radius: 999px;
+  padding: 8px 10px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.daily-card {
+  border: 0;
+  text-align: left;
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: linear-gradient(120deg, #ff6a3d, #e85d2a 55%, #2ec4b6);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(255, 106, 61, 0.3);
+  cursor: pointer;
+  font-family: inherit;
+}
+.daily-kicker {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.daily-card strong {
+  display: block;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.25rem;
+  margin-top: 4px;
+}
+.daily-card span:last-child {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.88rem;
+  opacity: 0.92;
+}
 
 .diff-row {
   display: grid;
@@ -299,6 +343,7 @@ html, body {
   padding: 6px 0 8px;
 }
 .tool {
+  position: relative;
   width: 54px;
   height: 54px;
   border: 0;
@@ -309,8 +354,27 @@ html, body {
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(255, 106, 61, 0.4);
 }
+.tool small {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #1a100c;
+  color: #ffc53d;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
 .tool:active { transform: scale(0.96); }
-
+.cell.hint-flash {
+  background: rgba(255, 229, 102, 0.9) !important;
+  box-shadow: 0 0 0 3px #ffc53d;
+}
 .toast {
   position: fixed;
   left: 50%;

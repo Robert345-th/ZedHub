@@ -21,23 +21,61 @@
   <header class="bar">
     <a class="back" href="/" aria-label="Back to Nexus">‹</a>
     <div class="title">Fruits</div>
-    <div class="lives-pill" id="livesPill" title="Lives">♥ <span id="livesVal">5</span></div>
+    <div class="bar-stats">
+      <div class="coin-pill" id="coinPill" title="Coins">🪙 <strong id="coinsVal">0</strong></div>
+      <div class="lives-pill" id="livesPill" title="Lives">♥ <span id="livesVal">5</span></div>
+    </div>
   </header>
 
   <main class="screen menu">
+    <a class="event-card" id="eventCard" href="play.html?mode=weekly">
+      <span class="event-kicker">This week</span>
+      <strong id="eventName">Ice Week</strong>
+      <span id="eventDesc">Heavy ice — smash through it</span>
+    </a>
+
     <div class="stage-box">
       <div class="stage-head">
         <span>Stages</span>
         <span class="stage-meta" id="progressMeta">1/100</span>
       </div>
       <div class="map-grid" id="mapGrid"></div>
+      <div class="stage-foot stage-foot-3">
+        <a class="foot-btn" href="play.html?mode=daily">Daily</a>
+        <button type="button" class="foot-btn" id="shopBtn">Shop</button>
+        <button type="button" class="foot-btn" id="boardBtn">Scores</button>
+      </div>
       <div class="stage-foot">
-        <a class="foot-btn" id="dailyBtn" href="play.html?mode=daily">Daily</a>
-        <a class="foot-btn" id="versusBtn" href="play.html?mode=versus">2P</a>
+        <a class="foot-btn" id="versusBtn" href="play.html?mode=versus">2 Players</a>
       </div>
     </div>
   </main>
 
+  <div class="modal" id="shopModal" hidden>
+    <div class="sheet">
+      <h2>Power-up shop</h2>
+      <p class="sheet-lead">Spend coins on boosters. Balance: <strong id="shopCoins">0</strong> 🪙</p>
+      <button type="button" class="shop-row" data-buy="hammer" data-cost="40">🔨 Hammer <span>×1 · 40🪙</span></button>
+      <button type="button" class="shop-row" data-buy="shuffle" data-cost="35">🔀 Shuffle <span>×1 · 35🪙</span></button>
+      <button type="button" class="shop-row" data-buy="moves" data-cost="30">➕ +5 Moves <span>×1 · 30🪙</span></button>
+      <button type="button" class="shop-row" data-buy="pack" data-cost="90">🎁 Booster pack <span>all three · 90🪙</span></button>
+      <button type="button" class="btn ghost" id="shopClose">Close</button>
+    </div>
+  </div>
+
+  <div class="modal" id="boardModal" hidden>
+    <div class="sheet">
+      <h2>Daily scores</h2>
+      <p class="sheet-lead" id="boardLead">Today’s best on this device</p>
+      <ol class="score-list" id="scoreList"></ol>
+      <label class="name-field">Your name
+        <input type="text" id="playerName" maxlength="16" placeholder="Player" />
+      </label>
+      <button type="button" class="btn ghost" id="boardClose">Close</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
   <script src="stages.js"></script>
 </body>
 </html>

@@ -69,16 +69,57 @@ function ensureState() {
   if (!state.unlocked) state.unlocked = THEMES.filter((t) => t.free).map((t) => t.id);
   if (!state.progress) state.progress = {};
   if (!state.diff) state.diff = 'medium';
+  if (typeof state.streak !== 'number') state.streak = 0;
+  if (!state.lastDaily) state.lastDaily = '';
+  if (!state.dailyDone) state.dailyDone = '';
   THEMES.forEach((t) => {
     if (typeof state.progress[t.id] !== 'number') state.progress[t.id] = 0;
   });
 }
 ensureState();
 
+function dayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function yesterdayKey() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function mulberry32(a) {
+  return function () {
+    let t = (a += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle(arr, rand) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function setCoinsUI() {
   document.querySelectorAll('#hubCoins strong, #playCoins strong').forEach((el) => {
     el.textContent = String(state.coins);
   });
+  const streakStrong = document.querySelector('#streakBadge strong');
+  if (streakStrong) streakStrong.textContent = String(state.streak || 0);
+  const dailyMeta = document.getElementById('dailyMeta');
+  if (dailyMeta) {
+    dailyMeta.textContent =
+      state.dailyDone === dayKey()
+        ? `Done today · streak ${state.streak}`
+        : `One shared grid · streak ${state.streak || 0}`;
+  }
 }
 
 function toastMsg(msg) {
@@ -191,25 +232,30 @@ function fillGrid(grid) {
   }
 }
 
-function buildPuzzle(themeId) {
+function buildPuzzle(themeId, opts) {
   const theme = THEMES.find((t) => t.id === themeId);
-  const cfg = DIFF[difficulty];
+  const cfg = opts?.cfg || DIFF[difficulty];
+  const rand = opts?.rand || Math.random;
+  const seeded = !!opts?.rand;
   let placed = [];
   let grid;
   let words;
   for (let attempt = 0; attempt < 40; attempt++) {
     grid = emptyGrid(cfg.size);
-    words = pickWords(theme, cfg.words, cfg.size);
+    const pool = seeded
+      ? seededShuffle(theme.pool.filter((w) => w.length <= cfg.size), rand)
+      : shuffle(theme.pool.filter((w) => w.length <= cfg.size));
+    words = pool.slice(0, Math.min(cfg.words, pool.length));
     placed = [];
     let ok = true;
     for (const w of words) {
-      const p = placeWord(grid, w);
+      const p = placeWordSeeded(grid, w, rand);
       if (!p) { ok = false; break; }
       placed.push(p);
     }
     if (ok) break;
   }
-  fillGrid(grid);
+  fillGridSeeded(grid, rand);
   return {
     themeId,
     theme,
@@ -219,7 +265,42 @@ function buildPuzzle(themeId) {
     placements: placed,
     found: {},
     hlIndex: 0,
+    daily: !!opts?.daily,
+    dailyKey: opts?.dailyKey || '',
   };
+}
+
+function placeWordSeeded(grid, word, rand) {
+  const n = grid.length;
+  const dirs = seededShuffle(DIRS.slice(), rand);
+  const spots = [];
+  for (const [dr, dc] of dirs) {
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) spots.push({ r, c, dr, dc });
+    }
+  }
+  const tries = seededShuffle(spots, rand);
+  for (const t of tries) {
+    if (!canPlace(grid, word, t.r, t.c, t.dr, t.dc)) continue;
+    const cells = [];
+    for (let i = 0; i < word.length; i++) {
+      const rr = t.r + t.dr * i;
+      const cc = t.c + t.dc * i;
+      grid[rr][cc] = word[i];
+      cells.push([rr, cc]);
+    }
+    return { word, cells, dir: [t.dr, t.dc] };
+  }
+  return null;
+}
+
+function fillGridSeeded(grid, rand) {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (let r = 0; r < grid.length; r++) {
+    for (let c = 0; c < grid.length; c++) {
+      if (!grid[r][c]) grid[r][c] = letters[Math.floor(rand() * letters.length)];
+    }
+  }
 }
 
 function startPuzzle(themeId) {
@@ -230,10 +311,33 @@ function startPuzzle(themeId) {
   themeBanner.textContent = puzzle.theme.name;
   document.getElementById('modePill').textContent =
     difficulty === 'easy' ? 'Learn new words' : difficulty === 'pro' ? 'Train your brain' : 'Find every word';
+  document.getElementById('btnShuffle').disabled = false;
+  document.getElementById('btnShuffle').style.opacity = '1';
   setBg(puzzle.themeId);
   setCoinsUI();
   renderBoard();
   renderWords();
+}
+
+function startDaily() {
+  const key = dayKey();
+  const seed = Number(key.replace(/-/g, ''));
+  const rand = mulberry32(seed ^ 0x9e3779b9);
+  const theme = THEMES[Math.floor(rand() * THEMES.length)];
+  const cfg = { size: 8, words: 7, label: 'Daily' };
+  puzzle = buildPuzzle(theme.id, { rand, cfg, daily: true, dailyKey: key });
+  hubScreen.hidden = true;
+  playScreen.hidden = false;
+  winModal.hidden = true;
+  themeBanner.textContent = 'Daily · ' + puzzle.theme.name;
+  document.getElementById('modePill').textContent = 'Daily puzzle';
+  document.getElementById('btnShuffle').disabled = true;
+  document.getElementById('btnShuffle').style.opacity = '0.4';
+  setBg(puzzle.themeId);
+  setCoinsUI();
+  renderBoard();
+  renderWords();
+  if (state.dailyDone === key) toastMsg('Already cleared today — practice run');
 }
 
 function setBg(themeId) {
@@ -378,21 +482,44 @@ function tryCommitSelection() {
 
 function onWin() {
   const themeId = puzzle.themeId;
-  const prev = state.progress[themeId] || 0;
-  if (prev < LEVELS_PER) state.progress[themeId] = prev + 1;
-  const reward = difficulty === 'pro' ? 35 : difficulty === 'hard' ? 28 : difficulty === 'easy' ? 12 : 20;
+  let reward = difficulty === 'pro' ? 35 : difficulty === 'hard' ? 28 : difficulty === 'easy' ? 12 : 20;
+  let streakNote = '';
+
+  if (puzzle.daily) {
+    const key = puzzle.dailyKey || dayKey();
+    if (state.dailyDone !== key) {
+      if (state.lastDaily === yesterdayKey()) state.streak = (state.streak || 0) + 1;
+      else state.streak = 1;
+      state.lastDaily = key;
+      state.dailyDone = key;
+      const bonus = Math.min(40, 10 + state.streak * 5);
+      reward = 30 + bonus;
+      streakNote = ` · streak ${state.streak} (+${bonus})`;
+    } else {
+      reward = 8;
+      streakNote = ' · practice';
+    }
+  } else {
+    const prev = state.progress[themeId] || 0;
+    if (prev < LEVELS_PER) state.progress[themeId] = prev + 1;
+  }
+
   state.coins += reward;
   saveState();
   setCoinsUI();
-  document.getElementById('winLead').textContent = `+${reward} coins · ${state.progress[themeId]}/${LEVELS_PER} in ${puzzle.theme.name}`;
+  const progressLine = puzzle.daily
+    ? `Daily clear${streakNote}`
+    : `${state.progress[themeId]}/${LEVELS_PER} in ${puzzle.theme.name}`;
+  document.getElementById('winLead').textContent = `+${reward} coins · ${progressLine}`;
   winModal.hidden = false;
 }
 
 function hintFlash() {
   const left = puzzle.words.filter((w) => !puzzle.found[w]);
   if (!left.length) return;
-  if (state.coins < 5) { toastMsg('Need 5 coins for a hint'); return; }
-  state.coins -= 5;
+  const COST = 5;
+  if (state.coins < COST) { toastMsg(`Need ${COST} coins for a hint`); return; }
+  state.coins -= COST;
   saveState();
   setCoinsUI();
   const w = left[Math.floor(Math.random() * left.length)];
@@ -401,16 +528,17 @@ function hintFlash() {
   const [r, c] = p.cells[0];
   const el = boardEl.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
   if (!el) return;
-  el.style.background = 'rgba(255, 229, 102, 0.85)';
-  setTimeout(() => { el.style.background = ''; }, 1200);
-  toastMsg(`Hint: starts near ${w[0]}…`);
+  el.classList.add('hint-flash');
+  setTimeout(() => el.classList.remove('hint-flash'), 1400);
+  toastMsg(`Hint: starts with ${w[0]} (−${COST}🪙)`);
 }
 
 function revealWord() {
   const left = puzzle.words.filter((w) => !puzzle.found[w]);
   if (!left.length) return;
-  if (state.coins < 15) { toastMsg('Need 15 coins to reveal'); return; }
-  state.coins -= 15;
+  const COST = 15;
+  if (state.coins < COST) { toastMsg(`Need ${COST} coins to reveal`); return; }
+  state.coins -= COST;
   saveState();
   setCoinsUI();
   const w = left[0];
@@ -420,6 +548,7 @@ function revealWord() {
   drawHighlight(puzzle.found[w].cells, color);
   renderWords();
   showPraise();
+  toastMsg(`Revealed ${w} (−${COST}🪙)`);
   if (Object.keys(puzzle.found).length >= puzzle.words.length) onWin();
 }
 
@@ -475,11 +604,15 @@ document.getElementById('btnHome').addEventListener('click', () => {
   renderHub();
 });
 document.getElementById('btnShuffle').addEventListener('click', () => {
-  if (!puzzle) return;
+  if (!puzzle || puzzle.daily) {
+    toastMsg('Daily puzzle can’t be reshuffled');
+    return;
+  }
   startPuzzle(puzzle.themeId);
 });
 document.getElementById('btnHint').addEventListener('click', hintFlash);
 document.getElementById('btnReveal').addEventListener('click', revealWord);
+document.getElementById('dailyBtn').addEventListener('click', startDaily);
 
 document.getElementById('unlockNo').addEventListener('click', () => {
   unlockModal.hidden = true;
@@ -504,6 +637,12 @@ document.getElementById('unlockYes').addEventListener('click', () => {
 
 document.getElementById('winNext').addEventListener('click', () => {
   winModal.hidden = true;
+  if (puzzle?.daily) {
+    playScreen.hidden = true;
+    hubScreen.hidden = false;
+    renderHub();
+    return;
+  }
   startPuzzle(puzzle.themeId);
 });
 document.getElementById('winHub').addEventListener('click', () => {
