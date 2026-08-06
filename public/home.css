@@ -65,8 +65,7 @@ body {
 .row:active { transform: scale(0.985); }
 
 .row.off {
-  opacity: 0.55;
-  pointer-events: none;
+  display: none;
 }
 
 .icon {
@@ -87,7 +86,7 @@ body {
 }
 
 .icon.market {
-  background: linear-gradient(145deg, #94a3b8, #64748b);
+  background: linear-gradient(145deg, #3b82f6, #1d4ed8);
 }
 
 .meta {

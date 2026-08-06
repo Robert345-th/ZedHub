@@ -4,39 +4,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Apps · ZedHub</title>
-  <meta name="theme-color" content="#C2410C" />
+  <meta name="theme-color" content="#134a32" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/apps.css" />
+  <link rel="stylesheet" href="/home.css" />
 </head>
 <body>
-  <header class="bar">
-    <a class="back" href="/events/">← Events</a>
-    <div class="title">Your apps</div>
+  <header class="top">
+    <div class="brand">ZedHub</div>
+    <p class="sub">Choose an app</p>
   </header>
 
-  <main class="grid-wrap">
-    <p class="hint">Tap an app to open it.</p>
-    <div class="grid">
-      <a class="app" href="/events/">
-        <span class="icon events" aria-hidden="true">E</span>
+  <main class="list" aria-label="Apps">
+    <a class="row" href="/events/">
+      <span class="icon events" aria-hidden="true">E</span>
+      <span class="meta">
         <span class="name">Events</span>
-      </a>
-      <div class="app disabled" aria-disabled="true" title="Not in Hub">
-        <span class="icon market" aria-hidden="true">M</span>
+        <span class="desc">Find services for weddings, parties &amp; more</span>
+      </span>
+      <span class="chev" aria-hidden="true">›</span>
+    </a>
+
+    <a class="row" href="https://zedmarket.app" target="_blank" rel="noopener noreferrer">
+      <span class="icon market" aria-hidden="true">M</span>
+      <span class="meta">
         <span class="name">Market</span>
-        <span class="badge">Separate</span>
-      </div>
-    </div>
+        <span class="desc">Buy &amp; sell — opens ZedMarket</span>
+      </span>
+      <span class="chev" aria-hidden="true">›</span>
+    </a>
   </main>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(function () {});
-    }
-  </script>
+  <p class="foot">Tap an app to open it.</p>
 </body>
 </html>
