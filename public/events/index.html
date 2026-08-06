@@ -23,6 +23,8 @@
       --peach: #FFD8B8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body { height: 100%; overflow-y: auto; overscroll-behavior: none; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg);
@@ -135,6 +137,7 @@
     .distance { font-size: 10px; color: var(--orange-hot); font-weight: 600; margin-top: 2px; }
     .status { text-align: center; padding: 60px 20px; color: var(--subtext); }
   </style>
+  <script src="/no-ptr.js"></script>
 </head>
 <body data-nav-active="home">
   <div class="sticky-header">

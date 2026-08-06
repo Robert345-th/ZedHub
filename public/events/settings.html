@@ -13,6 +13,8 @@
       --orange: #C2410C; --cream: #FFF3E8; --price-red: #A3131C; --red-btn: #E01B27;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body { height: 100%; overflow-y: auto; overscroll-behavior: none; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg); color: var(--text); padding-bottom: 24px; overscroll-behavior: none;}
@@ -93,6 +95,7 @@
     .modal-ok-btn { background: var(--price-red); color: #fff; }
     .modal-ok-btn.orange { background: var(--orange); }
   </style>
+  <script src="/no-ptr.js"></script>
 </head>
 <body>
   <div class="topbar">

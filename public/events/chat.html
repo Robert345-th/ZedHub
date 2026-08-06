@@ -13,6 +13,8 @@
       --cream: #FFF3E8; --peach: #FFD8B8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body { height: 100%; overflow-y: auto; overscroll-behavior: none; }
     html, body { height: 100%; overscroll-behavior: none;}
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
@@ -85,6 +87,7 @@
       padding: 11px 16px; color: #fff; font-weight: 700; font-size: 13px; cursor: pointer;
     }
   </style>
+  <script src="/no-ptr.js"></script>
 </head>
 <body>
   <div class="topbar">

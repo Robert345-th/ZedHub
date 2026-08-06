@@ -11,15 +11,23 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
-  min-height: 100vh;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
   background:
     radial-gradient(ellipse 80% 50% at 20% 0%, rgba(56, 189, 120, 0.28), transparent 55%),
     linear-gradient(165deg, #071a12, #0b2e1f 50%, #123528);
   color: var(--ink);
   font-family: "DM Sans", system-ui, sans-serif;
   padding-bottom: 28px;
-  overscroll-behavior: none;
   touch-action: manipulation;
 }
 

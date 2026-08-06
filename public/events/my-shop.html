@@ -14,6 +14,8 @@
       --price-red: #A3131C; --warn-bg: #FFF3E0; --warn-text: #7A3E00;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body { height: 100%; overflow-y: auto; overscroll-behavior: none; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg); color: var(--text); padding-bottom: 72px; overscroll-behavior: none;}
@@ -70,6 +72,7 @@
       stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
     }
   </style>
+  <script src="/no-ptr.js"></script>
 </head>
 <body data-nav-active="shop">
   <div class="topbar">

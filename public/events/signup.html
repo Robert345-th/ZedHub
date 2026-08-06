@@ -14,6 +14,8 @@
     --price-red: #A3131C; --btn-disabled: #E8B4A0;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body { height: 100%; overflow-y: auto; overscroll-behavior: none; }
   body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none;}
   .content { min-height: 100vh; padding: 24px; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; }
   .title { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
@@ -50,6 +52,7 @@
   .form-banner.error { background: #FBE7E8; color: var(--price-red); border: 1px solid #F0C1C4; }
   .form-banner.show { display: block; }
 </style>
+  <script src="/no-ptr.js"></script>
 </head>
 <body>
 <div class="content">

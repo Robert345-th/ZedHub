@@ -12,6 +12,8 @@
       --orange: #C2410C; --orange-hot: #EA580C; --cream: #FFF3E8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body { height: 100%; overflow-y: auto; overscroll-behavior: none; }
     body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none;}
     .topbar {
       background: var(--orange); padding: 16px;
@@ -72,6 +74,7 @@
     .form-banner.success { background: #E7F5EA; color: #1E7A38; border: 1px solid #BFE6C9; }
     .form-banner.show { display: block; }
   </style>
+  <script src="/no-ptr.js"></script>
 </head>
 <body>
   <div class="topbar">

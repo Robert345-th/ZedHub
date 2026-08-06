@@ -7,14 +7,22 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
-  min-height: 100vh;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
   background:
     radial-gradient(ellipse 90% 50% at 50% -10%, #ffd8b8 0%, transparent 55%),
     var(--bg);
   color: var(--ink);
   font-family: "DM Sans", system-ui, sans-serif;
-  overscroll-behavior: none;
   touch-action: manipulation;
 }
 

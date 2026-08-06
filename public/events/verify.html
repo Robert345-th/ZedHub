@@ -12,6 +12,8 @@
     --text: #211D1A; --subtext: #5C5955; --orange: #C2410C; --price-red: #A3131C;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body { height: 100%; overflow-y: auto; overscroll-behavior: none; }
   body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none;}
   .content { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 24px; max-width: 480px; margin: 0 auto; }
   .title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
@@ -28,6 +30,7 @@
   .form-banner.success { background: #E7F5EC; color: #1F7A43; border: 1px solid #BFE5CE; }
   .form-banner.show { display: block; }
 </style>
+  <script src="/no-ptr.js"></script>
 </head>
 <body>
 <div class="content">
