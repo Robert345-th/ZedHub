@@ -60,4 +60,10 @@
   }
 
   window.ZE = { API_URL, api, firstPhoto, formatPrice, uploadImage };
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("/sw.js").catch(function () {});
+    });
+  }
 })();

@@ -18,6 +18,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
     app: 'ZedHub',
+    defaultApp: 'events',
     eventsApi: ZEDEVENTS_API,
     eventsUi: '/events/',
     market: 'excluded',
@@ -44,9 +45,14 @@ app.get('/api/events/status', async (req, res) => {
 });
 
 const publicDir = path.join(__dirname, 'public');
+
+// Opening the site / installed app lands in the real Events app
+app.get('/', (req, res) => {
+  res.redirect(302, '/events/');
+});
+
 app.use(express.static(publicDir));
 
-// Events SPA-ish fallback inside /events
 app.get('/events', (req, res) => {
   res.redirect('/events/');
 });
@@ -56,12 +62,12 @@ app.get('*', (req, res, next) => {
   if (req.path.startsWith('/events/')) {
     return res.sendFile(path.join(publicDir, 'events', 'index.html'));
   }
-  res.sendFile(path.join(publicDir, 'index.html'));
+  res.sendFile(path.join(publicDir, 'apps.html'));
 });
 
 app.listen(PORT, () => {
   console.log(`ZedHub running on http://localhost:${PORT}`);
-  console.log(`Events UI:  http://localhost:${PORT}/events/`);
+  console.log(`Default app: Events → http://localhost:${PORT}/events/`);
   console.log(`Events API: ${ZEDEVENTS_API}`);
   console.log('ZedMarket: excluded (not touched)');
 });

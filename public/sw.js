@@ -1,14 +1,12 @@
-const CACHE = "zedhub-v1";
+const CACHE = "zedhub-events-v2";
 const PRECACHE = [
-  "/",
-  "/index.html",
-  "/styles.css",
-  "/app.js",
+  "/events/",
+  "/events/index.html",
+  "/apps.html",
+  "/apps.css",
   "/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
-  "/events/",
-  "/events/index.html",
 ];
 
 self.addEventListener("install", (event) => {
@@ -30,8 +28,10 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
-  // Never cache live Events API calls
-  if (url.hostname.includes("railway.app") || url.pathname.startsWith("/api/")) {
+  if (url.hostname.includes("railway.app") && !url.hostname.includes("zedhub")) {
+    return;
+  }
+  if (url.pathname.startsWith("/api/") || url.hostname.includes("zedevents-production")) {
     return;
   }
 

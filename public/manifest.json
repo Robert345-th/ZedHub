@@ -1,13 +1,13 @@
 {
-  "name": "ZedHub",
-  "short_name": "ZedHub",
-  "description": "One home for your Zed apps — Events live inside. ZedMarket stays separate.",
-  "start_url": "/",
+  "name": "ZedEvents",
+  "short_name": "ZedEvents",
+  "description": "Find event services in Zambia — catering, DJs, tents, décor and more.",
+  "start_url": "/events/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#f3efe6",
-  "theme_color": "#134a32",
+  "background_color": "#F4F1EC",
+  "theme_color": "#C2410C",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -24,10 +24,15 @@
   ],
   "shortcuts": [
     {
-      "name": "Events",
-      "short_name": "Events",
-      "description": "Open ZedEvents inside Hub",
+      "name": "Home",
+      "short_name": "Home",
       "url": "/events/",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Shop",
+      "short_name": "Shop",
+      "url": "/events/my-shop.html",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
