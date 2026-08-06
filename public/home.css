@@ -101,7 +101,23 @@ body {
   padding: 22px 20px 8px;
   max-width: 480px;
   margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
+
+.home-coins {
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #ffdba8;
+  white-space: nowrap;
+}
+.home-coins[hidden] { display: none !important; }
 
 .brand-row {
   display: flex;
@@ -221,6 +237,41 @@ body {
   text-shadow: 0 1px 8px rgba(0,0,0,0.45);
   max-width: 76px;
   word-break: break-word;
+}
+
+.app-desc {
+  display: none;
+}
+
+#appGrid:has(.app-wide) {
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.app-wide {
+  max-width: none;
+  width: 100%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 18px;
+  padding: 14px 10px 12px;
+  backdrop-filter: blur(8px);
+}
+
+.app-wide .label {
+  max-width: none;
+  font-size: 0.85rem;
+}
+
+.app-wide .app-desc {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.25;
+  margin-top: 2px;
+  text-shadow: none;
 }
 
 .empty {

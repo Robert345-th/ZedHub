@@ -17,6 +17,15 @@
     try {
       localStorage.setItem('nexus_cat', cat);
     } catch (_) {}
+    const coinEl = document.getElementById('homeCoins');
+    if (coinEl) {
+      if (cat === 'games' && window.NexusWallet) {
+        coinEl.hidden = false;
+        coinEl.querySelector('strong').textContent = String(NexusWallet.getCoins());
+      } else {
+        coinEl.hidden = true;
+      }
+    }
   }
 
   topButtons.forEach((btn) => {

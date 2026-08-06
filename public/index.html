@@ -34,6 +34,7 @@
       <img class="brand-logo" src="/icons/icon-192.png" alt="" width="40" height="40" />
       <div class="brand">Nexus</div>
     </div>
+    <div class="home-coins" id="homeCoins" hidden>🪙 <strong>0</strong></div>
   </header>
 
   <nav class="cats" aria-label="Categories">
@@ -64,16 +65,19 @@
   </template>
 
   <template id="tpl-games">
-    <a class="app" href="/games/fruits/?mode=offline">
+    <a class="app app-wide" href="/games/fruits/?mode=offline">
       <img class="icon-img" src="/icons/fruits.png" alt="" width="62" height="62" />
       <span class="label">Fruits</span>
+      <span class="app-desc">Match &amp; clear 100 stages</span>
     </a>
-    <a class="app" href="/games/words/">
+    <a class="app app-wide" href="/games/words/">
       <img class="icon-img" src="/icons/words.png" alt="" width="62" height="62" />
       <span class="label">Words</span>
+      <span class="app-desc">Find words by theme</span>
     </a>
   </template>
 
+  <script src="/games/wallet.js"></script>
   <script src="/home.js"></script>
 </body>
 </html>

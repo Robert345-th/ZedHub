@@ -107,7 +107,7 @@
     <a class="auth-btn" href="/events/login.html" id="authLink">Login</a>
   </div>
 
-  <div id="status" class="center-box">LoadingÖ</div>
+  <div id="status" class="center-box">Loadingù</div>
   <div class="content" id="detail" hidden>
     <div class="media-main" id="mediaMain">
       <div class="thumb-ph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-4 4-2-2-5 5"/></svg></div>
@@ -115,9 +115,9 @@
     <div class="media-thumbs" id="mediaThumbs" hidden></div>
     <div class="panel">
       <div class="card-cat" id="category">Service</div>
-      <h1 class="title" id="title">ó</h1>
-      <div class="vendor" id="vendor">ó</div>
-      <div class="price" id="price">ó</div>
+      <h1 class="title" id="title">ù</h1>
+      <div class="vendor" id="vendor">ù</div>
+      <div class="price" id="price">ù</div>
       <div class="location" id="locationRow" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <span id="location"></span>
@@ -126,6 +126,8 @@
       <div class="actions">
         <button type="button" class="primary-btn" id="msgBtn">Message vendor</button>
         <button type="button" class="ghost-btn" id="favBtn">Save to favorites</button>
+        <button type="button" class="ghost-btn" id="shareBtn">Share link</button>
+        <button type="button" class="ghost-btn" id="remindBtn">Remind me later</button>
         <a class="ghost-btn" id="vendorLink" href="#">View vendor profile</a>
       </div>
     </div>
@@ -134,12 +136,14 @@
   <script src="/events/js/api.js"></script>
   <script src="/events/js/ui.js"></script>
   <script src="/events/js/auth.js"></script>
+  <script src="/events/js/reminders.js"></script>
   <script>
     const params = new URLSearchParams(location.search);
     const id = params.get("id");
     const status = document.getElementById("status");
     const detail = document.getElementById("detail");
     let itemData = null;
+    let isFav = false;
 
     const user = ZEAuth.getUser();
     const authLink = document.getElementById("authLink");
@@ -166,6 +170,31 @@
       document.getElementById("mediaMain").innerHTML = url
         ? `<img src="${url}" alt="" />`
         : `<div class="thumb-ph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-4 4-2-2-5 5"/></svg></div>`;
+    }
+
+    function paintFav() {
+      const btn = document.getElementById("favBtn");
+      btn.textContent = isFav ? "Remove favorite" : "Save to favorites";
+    }
+
+    function paintRemind() {
+      const btn = document.getElementById("remindBtn");
+      const existing = ZEReminders.get(id);
+      if (existing) {
+        const when = new Date(existing.at);
+        btn.textContent = `Reminder ∑ ${when.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`;
+      } else {
+        btn.textContent = "Remind me later";
+      }
+    }
+
+    async function checkFav() {
+      if (!user || !id) return;
+      try {
+        const list = await ZE.api("/favorites");
+        isFav = list.some((s) => String(s.id) === String(id));
+        paintFav();
+      } catch { /* ignore */ }
     }
 
     async function load() {
@@ -215,15 +244,70 @@
           vendorLink.hidden = true;
         }
 
+        paintRemind();
+        checkFav();
+
         document.getElementById("favBtn").onclick = async () => {
           if (!ZEAuth.requireLogin(location.pathname + location.search)) return;
           try {
-            await ZE.api(`/favorites/${id}`, { method: "POST" });
-            document.getElementById("favBtn").textContent = "Saved to favorites";
-            ZEUI.toast("Saved to favorites.", "success");
+            if (isFav) {
+              try {
+                await ZE.api(`/favorites/${id}`, { method: "DELETE" });
+              } catch {
+                await ZE.api(`/favorites/${id}`, { method: "POST" });
+              }
+              isFav = false;
+              ZEUI.toast("Removed from favorites.", "success");
+            } else {
+              await ZE.api(`/favorites/${id}`, { method: "POST" });
+              isFav = true;
+              ZEUI.toast("Saved to favorites.", "success");
+            }
+            paintFav();
           } catch (err) {
-            ZEUI.error(err.message || "Could not save favorite.");
+            ZEUI.error(err.message || "Could not update favorite.");
           }
+        };
+
+        document.getElementById("shareBtn").onclick = async () => {
+          const url = `${location.origin}/events/service.html?id=${encodeURIComponent(id)}`;
+          const data = {
+            title: itemData.title || "ZedEvents",
+            text: `${itemData.title || "Service"} on ZedEvents`,
+            url,
+          };
+          try {
+            if (navigator.share) {
+              await navigator.share(data);
+            } else {
+              await navigator.clipboard.writeText(url);
+              ZEUI.toast("Link copied.", "success");
+            }
+          } catch (err) {
+            if (err && err.name === "AbortError") return;
+            try {
+              await navigator.clipboard.writeText(url);
+              ZEUI.toast("Link copied.", "success");
+            } catch {
+              ZEUI.error("Could not share link.");
+            }
+          }
+        };
+
+        document.getElementById("remindBtn").onclick = () => {
+          const existing = ZEReminders.get(id);
+          if (existing) {
+            ZEReminders.remove(id);
+            paintRemind();
+            ZEUI.toast("Reminder cleared.", "success");
+            return;
+          }
+          const hours = window.prompt("Remind me in how many hours? (e.g. 24)", "24");
+          if (hours == null) return;
+          const h = Math.min(168, Math.max(1, parseInt(hours, 10) || 24));
+          ZEReminders.set(id, itemData.title || "Service", Date.now() + h * 3600 * 1000);
+          paintRemind();
+          ZEUI.toast(`Reminder set for ${h}h.`, "success");
         };
 
         document.getElementById("msgBtn").onclick = () => {

@@ -59,13 +59,13 @@ function loadState() {
     return {};
   }
 }
-function saveState() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch (_) {}
-}
+
 function ensureState() {
-  if (typeof state.coins !== 'number') state.coins = 80;
+  if (window.NexusWallet) {
+    state.coins = NexusWallet.getCoins();
+  } else if (typeof state.coins !== 'number') {
+    state.coins = 80;
+  }
   if (!state.unlocked) state.unlocked = THEMES.filter((t) => t.free).map((t) => t.id);
   if (!state.progress) state.progress = {};
   if (!state.diff) state.diff = 'medium';
@@ -77,6 +77,17 @@ function ensureState() {
   });
 }
 ensureState();
+
+function syncCoinsFromWallet() {
+  if (window.NexusWallet) state.coins = NexusWallet.getCoins();
+}
+
+function saveState() {
+  try {
+    if (window.NexusWallet) state.coins = NexusWallet.getCoins();
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (_) {}
+}
 
 function dayKey() {
   const d = new Date();
@@ -107,7 +118,24 @@ function seededShuffle(arr, rand) {
   return a;
 }
 
+function addCoins(n) {
+  if (window.NexusWallet) state.coins = NexusWallet.add(n);
+  else state.coins = (state.coins || 0) + n;
+}
+
+function spendCoins(n) {
+  if (window.NexusWallet) {
+    const ok = NexusWallet.spend(n);
+    if (ok) state.coins = NexusWallet.getCoins();
+    return ok;
+  }
+  if ((state.coins || 0) < n) return false;
+  state.coins -= n;
+  return true;
+}
+
 function setCoinsUI() {
+  syncCoinsFromWallet();
   document.querySelectorAll('#hubCoins strong, #playCoins strong').forEach((el) => {
     el.textContent = String(state.coins);
   });
@@ -504,7 +532,7 @@ function onWin() {
     if (prev < LEVELS_PER) state.progress[themeId] = prev + 1;
   }
 
-  state.coins += reward;
+  addCoins(reward);
   saveState();
   setCoinsUI();
   const progressLine = puzzle.daily
@@ -518,8 +546,7 @@ function hintFlash() {
   const left = puzzle.words.filter((w) => !puzzle.found[w]);
   if (!left.length) return;
   const COST = 5;
-  if (state.coins < COST) { toastMsg(`Need ${COST} coins for a hint`); return; }
-  state.coins -= COST;
+  if (!spendCoins(COST)) { toastMsg(`Need ${COST} coins for a hint`); return; }
   saveState();
   setCoinsUI();
   const w = left[Math.floor(Math.random() * left.length)];
@@ -537,8 +564,7 @@ function revealWord() {
   const left = puzzle.words.filter((w) => !puzzle.found[w]);
   if (!left.length) return;
   const COST = 15;
-  if (state.coins < COST) { toastMsg(`Need ${COST} coins to reveal`); return; }
-  state.coins -= COST;
+  if (!spendCoins(COST)) { toastMsg(`Need ${COST} coins to reveal`); return; }
   saveState();
   setCoinsUI();
   const w = left[0];
@@ -620,11 +646,10 @@ document.getElementById('unlockNo').addEventListener('click', () => {
 });
 document.getElementById('unlockYes').addEventListener('click', () => {
   if (!pendingUnlock) return;
-  if (state.coins < pendingUnlock.price) {
+  if (!spendCoins(pendingUnlock.price)) {
     toastMsg('Not enough coins');
     return;
   }
-  state.coins -= pendingUnlock.price;
   state.unlocked.push(pendingUnlock.id);
   saveState();
   unlockModal.hidden = true;

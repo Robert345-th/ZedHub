@@ -136,7 +136,7 @@
       boosters: { hammer: 3, shuffle: 2, moves: 2 },
       theme: 'meadow',
       daily: {},
-      coins: 120,
+      coins: 0,
       playerName: 'You',
       leaderboard: {},
     };
@@ -146,9 +146,9 @@
     try {
       const raw = localStorage.getItem('fruits_offline_v2') || localStorage.getItem('fruits_offline');
       const p = raw ? { ...defaultProgress(), ...JSON.parse(raw) } : defaultProgress();
-      if (typeof p.coins !== 'number') p.coins = 120;
       if (!p.leaderboard) p.leaderboard = {};
       if (!p.playerName) p.playerName = 'You';
+      p.coins = window.NexusWallet ? NexusWallet.getCoins() : (typeof p.coins === 'number' ? p.coins : 120);
       return p;
     } catch (_) {
       return defaultProgress();
@@ -157,10 +157,18 @@
 
   function saveProgress() {
     try {
+      if (window.NexusWallet) progress.coins = NexusWallet.getCoins();
       localStorage.setItem('fruits_offline_v2', JSON.stringify(progress));
     } catch (_) {}
   }
 
+  function addCoins(n) {
+    if (window.NexusWallet) {
+      progress.coins = NexusWallet.add(n);
+    } else {
+      progress.coins = (progress.coins || 0) + n;
+    }
+  }
   function refreshLives() {
     let lives = progress.lives ?? MAX_LIVES;
     let lifeAt = progress.lifeAt || Date.now();
@@ -829,7 +837,7 @@
     if (won) {
       soundWin();
       const coinReward = 12 + stars * 8 + (mode === 'weekly' ? 15 : 0) + (mode === 'daily' ? 10 : 0);
-      progress.coins = (progress.coins || 0) + coinReward;
+      addCoins(coinReward);
       if (els.coinsVal) els.coinsVal.textContent = String(progress.coins);
 
       if (mode === 'campaign') {
@@ -898,7 +906,7 @@
           : `Collect ${level.goalNeed} ${FRUITS[level.goalType].emoji}`;
     renderBoard();
     updateBoostUi();
-    if (els.coinsVal) els.coinsVal.textContent = String(progress.coins || 0);
+    if (els.coinsVal) els.coinsVal.textContent = String(window.NexusWallet ? NexusWallet.getCoins() : (progress.coins || 0));
     show(els.play);
     beep(440, 0.05);
   }

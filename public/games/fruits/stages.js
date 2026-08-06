@@ -24,7 +24,7 @@
       boosters: { hammer: 3, shuffle: 2, moves: 2 },
       theme: 'meadow',
       daily: {},
-      coins: 120,
+      coins: 0,
       playerName: 'You',
       leaderboard: {},
     };
@@ -34,10 +34,10 @@
     try {
       const raw = localStorage.getItem(KEY) || localStorage.getItem('fruits_offline');
       const p = raw ? { ...defaultProgress(), ...JSON.parse(raw) } : defaultProgress();
-      if (typeof p.coins !== 'number') p.coins = 120;
       if (!p.leaderboard) p.leaderboard = {};
       if (!p.playerName) p.playerName = 'You';
       if (!p.boosters) p.boosters = { hammer: 3, shuffle: 2, moves: 2 };
+      p.coins = window.NexusWallet ? NexusWallet.getCoins() : (typeof p.coins === 'number' ? p.coins : 120);
       return p;
     } catch (_) {
       return defaultProgress();
@@ -46,8 +46,42 @@
 
   function saveProgress() {
     try {
+      if (window.NexusWallet) {
+        progress.coins = NexusWallet.getCoins();
+      }
       localStorage.setItem(KEY, JSON.stringify(progress));
     } catch (_) {}
+  }
+
+  function getCoins() {
+    return window.NexusWallet ? NexusWallet.getCoins() : (progress.coins || 0);
+  }
+
+  function setCoins(n) {
+    if (window.NexusWallet) {
+      progress.coins = NexusWallet.setCoins(n);
+    } else {
+      progress.coins = Math.max(0, Math.floor(n || 0));
+    }
+  }
+
+  function addCoins(n) {
+    if (window.NexusWallet) {
+      progress.coins = NexusWallet.add(n);
+    } else {
+      progress.coins = (progress.coins || 0) + n;
+    }
+  }
+
+  function spendCoins(n) {
+    if (window.NexusWallet) {
+      const ok = NexusWallet.spend(n);
+      if (ok) progress.coins = NexusWallet.getCoins();
+      return ok;
+    }
+    if ((progress.coins || 0) < n) return false;
+    progress.coins -= n;
+    return true;
   }
 
   function isoWeek(d) {
@@ -101,6 +135,7 @@
   }
 
   function refreshCoins() {
+    progress.coins = getCoins();
     coinsVal.textContent = String(progress.coins || 0);
     const shopCoins = document.getElementById('shopCoins');
     if (shopCoins) shopCoins.textContent = String(progress.coins || 0);
@@ -180,11 +215,10 @@
     if (!row) return;
     const item = SHOP[row.dataset.buy];
     if (!item) return;
-    if ((progress.coins || 0) < item.cost) {
+    if (!spendCoins(item.cost)) {
       toastMsg('Not enough coins');
       return;
     }
-    progress.coins -= item.cost;
     item.apply();
     saveProgress();
     refreshCoins();

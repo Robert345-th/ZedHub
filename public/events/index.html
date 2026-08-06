@@ -97,6 +97,25 @@
       scrollbar-width: none;
     }
     .chips-row::-webkit-scrollbar { display: none; }
+    .sort-row {
+      display: flex; gap: 8px; overflow-x: auto; padding: 0 12px 12px;
+      scrollbar-width: none;
+    }
+    .sort-row::-webkit-scrollbar { display: none; }
+    .sort-chip {
+      flex: 0 0 auto; border: 1px solid var(--border); background: var(--card);
+      border-radius: 999px; padding: 7px 12px; font-size: 12px; font-weight: 600;
+      color: var(--subtext); cursor: pointer;
+    }
+    .sort-chip.active { background: var(--cream); border-color: var(--orange); color: var(--orange); }
+    .remind-banner {
+      margin: 0 12px 10px; padding: 12px 14px; border-radius: 14px;
+      background: #FFF3E8; border: 1px solid #FFD8B8; color: var(--text);
+      font-size: 13px; line-height: 1.4;
+    }
+    .remind-banner[hidden] { display: none !important; }
+    .remind-banner strong { display: block; margin-bottom: 4px; color: var(--orange); }
+    .remind-banner a { color: var(--orange); font-weight: 700; }
     .chip {
       background: var(--card); border: 1px solid var(--border); border-radius: 20px;
       padding: 7px 14px; font-size: 13px; white-space: nowrap; cursor: pointer; flex-shrink: 0;
@@ -181,23 +200,34 @@
       <button type="button" class="chip active" data-id="">All</button>
       <button type="button" class="chip" data-id="__nearby__">Nearby</button>
     </div>
+    <div class="sort-row" id="sortRow" aria-label="Sort">
+      <button type="button" class="sort-chip active" data-sort="featured">Featured</button>
+      <button type="button" class="sort-chip" data-sort="newest">Newest</button>
+      <button type="button" class="sort-chip" data-sort="price-asc">Price ?</button>
+      <button type="button" class="sort-chip" data-sort="price-desc">Price ?</button>
+      <button type="button" class="sort-chip" data-sort="az">A?Z</button>
+    </div>
   </div>
 
+  <div class="remind-banner" id="remindBanner" hidden></div>
   <div id="status" class="status">Loading services?</div>
   <div class="grid" id="grid" hidden></div>
 
   <script src="/events/js/api.js"></script>
   <script src="/events/js/auth.js"></script>
   <script src="/events/js/location.js"></script>
+  <script src="/events/js/reminders.js"></script>
   <script src="/events/js/bottom-nav.js"></script>
   <script>
     const grid = document.getElementById("grid");
     const status = document.getElementById("status");
     const catsEl = document.getElementById("cats");
     const search = document.getElementById("search");
+    const sortRow = document.getElementById("sortRow");
     let services = [];
     let activeCategory = "";
     let sortNearby = false;
+    let sortMode = "featured";
     let myCoords = ZELocation.getSavedCoords();
 
     function goLogin(next) {
@@ -323,7 +353,58 @@
           return Number.isFinite(lat) && Number.isFinite(lng);
         });
       }
+      filtered = sortList(filtered);
       renderCards(filtered);
+    }
+
+    function sortList(rows) {
+      const list = rows.slice();
+      if (sortMode === "az") {
+        list.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+      } else if (sortMode === "price-asc") {
+        list.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+      } else if (sortMode === "price-desc") {
+        list.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+      } else if (sortMode === "newest") {
+        list.sort((a, b) => {
+          const ta = new Date(a.created_at || a.updated_at || 0).getTime();
+          const tb = new Date(b.created_at || b.updated_at || 0).getTime();
+          return tb - ta;
+        });
+      } else if (sortNearby && myCoords) {
+        // featured nearby = closest first (distance already attached in render path)
+        list.sort((a, b) => (a.distanceKm || 1e9) - (b.distanceKm || 1e9));
+      } else {
+        // featured: items with photos first, then price presence
+        list.sort((a, b) => {
+          const pa = ZE.firstPhoto(a.photos) ? 0 : 1;
+          const pb = ZE.firstPhoto(b.photos) ? 0 : 1;
+          if (pa !== pb) return pa - pb;
+          return String(a.title || "").localeCompare(String(b.title || ""));
+        });
+      }
+      return list;
+    }
+
+    function showReminders() {
+      const banner = document.getElementById("remindBanner");
+      if (!banner || !window.ZEReminders) return;
+      const due = ZEReminders.due();
+      const soon = ZEReminders.upcoming(24);
+      if (!due.length && !soon.length) {
+        banner.hidden = true;
+        return;
+      }
+      const item = due[0] || soon[0];
+      const label = due.length
+        ? `Reminder due: ${item.title}`
+        : `Upcoming reminder: ${item.title}`;
+      banner.hidden = false;
+      banner.innerHTML = `<strong>${label}</strong><a href="/events/service.html?id=${encodeURIComponent(item.id)}">Open service</a>`;
+      if (due.length) {
+        // auto-clear due after showing once this session
+        due.forEach((r) => ZEReminders.remove(r.id));
+      }
     }
 
     async function loadCategories() {
@@ -352,7 +433,7 @@
 
     async function loadServices(force) {
       status.hidden = false;
-      status.textContent = "Loading services?";
+        status.textContent = "Loading services?";
       grid.hidden = true;
       try {
         if (activeCategory && activeCategory !== "__nearby__") {
@@ -405,7 +486,16 @@
     });
 
     search.addEventListener("input", applyFilter);
+    sortRow.addEventListener("click", (e) => {
+      const btn = e.target.closest(".sort-chip");
+      if (!btn) return;
+      sortRow.querySelectorAll(".sort-chip").forEach((el) => el.classList.remove("active"));
+      btn.classList.add("active");
+      sortMode = btn.dataset.sort || "featured";
+      applyFilter();
+    });
     paintAuth();
+    showReminders();
     loadCategories();
     loadServices(true);
   </script>
