@@ -32,26 +32,36 @@
 
   show(start);
 
-  // Opening splash: Nexus logo → powered by SAVANNA (2s) → home
+  // Savanna splash only when entering the app (once per session), not on every home visit
   (function runSplash() {
     const splash = document.getElementById('splash');
     const nexus = document.getElementById('splashNexus');
     const savanna = document.getElementById('splashSavanna');
-    if (!splash || !nexus || !savanna) return;
+    if (!splash || !savanna) return;
 
-    // Brief Nexus mark, then Savanna for 2 seconds (same dark bg — no orange flash)
+    let alreadyShown = false;
+    try {
+      alreadyShown = sessionStorage.getItem('nexus_savanna_splash') === '1';
+    } catch (_) {}
+
+    if (alreadyShown) {
+      splash.remove();
+      return;
+    }
+
+    try {
+      sessionStorage.setItem('nexus_savanna_splash', '1');
+    } catch (_) {}
+
+    // Skip NX phase — OS already shows the app icon; go straight to Savanna
+    if (nexus) nexus.hidden = true;
+    savanna.hidden = false;
+
     setTimeout(() => {
-      nexus.classList.add('fade-out');
-      setTimeout(() => {
-        nexus.hidden = true;
-        savanna.hidden = false;
-        setTimeout(() => {
-          splash.classList.add('hide');
-          splash.setAttribute('aria-hidden', 'true');
-          setTimeout(() => splash.remove(), 400);
-        }, 2000);
-      }, 200);
-    }, 700);
+      splash.classList.add('hide');
+      splash.setAttribute('aria-hidden', 'true');
+      setTimeout(() => splash.remove(), 400);
+    }, 2000);
   })();
 
   // Bottom Install button — Chrome always shows its own confirm sheet (required).
