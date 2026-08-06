@@ -40,6 +40,25 @@
 
   show(start);
 
+  // Opening splash: Nexus logo → powered by SAVANNA (2s) → home
+  (function runSplash() {
+    const splash = document.getElementById('splash');
+    const nexus = document.getElementById('splashNexus');
+    const savanna = document.getElementById('splashSavanna');
+    if (!splash || !nexus || !savanna) return;
+
+    // Brief Nexus mark, then Savanna for 2 seconds
+    setTimeout(() => {
+      nexus.hidden = true;
+      savanna.hidden = false;
+      setTimeout(() => {
+        splash.classList.add('hide');
+        splash.setAttribute('aria-hidden', 'true');
+        setTimeout(() => splash.remove(), 400);
+      }, 2000);
+    }, 700);
+  })();
+
   // Bottom Install button — Chrome always shows its own confirm sheet (required).
   const downloadBar = document.getElementById('downloadBar');
   const downloadBtn = document.getElementById('downloadBtn');

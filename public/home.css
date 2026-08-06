@@ -32,6 +32,58 @@ body {
     linear-gradient(165deg, #3b1208 0%, #7c2d12 45%, #9a3412 100%);
 }
 
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(165deg, #3b1208 0%, #7c2d12 45%, #9a3412 100%);
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.splash.hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.splash-nexus img {
+  width: 88px;
+  height: 88px;
+  border-radius: 22px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+  animation: splashIn 0.4s ease both;
+}
+
+.splash-savanna {
+  text-align: center;
+  animation: splashIn 0.45s ease both;
+}
+
+.splash-powered {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: lowercase;
+  color: rgba(255, 248, 243, 0.72);
+  margin-bottom: 10px;
+}
+
+.splash-name {
+  font-family: Syne, sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.2rem, 10vw, 3.2rem);
+  letter-spacing: 0.22em;
+  color: #fff8f3;
+  text-indent: 0.22em;
+}
+
+@keyframes splashIn {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 .top {
   padding: 22px 20px 8px;
   max-width: 480px;
