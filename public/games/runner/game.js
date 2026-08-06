@@ -14,7 +14,11 @@ const startBtn = document.getElementById('startBtn');
 
 const LANE_X = [-2.2, 0, 2.2];
 const TRACK_LEN = 220;
-const CHAR_SCALE = 0.012;
+// Mixamo FBX is in cm — ~0.011–0.013 puts a runner at ~1.8–2.1 world units
+const CHAR_SCALE = 0.0115;
+// Platform top (platform y=0.1, height 0.35) — feet must sit here, not at y=0
+const GROUND_Y = 0.28;
+const FOOT_CLEARANCE = 0.03;
 
 function makeToonGradient() {
   const data = new Uint8Array([90, 90, 90, 255, 170, 170, 170, 255, 255, 255, 255, 255]);
@@ -152,8 +156,110 @@ const player = {
   mixer: null,
   actions: {},
   current: null,
+  footLift: 0,
 };
 scene.add(player.root);
+
+function isHipPositionTrack(trackName) {
+  // Mixamo root motion lives on the Hips bone — that is what sinks legs into the sand
+  const lower = trackName.toLowerCase();
+  if (!lower.endsWith('.position')) return false;
+  return lower.includes('hips') || lower.includes('pelvis') || lower.startsWith('root.');
+}
+
+/** Keep limb motion, kill hip translation so the runner stays planted in-place. */
+function stripHipRootMotion(clip) {
+  if (!clip || !clip.tracks) return clip;
+  clip.tracks = clip.tracks.filter((t) => !isHipPositionTrack(t.name));
+  return clip;
+}
+
+function softSkinMaterials(root) {
+  root.traverse((c) => {
+    if (!c.isMesh) return;
+    c.castShadow = true;
+    c.receiveShadow = true;
+    const mats = Array.isArray(c.material) ? c.material : [c.material];
+    mats.forEach((m) => {
+      if (!m) return;
+      m.side = THREE.FrontSide;
+      if ('skinning' in m) m.skinning = true;
+      if (m.map) {
+        m.map.colorSpace = THREE.SRGBColorSpace;
+        m.map.anisotropy = 4;
+      }
+      if ('metalness' in m) m.metalness = Math.min(m.metalness || 0, 0.15);
+      if ('roughness' in m) m.roughness = Math.max(m.roughness || 0.7, 0.55);
+      m.needsUpdate = true;
+    });
+  });
+}
+
+/**
+ * Lowest world-Y of Mixamo foot / toe bones (Box3 lies for skinned meshes).
+ */
+function lowestFootWorldY(model) {
+  model.updateMatrixWorld(true);
+  let lowest = Infinity;
+  const pos = new THREE.Vector3();
+  model.traverse((o) => {
+    if (!o.isBone) return;
+    const n = o.name;
+    if (/Hand|Finger|Thumb|Index|Middle|Ring|Pinky/i.test(n)) return;
+    if (!/(Left|Right)(Foot|Toe)/i.test(n)) return;
+    o.getWorldPosition(pos);
+    lowest = Math.min(lowest, pos.y);
+  });
+  return lowest;
+}
+
+/**
+ * Sample the run cycle and lift the model so the deepest foot plant
+ * sits on local y=0 (parent root then sits on GROUND_Y).
+ */
+function alignFeetToGround(model, mixer, runAction) {
+  const samples = runAction ? 20 : 1;
+  const duration = runAction ? Math.max(0.01, runAction.getClip().duration || 1) : 0;
+  let lowest = Infinity;
+
+  if (runAction) {
+    runAction.reset().play();
+    runAction.setEffectiveWeight(1);
+  }
+
+  for (let i = 0; i < samples; i++) {
+    if (mixer && runAction) mixer.setTime((i / samples) * duration);
+    const y = lowestFootWorldY(model);
+    if (Number.isFinite(y)) lowest = Math.min(lowest, y);
+  }
+
+  if (mixer) mixer.setTime(0);
+
+  // Fallback: mesh AABB if bones were missing
+  if (!Number.isFinite(lowest) || lowest === Infinity) {
+    model.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(model);
+    lowest = box.min.y;
+  }
+
+  // Raise so deepest foot clears the sand during the whole run loop
+  model.position.y += -lowest + FOOT_CLEARANCE;
+  player.footLift = model.position.y;
+}
+
+function syncPlayerPose() {
+  const baseY = GROUND_Y + player.y;
+  if (player.sliding) {
+    // Crouch without squashing into the sand (old scale.y=0.55 buried the feet)
+    player.root.scale.set(1, 1, 1);
+    player.root.rotation.x = 0.55;
+    player.root.position.set(player.x, baseY + 0.15, 0.2);
+  } else {
+    player.root.scale.set(1, 1, 1);
+    player.root.rotation.x = 0;
+    player.root.position.set(player.x, baseY, 0);
+  }
+}
 
 function playAnim(name, fade = 0.2) {
   if (!player.mixer || !player.actions[name]) return;
@@ -170,46 +276,55 @@ async function loadCharacter() {
 
   const runObj = await loader.loadAsync('./models/run.fbx');
   runObj.scale.setScalar(CHAR_SCALE);
-  runObj.traverse((c) => {
-    if (c.isMesh) {
-      c.castShadow = true;
-      c.receiveShadow = true;
-    }
-  });
-  // Face away from camera / down the track (-Z)
+  softSkinMaterials(runObj);
+  // Face down the track (-Z), away from camera
   runObj.rotation.y = Math.PI;
+  runObj.position.set(0, 0, 0);
   player.model = runObj;
   player.root.add(runObj);
 
   player.mixer = new THREE.AnimationMixer(runObj);
+
   if (runObj.animations && runObj.animations.length) {
-    const clip = runObj.animations[0];
+    const clip = stripHipRootMotion(runObj.animations[0]);
+    clip.name = 'run';
     player.actions.run = player.mixer.clipAction(clip);
     player.actions.run.setLoop(THREE.LoopRepeat);
+    player.actions.run.timeScale = 1.15;
   }
 
-  // Jump clips from other FBX (same Mixamo character)
+  // Jump clips share the same Mixamo skeleton — strip hip Y so our jump physics own height
+  async function loadJumpClip(url) {
+    const obj = await loader.loadAsync(url);
+    if (!obj.animations || !obj.animations.length) return null;
+    const clip = stripHipRootMotion(obj.animations[0]);
+    clip.name = 'jump';
+    return clip;
+  }
+
   try {
-    const jumpObj = await loader.loadAsync('./models/jump.fbx');
-    if (jumpObj.animations && jumpObj.animations.length) {
-      const clip = jumpObj.animations[0];
-      clip.name = 'jump';
-      player.actions.jump = player.mixer.clipAction(clip);
+    const jumpClip = await loadJumpClip('./models/jump.fbx');
+    if (jumpClip) {
+      player.actions.jump = player.mixer.clipAction(jumpClip);
       player.actions.jump.setLoop(THREE.LoopOnce);
       player.actions.jump.clampWhenFinished = true;
     }
   } catch (_) {}
 
-  try {
-    const bigObj = await loader.loadAsync('./models/bigjump.fbx');
-    if (bigObj.animations && bigObj.animations.length && !player.actions.jump) {
-      const clip = bigObj.animations[0];
-      clip.name = 'jump';
-      player.actions.jump = player.mixer.clipAction(clip);
-      player.actions.jump.setLoop(THREE.LoopOnce);
-      player.actions.jump.clampWhenFinished = true;
-    }
-  } catch (_) {}
+  if (!player.actions.jump) {
+    try {
+      const bigClip = await loadJumpClip('./models/bigjump.fbx');
+      if (bigClip) {
+        player.actions.jump = player.mixer.clipAction(bigClip);
+        player.actions.jump.setLoop(THREE.LoopOnce);
+        player.actions.jump.clampWhenFinished = true;
+      }
+    } catch (_) {}
+  }
+
+  // Plant feet on the sandy platform (sample full run loop)
+  alignFeetToGround(runObj, player.mixer, player.actions.run);
+  syncPlayerPose();
 
   playAnim('run', 0);
   characterReady = true;
@@ -339,9 +454,7 @@ function reset() {
   player.sliding = false;
   player.slideT = 0;
   player.alive = true;
-  player.root.position.set(player.x, 0, 0);
-  player.root.scale.set(1, 1, 1);
-  player.root.rotation.set(0, 0, 0);
+  syncPlayerPose();
   score = 0;
   coins = 0;
   distance = 0;
@@ -423,15 +536,10 @@ function update(dt) {
     player.slideT -= dt;
     if (player.slideT <= 0) {
       player.sliding = false;
-      player.root.scale.set(1, 1, 1);
-      player.root.rotation.x = 0;
-    } else {
-      player.root.scale.set(1, 0.55, 1);
-      player.root.rotation.x = 0.45;
     }
   }
 
-  player.root.position.set(player.x, player.y, 0);
+  syncPlayerPose();
 
   const dz = speed * dt;
   entities.forEach((e) => {
