@@ -14,21 +14,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="fruits.css" />
 </head>
-<body>
+<body class="theme-meadow">
   <div class="sky" aria-hidden="true"></div>
 
   <header class="bar">
     <a class="back" href="/">‹ Nexus</a>
     <div class="brand">Fruits</div>
-    <div class="mode-pill" id="modePill">OFFLINE</div>
+    <div class="lives-pill" id="livesPill" title="Lives">❤️ <span id="livesVal">5</span></div>
   </header>
 
   <section class="screen" id="menuScreen">
     <div class="hero-fruit" aria-hidden="true">🍓🍋🍇🍉🍊🫐</div>
-    <h1>Match fruits.<br />Beat 100 levels.</h1>
-    <p class="lead" id="menuLead">Offline campaign — smooth swaps, combos & power fruits. Gets harder as you climb.</p>
-    <button type="button" class="btn primary" id="playBtn">Play</button>
+    <h1>Fruits</h1>
+    <p class="lead">100 levels, boosters, ice, daily challenge &amp; 2-player fun.</p>
+
+    <button type="button" class="btn primary" id="mapBtn">Level Map</button>
+    <button type="button" class="btn" id="continueBtn">Continue</button>
+    <button type="button" class="btn" id="dailyBtn">Daily Challenge</button>
+    <button type="button" class="btn" id="versusBtn">2 Players</button>
+
+    <div class="theme-row" aria-label="Themes">
+      <button type="button" class="theme-chip active" data-theme="meadow">Meadow</button>
+      <button type="button" class="theme-chip" data-theme="night">Night</button>
+      <button type="button" class="theme-chip" data-theme="jungle">Jungle</button>
+      <button type="button" class="theme-chip" data-theme="candy">Candy</button>
+    </div>
     <p class="meta" id="progressMeta"></p>
+  </section>
+
+  <section class="screen" id="mapScreen" hidden>
+    <h2>Level Map</h2>
+    <p class="lead">Tap a unlocked level. Stars show your best.</p>
+    <div class="map-grid" id="mapGrid"></div>
+    <button type="button" class="btn ghost" id="mapBackBtn">Back</button>
   </section>
 
   <section class="screen play" id="playScreen" hidden>
@@ -38,24 +56,33 @@
         <span class="hud-value" id="movesVal">20</span>
       </div>
       <div class="hud-mid">
-            <div class="level-chip" id="levelChip">Lv <span id="levelVal">1</span></div>
+        <div class="level-chip" id="levelChip">Lv 1</div>
         <div class="goal" id="goalBox">
           <span class="goal-emoji" id="goalEmoji">🍓</span>
           <span id="goalCount">0/10</span>
         </div>
         <div class="score-line">Score <strong id="scoreVal">0</strong></div>
+        <div class="turn-line" id="turnLine" hidden>P1 turn</div>
       </div>
       <div class="hud-cell stars" id="starsBox" aria-label="Stars">
-        <span class="star on">★</span><span class="star">★</span><span class="star">★</span>
+        <span class="star">★</span><span class="star">★</span><span class="star">★</span>
       </div>
     </div>
 
     <div class="board-frame">
       <div class="board" id="board" role="grid" aria-label="Fruit board"></div>
       <div class="fx" id="fx" aria-hidden="true"></div>
+      <div class="fly-layer" id="flyLayer" aria-hidden="true"></div>
     </div>
 
-    <div class="hint-bar" id="hintBar">Match 3 or more in a line</div>
+    <div class="boosters" id="boosters">
+      <button type="button" class="boost" data-boost="hammer" id="boostHammer">🔨 <span>3</span></button>
+      <button type="button" class="boost" data-boost="shuffle" id="boostShuffle">🔀 <span>2</span></button>
+      <button type="button" class="boost" data-boost="moves" id="boostMoves">➕ <span>2</span></button>
+    </div>
+
+    <div class="hint-bar" id="hintBar">Match 3 or more</div>
+    <button type="button" class="btn ghost" id="quitBtn">Quit</button>
   </section>
 
   <section class="screen" id="resultScreen" hidden>
@@ -63,9 +90,10 @@
     <div class="result-stars" id="resultStars">★★★</div>
     <p class="lead" id="resultScore">Score 0</p>
     <p class="meta" id="resultExtra"></p>
-    <button type="button" class="btn primary" id="nextBtn">Next level</button>
+    <button type="button" class="btn primary" id="nextBtn">Next</button>
+    <button type="button" class="btn" id="continueLifeBtn" hidden>Continue (−1 ❤️)</button>
     <button type="button" class="btn ghost" id="retryBtn">Retry</button>
-    <a class="btn ghost link" href="/">Back to Nexus</a>
+    <button type="button" class="btn ghost" id="resultMapBtn">Level Map</button>
   </section>
 
   <script src="fruits.js"></script>
