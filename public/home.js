@@ -8,34 +8,63 @@
 
   const grid = document.getElementById('appGrid');
   const intro = document.getElementById('introDesc');
-  const buttons = Array.from(document.querySelectorAll('.cat'));
+  const subcats = document.getElementById('gameSubcats');
+  const topButtons = Array.from(document.querySelectorAll('.cats > .cat'));
+  const gameButtons = Array.from(document.querySelectorAll('#gameSubcats .cat'));
 
-  function show(cat) {
-    const tpl = document.getElementById('tpl-' + cat);
+  let gameMode = 'online';
+
+  function fill(tplId, text) {
+    const tpl = document.getElementById(tplId);
     if (!grid || !tpl) return;
-
-    if (intro) intro.textContent = INFO[cat] || '';
-
+    if (intro) intro.textContent = text || '';
     grid.innerHTML = '';
     grid.appendChild(tpl.content.cloneNode(true));
+  }
 
-    buttons.forEach((btn) => {
+  function show(cat) {
+    topButtons.forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.cat === cat);
     });
 
+    if (cat === 'games') {
+      if (subcats) subcats.hidden = false;
+      gameButtons.forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.game === gameMode);
+      });
+      fill('tpl-' + gameMode, INFO[gameMode]);
+    } else {
+      if (subcats) subcats.hidden = true;
+      fill('tpl-' + cat, INFO[cat]);
+    }
+
     try {
       localStorage.setItem('zedhub_cat', cat);
+      if (cat === 'games') localStorage.setItem('zedhub_game_mode', gameMode);
     } catch (_) {}
   }
 
-  buttons.forEach((btn) => {
+  topButtons.forEach((btn) => {
     btn.addEventListener('click', () => show(btn.dataset.cat));
+  });
+
+  gameButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      gameMode = btn.dataset.game;
+      show('games');
+    });
   });
 
   let start = 'events';
   try {
     const saved = localStorage.getItem('zedhub_cat');
-    if (INFO[saved]) start = saved;
+    if (saved === 'events' || saved === 'market' || saved === 'games') start = saved;
+    if (saved === 'online' || saved === 'offline') {
+      start = 'games';
+      gameMode = saved;
+    }
+    const savedMode = localStorage.getItem('zedhub_game_mode');
+    if (savedMode === 'online' || savedMode === 'offline') gameMode = savedMode;
   } catch (_) {}
 
   show(start);
