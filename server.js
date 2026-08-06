@@ -83,6 +83,14 @@ app.get('/games/fruits', (req, res) => {
   res.redirect('/games/fruits/');
 });
 
+app.get('/games/ludo/', (req, res) => {
+  res.sendFile(path.join(publicDir, 'games', 'ludo', 'index.html'));
+});
+
+app.get('/games/fruits/', (req, res) => {
+  res.sendFile(path.join(publicDir, 'games', 'fruits', 'index.html'));
+});
+
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io')) return next();
   if (req.path.startsWith('/events/')) {
