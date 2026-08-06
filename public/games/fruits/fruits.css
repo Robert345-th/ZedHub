@@ -246,23 +246,34 @@ html, body {
   font-size: clamp(1.35rem, 5.5vw, 1.85rem);
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.08);
-  transition: transform 0.12s ease, filter 0.12s ease;
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), filter 0.18s ease, background 0.18s ease;
   cursor: pointer;
+  will-change: transform;
+}
+
+.cell.empty {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .cell.selected {
-  transform: scale(1.08);
-  filter: drop-shadow(0 0 8px #ffe082);
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 10px #ffe082);
   z-index: 2;
   outline: 2px solid #ffe082;
+  background: rgba(255, 224, 130, 0.22);
+}
+
+.cell.swap {
+  animation: swapPulse 0.16s ease;
 }
 
 .cell.pop {
-  animation: pop 0.28s ease forwards;
+  animation: pop 0.26s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .cell.fall {
-  animation: fall 0.22s ease;
+  animation: fall 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .cell.special::after {
@@ -275,14 +286,29 @@ html, body {
   text-shadow: 0 0 4px #000;
 }
 
+.board.shake {
+  animation: shake 0.28s ease;
+}
+
+@keyframes swapPulse {
+  50% { transform: scale(1.06); }
+}
+
 @keyframes pop {
   0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(0.2); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 0.85; }
+  100% { transform: scale(0.15); opacity: 0; }
 }
 
 @keyframes fall {
-  from { transform: translateY(-40%); opacity: 0.4; }
-  to { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(-55%) scale(0.92); opacity: 0.35; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 .fx {

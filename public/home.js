@@ -2,8 +2,8 @@
   const INFO = {
     events: 'Find and book event services — catering, DJs, tents, décor and more.',
     market: 'Buy and sell on ZedMarket. Opens the live Market app.',
-    online: 'Play live Ludo with friends, or today’s ZedFruits daily challenge.',
-    offline: 'Play Ludo vs bots, or climb ZedFruits campaign levels.',
+    online: 'ZedLudo live rooms + ZedFruits online campaign (100 levels).',
+    offline: 'Play ZedLudo against bots on this phone.',
   };
 
   const grid = document.getElementById('appGrid');

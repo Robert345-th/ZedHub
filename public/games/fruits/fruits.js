@@ -9,22 +9,33 @@
     { id: 5, emoji: '🫐', name: 'berry' },
   ];
 
-  const LEVELS = [
-    { moves: 22, goalType: 0, goalNeed: 12, starScores: [800, 1600, 2600] },
-    { moves: 20, goalType: 1, goalNeed: 14, starScores: [900, 1800, 2800] },
-    { moves: 20, goalType: 2, goalNeed: 16, starScores: [1000, 2000, 3200] },
-    { moves: 18, goalType: 3, goalNeed: 16, starScores: [1100, 2200, 3400] },
-    { moves: 18, goalType: 4, goalNeed: 18, starScores: [1200, 2400, 3600] },
-    { moves: 16, goalType: 5, goalNeed: 18, starScores: [1300, 2600, 3800] },
-    { moves: 16, goalType: 0, goalNeed: 22, starScores: [1500, 3000, 4500] },
-    { moves: 15, goalType: 2, goalNeed: 24, starScores: [1600, 3200, 4800] },
-    { moves: 14, goalType: 1, goalNeed: 24, starScores: [1700, 3400, 5000] },
-    { moves: 14, goalType: 3, goalNeed: 26, starScores: [1800, 3600, 5400] },
-  ];
+  /** 100 levels — starts easy, gets harder */
+  function buildLevels() {
+    const levels = [];
+    for (let i = 0; i < 100; i++) {
+      const t = i / 99; // 0 → 1
+      const goalType = i % FRUITS.length;
+      const goalNeed = Math.round(10 + t * 38 + (i % 5)); // ~10 → ~50
+      const moves = Math.max(8, Math.round(26 - t * 16 - (i % 3))); // ~26 → ~8
+      const base = 600 + i * 55;
+      levels.push({
+        moves,
+        goalType,
+        goalNeed,
+        fruitCount: i < 15 ? 4 : i < 40 ? 5 : 6, // more fruit types later = harder
+        starScores: [base, Math.round(base * 1.9), Math.round(base * 3.1)],
+      });
+    }
+    return levels;
+  }
 
-  const params = new URLSearchParams(location.search);
-  const mode = (params.get('mode') || 'offline').toLowerCase();
-  const isOnline = mode === 'online';
+  const LEVELS = buildLevels();
+
+  // Fruits is Online-only
+  if ((new URLSearchParams(location.search).get('mode') || '') === 'offline') {
+    location.replace('/games/fruits/?mode=online');
+    return;
+  }
 
   const els = {
     menu: document.getElementById('menuScreen'),
@@ -52,14 +63,12 @@
     retryBtn: document.getElementById('retryBtn'),
   };
 
-  els.modePill.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
-  if (isOnline) {
-    els.menuLead.textContent =
-      'Daily challenge — same board for everyone today. Beat your best score and climb higher tomorrow.';
-  }
+  els.modePill.textContent = 'ONLINE';
+  els.menuLead.textContent =
+    '100 online levels — smooth matches, combos & power fruits. Each level gets harder.';
 
-  let rng = Math.random;
   let levelIndex = 0;
+  let fruitPool = 6;
   let grid = [];
   let moves = 0;
   let score = 0;
@@ -74,51 +83,31 @@
     });
   }
 
-  function mulberry32(a) {
-    return function () {
-      let t = (a += 0x6d2b79f5);
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
-  function todaySeed() {
-    const d = new Date();
-    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-  }
-
   function loadProgress() {
     try {
-      const raw = localStorage.getItem(isOnline ? 'zedfruits_daily' : 'zedfruits_prog');
-      return raw ? JSON.parse(raw) : {};
+      const raw = localStorage.getItem('zedfruits_online');
+      return raw ? JSON.parse(raw) : { level: 0, stars: {} };
     } catch (_) {
-      return {};
+      return { level: 0, stars: {} };
     }
   }
 
   function saveProgress(data) {
     try {
-      localStorage.setItem(isOnline ? 'zedfruits_daily' : 'zedfruits_prog', JSON.stringify(data));
+      localStorage.setItem('zedfruits_online', JSON.stringify(data));
     } catch (_) {}
   }
 
   function updateMenuMeta() {
     const p = loadProgress();
-    if (isOnline) {
-      const best = p[todaySeed()]?.best || 0;
-      els.progressMeta.textContent = best
-        ? `Today’s best: ${best}`
-        : 'No score yet today — be the first on your phone.';
-      levelIndex = todaySeed() % LEVELS.length;
-    } else {
-      levelIndex = Math.min(p.level || 0, LEVELS.length - 1);
-      els.progressMeta.textContent = `Campaign level ${levelIndex + 1} of ${LEVELS.length}`;
-    }
+    levelIndex = Math.min(Math.max(0, p.level || 0), 99);
+    const cleared = Object.keys(p.stars || {}).length;
+    els.progressMeta.textContent = `Level ${levelIndex + 1} / 100 · ${cleared} cleared`;
+    els.playBtn.textContent = levelIndex === 0 ? 'Start level 1' : `Continue level ${levelIndex + 1}`;
   }
 
   function randFruit() {
-    return Math.floor(rng() * FRUITS.length);
+    return Math.floor(Math.random() * fruitPool);
   }
 
   function cell(r, c) {
@@ -134,11 +123,14 @@
     for (let r = 0; r < SIZE; r++) {
       for (let c = 0; c < SIZE; c++) {
         let v;
+        let guard = 0;
         do {
           v = randFruit();
+          guard++;
         } while (
-          (c >= 2 && cell(r, c - 1) === v && cell(r, c - 2) === v) ||
-          (r >= 2 && cell(r - 1, c) === v && cell(r - 2, c) === v)
+          guard < 40 &&
+          ((c >= 2 && cell(r, c - 1)?.type === v && cell(r, c - 2)?.type === v) ||
+            (r >= 2 && cell(r - 1, c)?.type === v && cell(r - 2, c)?.type === v))
         );
         setCell(r, c, { type: v, special: null });
       }
@@ -147,38 +139,26 @@
 
   function findMatches() {
     const matched = new Set();
-    // horizontal
     for (let r = 0; r < SIZE; r++) {
       let run = 1;
       for (let c = 1; c <= SIZE; c++) {
         const same =
-          c < SIZE &&
-          cell(r, c) &&
-          cell(r, c - 1) &&
-          cell(r, c).type === cell(r, c - 1).type;
+          c < SIZE && cell(r, c) && cell(r, c - 1) && cell(r, c).type === cell(r, c - 1).type;
         if (same) run++;
         else {
-          if (run >= 3) {
-            for (let k = 0; k < run; k++) matched.add(r * SIZE + (c - 1 - k));
-          }
+          if (run >= 3) for (let k = 0; k < run; k++) matched.add(r * SIZE + (c - 1 - k));
           run = 1;
         }
       }
     }
-    // vertical
     for (let c = 0; c < SIZE; c++) {
       let run = 1;
       for (let r = 1; r <= SIZE; r++) {
         const same =
-          r < SIZE &&
-          cell(r, c) &&
-          cell(r - 1, c) &&
-          cell(r, c).type === cell(r - 1, c).type;
+          r < SIZE && cell(r, c) && cell(r - 1, c) && cell(r, c).type === cell(r - 1, c).type;
         if (same) run++;
         else {
-          if (run >= 3) {
-            for (let k = 0; k < run; k++) matched.add((r - 1 - k) * SIZE + c);
-          }
+          if (run >= 3) for (let k = 0; k < run; k++) matched.add((r - 1 - k) * SIZE + c);
           run = 1;
         }
       }
@@ -206,26 +186,24 @@
   }
 
   function paintStars(n) {
-    const stars = els.starsBox.querySelectorAll('.star');
-    stars.forEach((el, i) => el.classList.toggle('on', i < n));
+    els.starsBox.querySelectorAll('.star').forEach((el, i) => el.classList.toggle('on', i < n));
   }
 
   function updateHud(level) {
     els.movesVal.textContent = String(moves);
-    if (isOnline) {
-      els.levelChip.textContent = 'Daily';
-    } else {
-      els.levelChip.innerHTML = `Lv <span id="levelVal">${levelIndex + 1}</span>`;
-      els.levelVal = document.getElementById('levelVal');
-    }
+    els.levelChip.innerHTML = `Lv <span id="levelVal">${levelIndex + 1}</span>`;
     els.goalEmoji.textContent = FRUITS[level.goalType].emoji;
     els.goalCount.textContent = `${collected}/${level.goalNeed}`;
     els.scoreVal.textContent = String(score);
     paintStars(starsFromScore(level, score));
   }
 
-  function renderBoard(animFallIdx) {
-    const level = LEVELS[levelIndex % LEVELS.length];
+  function renderBoard(opts) {
+    const level = LEVELS[levelIndex];
+    const fall = opts?.fall || new Set();
+    const popping = opts?.pop || new Set();
+    const swapping = opts?.swap;
+
     els.board.innerHTML = '';
     for (let i = 0; i < SIZE * SIZE; i++) {
       const item = grid[i];
@@ -233,12 +211,14 @@
       div.className = 'cell';
       div.dataset.i = String(i);
       if (!item) {
-        div.style.visibility = 'hidden';
+        div.classList.add('empty');
       } else {
         div.textContent = FRUITS[item.type].emoji;
         if (item.special) div.classList.add('special');
-        if (animFallIdx && animFallIdx.has(i)) div.classList.add('fall');
+        if (fall.has(i)) div.classList.add('fall');
+        if (popping.has(i)) div.classList.add('pop');
         if (selected === i) div.classList.add('selected');
+        if (swapping && (swapping.a === i || swapping.b === i)) div.classList.add('swap');
       }
       div.addEventListener('click', () => onCellTap(i));
       els.board.appendChild(div);
@@ -261,44 +241,39 @@
   }
 
   async function clearAndDrop(matched) {
-    const level = LEVELS[levelIndex % LEVELS.length];
-    const nodes = els.board.querySelectorAll('.cell');
+    const level = LEVELS[levelIndex];
+    renderBoard({ pop: matched });
     matched.forEach((i) => {
       const item = grid[i];
       if (item && item.type === level.goalType) collected++;
-      nodes[i]?.classList.add('pop');
     });
 
-    const gained = matched.size * 40 * Math.max(1, combo);
+    const gained = matched.size * (35 + Math.floor(levelIndex / 5)) * Math.max(1, combo);
     score += gained;
-    if (combo >= 2) flashFx(combo >= 3 ? `SUPER x${combo}` : `COMBO x${combo}`);
+    if (combo >= 3) flashFx(`SUPER x${combo}`);
+    else if (combo === 2) flashFx('COMBO!');
     else if (matched.size >= 5) flashFx('MEGA!');
     else if (matched.size >= 4) flashFx('NICE!');
 
-    await sleep(260);
+    await sleep(240);
 
-    // create specials for long matches before clearing
-    const specialSpots = [];
-    matched.forEach((i) => {
-      // count run length roughly via matched size groups — simple: 4+ gets line, 5+ bomb at first cell
-    });
+    let specialSpot = null;
+    let specialKind = null;
     if (matched.size >= 5) {
-      const first = [...matched][0];
-      specialSpots.push({ i: first, special: 'bomb' });
+      specialSpot = [...matched][Math.floor(matched.size / 2)];
+      specialKind = 'bomb';
     } else if (matched.size === 4) {
-      const first = [...matched][0];
-      specialSpots.push({ i: first, special: 'line' });
+      specialSpot = [...matched][0];
+      specialKind = 'line';
     }
 
     matched.forEach((i) => {
       grid[i] = null;
     });
-    specialSpots.forEach(({ i, special }) => {
-      // keep a fruit there as special power piece
-      grid[i] = { type: randFruit(), special };
-    });
+    if (specialSpot != null) {
+      grid[specialSpot] = { type: randFruit(), special: specialKind };
+    }
 
-    // gravity
     const fell = new Set();
     for (let c = 0; c < SIZE; c++) {
       let write = SIZE - 1;
@@ -319,16 +294,14 @@
       }
     }
 
-    renderBoard(fell);
-    await sleep(220);
+    renderBoard({ fall: fell });
+    await sleep(280);
   }
 
   async function resolveBoard() {
     combo = 0;
     while (true) {
       let matched = findMatches();
-
-      // expand specials if matched includes special
       if (matched.size) {
         const extra = new Set(matched);
         matched.forEach((i) => {
@@ -350,7 +323,6 @@
         });
         matched = extra;
       }
-
       if (!matched.size) break;
       combo++;
       await clearAndDrop(matched);
@@ -359,20 +331,18 @@
 
   async function onCellTap(i) {
     if (busy || !grid[i]) return;
-    const level = LEVELS[levelIndex % LEVELS.length];
+    const level = LEVELS[levelIndex];
 
     if (selected == null) {
       selected = i;
       renderBoard();
       return;
     }
-
     if (selected === i) {
       selected = null;
       renderBoard();
       return;
     }
-
     if (!neighbors(selected, i)) {
       selected = i;
       renderBoard();
@@ -385,23 +355,23 @@
     busy = true;
 
     swap(a, b);
-    renderBoard();
-    await sleep(120);
+    renderBoard({ swap: { a, b } });
+    await sleep(160);
 
-    const matched = findMatches();
-    if (!matched.size) {
-      // revert
+    if (!findMatches().size) {
       swap(a, b);
       renderBoard();
       els.hintBar.textContent = 'No match — try another swap';
+      els.board.classList.add('shake');
+      await sleep(280);
+      els.board.classList.remove('shake');
       busy = false;
       return;
     }
 
     moves--;
-    els.hintBar.textContent = 'Nice move!';
+    els.hintBar.textContent = 'Great!';
     await resolveBoard();
-
     updateHud(level);
 
     if (collected >= level.goalNeed) {
@@ -412,40 +382,29 @@
       await finish(false);
       return;
     }
-
     busy = false;
   }
 
   async function finish(won) {
     busy = true;
-    const level = LEVELS[levelIndex % LEVELS.length];
+    const level = LEVELS[levelIndex];
     const stars = starsFromScore(level, score);
     const p = loadProgress();
+    p.stars = p.stars || {};
 
-    if (isOnline) {
-      const key = String(todaySeed());
-      const prev = p[key]?.best || 0;
-      p[key] = { best: Math.max(prev, score), stars: Math.max(p[key]?.stars || 0, stars) };
+    if (won) {
+      p.stars[levelIndex] = Math.max(p.stars[levelIndex] || 0, stars);
+      p.level = Math.max(p.level || 0, Math.min(99, levelIndex + 1));
       saveProgress(p);
-      els.resultTitle.textContent = won ? 'Daily cleared!' : 'Out of moves';
+      els.resultTitle.textContent = levelIndex >= 99 ? 'You finished all 100!' : 'Level clear!';
       els.resultExtra.textContent =
-        score >= prev ? 'New best for today!' : `Best today stays ${Math.max(prev, score)}`;
-      els.nextBtn.textContent = 'Play again';
+        stars === 3 ? 'Perfect three stars!' : `Unlocked level ${Math.min(100, levelIndex + 2)}`;
+      els.nextBtn.textContent = levelIndex >= 99 ? 'Play again' : 'Next level';
+      if (levelIndex < 99) levelIndex++;
     } else {
-      if (won) {
-        p.level = Math.max(p.level || 0, levelIndex + 1);
-        p.stars = p.stars || {};
-        p.stars[levelIndex] = Math.max(p.stars[levelIndex] || 0, stars);
-        saveProgress(p);
-      }
-      els.resultTitle.textContent = won ? 'Level clear!' : 'Almost — try again';
-      els.resultExtra.textContent = won
-        ? stars === 3
-          ? 'Perfect three stars!'
-          : 'Goal reached'
-        : 'Collect the goal fruit before moves run out';
-      els.nextBtn.textContent = won ? (levelIndex >= LEVELS.length - 1 ? 'Replay max' : 'Next level') : 'Retry level';
-      if (won && levelIndex < LEVELS.length - 1) levelIndex++;
+      els.resultTitle.textContent = 'Out of moves';
+      els.resultExtra.textContent = 'Levels get harder — try a cleaner combo path.';
+      els.nextBtn.textContent = 'Retry';
     }
 
     els.resultStars.textContent = '★'.repeat(Math.max(1, stars)) + '☆'.repeat(Math.max(0, 3 - stars));
@@ -455,35 +414,25 @@
   }
 
   function startLevel() {
-    const level = LEVELS[levelIndex % LEVELS.length];
-    if (isOnline) rng = mulberry32(todaySeed() * 997 + 13);
-    else rng = Math.random;
-
+    const level = LEVELS[levelIndex];
+    fruitPool = level.fruitCount;
     createGridNoMatches();
+    // resolve any rare leftover cascades silently
     moves = level.moves;
     score = 0;
     collected = 0;
     selected = null;
     combo = 0;
     busy = false;
-    els.hintBar.textContent = `Collect ${level.goalNeed} ${FRUITS[level.goalType].emoji} in ${level.moves} moves`;
+    els.hintBar.textContent = `Lv ${levelIndex + 1}: collect ${level.goalNeed} ${FRUITS[level.goalType].emoji} in ${level.moves} moves`;
     renderBoard();
     show(els.play);
   }
 
   els.playBtn.addEventListener('click', startLevel);
-  els.retryBtn.addEventListener('click', () => {
-    if (!isOnline) {
-      /* stay on same level */
-    }
-    startLevel();
-  });
-  els.nextBtn.addEventListener('click', () => {
-    if (isOnline) startLevel();
-    else startLevel();
-  });
+  els.retryBtn.addEventListener('click', startLevel);
+  els.nextBtn.addEventListener('click', startLevel);
 
-  // swipe support
   let touchStart = null;
   els.board.addEventListener(
     'touchstart',
@@ -491,7 +440,7 @@
       const t = e.changedTouches[0];
       const el = document.elementFromPoint(t.clientX, t.clientY);
       const cellEl = el?.closest?.('.cell');
-      if (!cellEl) return;
+      if (!cellEl || cellEl.classList.contains('empty')) return;
       touchStart = { i: Number(cellEl.dataset.i), x: t.clientX, y: t.clientY };
     },
     { passive: true }
@@ -503,7 +452,7 @@
       const t = e.changedTouches[0];
       const dx = t.clientX - touchStart.x;
       const dy = t.clientY - touchStart.y;
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) {
         touchStart = null;
         return;
       }
@@ -511,8 +460,13 @@
       const r = Math.floor(i / SIZE);
       const c = i % SIZE;
       let j = i;
-      if (Math.abs(dx) > Math.abs(dy)) j = c + (dx > 0 ? 1 : -1) >= 0 && c + (dx > 0 ? 1 : -1) < SIZE ? r * SIZE + (c + (dx > 0 ? 1 : -1)) : i;
-      else j = r + (dy > 0 ? 1 : -1) >= 0 && r + (dy > 0 ? 1 : -1) < SIZE ? (r + (dy > 0 ? 1 : -1)) * SIZE + c : i;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        const nc = c + (dx > 0 ? 1 : -1);
+        if (nc >= 0 && nc < SIZE) j = r * SIZE + nc;
+      } else {
+        const nr = r + (dy > 0 ? 1 : -1);
+        if (nr >= 0 && nr < SIZE) j = nr * SIZE + c;
+      }
       touchStart = null;
       if (j !== i) {
         selected = i;
