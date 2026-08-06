@@ -88,7 +88,7 @@
 
   function loadProgress() {
     try {
-      const raw = localStorage.getItem('zedfruits_offline');
+      const raw = localStorage.getItem('fruits_offline') || localStorage.getItem('zedfruits_offline');
       return raw ? JSON.parse(raw) : { level: 0, stars: {} };
     } catch (_) {
       return { level: 0, stars: {} };
@@ -97,7 +97,7 @@
 
   function saveProgress(data) {
     try {
-      localStorage.setItem('zedfruits_offline', JSON.stringify(data));
+      localStorage.setItem('fruits_offline', JSON.stringify(data));
     } catch (_) {}
   }
 
