@@ -1,4 +1,4 @@
-const CACHE = "nexus-v26";
+const CACHE = "nexus-v27";
 
 // Everything users need offline after installing Nexus once.
 const PRECACHE = [
@@ -15,6 +15,8 @@ const PRECACHE = [
   "/icons/zedevents.png",
   "/icons/ludo.png",
   "/icons/fruits.png",
+  "/icons/2048.png",
+  "/icons/runner.png",
   // Events
   "/events/",
   "/events/index.html",
@@ -45,6 +47,18 @@ const PRECACHE = [
   "/games/fruits/fruits.css",
   "/games/fruits/fruits.js",
   "/games/fruits/manifest.json",
+  // 2048
+  "/games/2048/",
+  "/games/2048/index.html",
+  "/games/2048/game.css",
+  "/games/2048/game.js",
+  "/games/2048/manifest.json",
+  // Runner
+  "/games/runner/",
+  "/games/runner/index.html",
+  "/games/runner/game.css",
+  "/games/runner/game.js",
+  "/games/runner/manifest.json",
 ];
 
 self.addEventListener("install", (event) => {

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <title>2048 · Nexus</title>
+  <meta name="theme-color" content="#0f3d4a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/2048.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="game.css" />
+  <script src="/no-ptr.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <a class="back" href="/">‹ Nexus</a>
+    <div class="brand">2048</div>
+  </header>
+
+  <main class="wrap">
+    <div class="scores">
+      <div class="pill"><span>Score</span><strong id="score">0</strong></div>
+      <div class="pill"><span>Best</span><strong id="best">0</strong></div>
+    </div>
+
+    <p class="hint" id="hint">Swipe or use arrow keys</p>
+    <div class="board" id="board" aria-label="2048 board"></div>
+
+    <div class="actions">
+      <button type="button" class="btn primary" id="newBtn">New game</button>
+    </div>
+  </main>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="card">
+      <h2 id="overTitle">Game over</h2>
+      <p id="overScore">Score 0</p>
+      <button type="button" class="btn primary" id="againBtn">Play again</button>
+      <a class="btn ghost" href="/">Back to Nexus</a>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+:root {
+  --ink: #fff4ea;
+  --muted: #d2b59a;
+  --bg1: #1a0f08;
+  --bg2: #3b1d0f;
+  --accent: #ff8a3d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  font-family: "DM Sans", system-ui, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, #120b07 0%, var(--bg2) 50%, #5a2a12 100%);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.back { color: var(--accent); font-weight: 700; text-decoration: none; }
+.brand { font-family: Syne, sans-serif; font-weight: 800; font-size: 1.25rem; }
+
+.wrap {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 8px 16px 32px;
+}
+
+.hud {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.pill {
+  flex: 1;
+  background: rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.pill span { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.pill strong { font-family: Syne, sans-serif; font-size: 1.4rem; }
+
+#canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #6ec8ff 0%, #b8e4ff 42%, #7ecf6a 42%, #5bb85a 100%);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.28);
+  touch-action: none;
+}
+
+.hint {
+  margin: 12px 0;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 600;
+  min-height: 1.2em;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  padding: 14px;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 8px;
+}
+.btn.primary { background: linear-gradient(180deg, #ffb067, #ff8a3d); color: #3b1208; }
+.btn.ghost { background: rgba(255,255,255,0.1); color: var(--ink); }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 10, 5, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 20;
+}
+.overlay[hidden] { display: none; }
+.card {
+  width: min(360px, 100%);
+  background: #3b1d0f;
+  border-radius: 18px;
+  padding: 22px;
+  text-align: center;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+}
+.card h2 { font-family: Syne, sans-serif; font-size: 1.6rem; margin-bottom: 6px; }
+.card p { color: var(--muted); margin-bottom: 14px; }
