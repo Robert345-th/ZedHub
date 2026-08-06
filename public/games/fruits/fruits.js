@@ -280,6 +280,53 @@
     grid[b] = t;
   }
 
+  function clearSlideStyles(el) {
+    if (!el) return;
+    el.classList.remove('sliding', 'sliding-back');
+    el.style.transform = '';
+    el.style.zIndex = '';
+    el.style.transition = '';
+  }
+
+  /** Visually slide two fruits into each other's places (data not changed yet). */
+  async function slideSwap(a, b, reverse) {
+    const nodes = els.board.querySelectorAll('.cell');
+    const elA = nodes[a];
+    const elB = nodes[b];
+    if (!elA || !elB) return;
+
+    const ra = elA.getBoundingClientRect();
+    const rb = elB.getBoundingClientRect();
+    const mx = rb.left - ra.left;
+    const my = rb.top - ra.top;
+
+    elA.classList.remove('selected', 'neighbor', 'pressed');
+    elB.classList.remove('selected', 'neighbor', 'pressed');
+
+    if (!reverse) {
+      // force reflow so transition runs from identity
+      elA.style.transform = 'translate(0px, 0px)';
+      elB.style.transform = 'translate(0px, 0px)';
+      void elA.offsetWidth;
+      elA.classList.add('sliding');
+      elB.classList.add('sliding');
+      elA.style.transform = `translate(${mx}px, ${my}px) scale(1.08)`;
+      elB.style.transform = `translate(${-mx}px, ${-my}px) scale(1.08)`;
+      await sleep(250);
+    } else {
+      elA.classList.add('sliding-back');
+      elB.classList.add('sliding-back');
+      elA.style.transform = `translate(${mx}px, ${my}px) scale(1.08)`;
+      elB.style.transform = `translate(${-mx}px, ${-my}px) scale(1.08)`;
+      void elA.offsetWidth;
+      elA.style.transform = 'translate(0px, 0px) scale(1)';
+      elB.style.transform = 'translate(0px, 0px) scale(1)';
+      await sleep(250);
+      clearSlideStyles(elA);
+      clearSlideStyles(elB);
+    }
+  }
+
   async function clearAndDrop(matched) {
     const level = LEVELS[levelIndex];
     renderBoard({ pop: matched });
@@ -398,21 +445,21 @@
     busy = true;
     paintSelection();
 
-    swap(a, b);
-    renderBoard({ swap: { a, b } });
-    await sleep(180);
+    // Show fruits sliding into each other
+    await slideSwap(a, b, false);
 
+    swap(a, b);
     if (!findMatches().size) {
+      // No match — slide back, then restore data
       swap(a, b);
-      renderBoard();
-      els.hintBar.textContent = 'No match — try another swap';
-      els.board.classList.add('shake');
-      await sleep(280);
-      els.board.classList.remove('shake');
+      await slideSwap(a, b, true);
+      els.hintBar.textContent = 'No match — fruits bounced back';
       busy = false;
       return;
     }
 
+    // Lock in the swap on the board
+    renderBoard();
     moves--;
     els.hintBar.textContent = 'Great!';
     await resolveBoard();

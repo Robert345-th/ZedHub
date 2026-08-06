@@ -299,9 +299,17 @@ html, body {
   animation: neighborPulse 0.9s ease infinite;
 }
 
-.cell.swap {
-  animation: swapPulse 0.2s ease;
-  z-index: 4;
+.cell.sliding {
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 8 !important;
+  pointer-events: none;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
+}
+
+.cell.sliding-back {
+  transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 8 !important;
+  pointer-events: none;
 }
 
 .cell.pop {
