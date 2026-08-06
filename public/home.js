@@ -39,16 +39,18 @@
     const savanna = document.getElementById('splashSavanna');
     if (!splash || !nexus || !savanna) return;
 
-    // Brief Nexus mark, then Savanna for 2 seconds
+    // Brief Nexus mark, then Savanna for 2 seconds (same dark bg — no orange flash)
     setTimeout(() => {
-      nexus.hidden = true;
-      splash.classList.add('savanna-mode');
-      savanna.hidden = false;
+      nexus.classList.add('fade-out');
       setTimeout(() => {
-        splash.classList.add('hide');
-        splash.setAttribute('aria-hidden', 'true');
-        setTimeout(() => splash.remove(), 400);
-      }, 2000);
+        nexus.hidden = true;
+        savanna.hidden = false;
+        setTimeout(() => {
+          splash.classList.add('hide');
+          splash.setAttribute('aria-hidden', 'true');
+          setTimeout(() => splash.remove(), 400);
+        }, 2000);
+      }, 200);
     }, 700);
   })();
 

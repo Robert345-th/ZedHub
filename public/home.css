@@ -38,12 +38,9 @@ body {
   z-index: 1000;
   display: grid;
   place-items: center;
-  background: linear-gradient(165deg, #3b1208 0%, #7c2d12 45%, #9a3412 100%);
-  transition: opacity 0.35s ease, visibility 0.35s ease, background 0.35s ease;
-}
-
-.splash.savanna-mode {
+  /* Always dark — NX icon brings its own orange; avoids orange blink into Savanna */
   background: #0e0e0e;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
 }
 
 .splash.hide {
@@ -52,17 +49,27 @@ body {
   pointer-events: none;
 }
 
+.splash-nexus,
+.splash-savanna {
+  grid-area: 1 / 1;
+  text-align: center;
+}
+
 .splash-nexus img {
   width: 88px;
   height: 88px;
   border-radius: 22px;
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
   animation: splashIn 0.4s ease both;
 }
 
+.splash-nexus.fade-out {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
 .splash-savanna {
-  text-align: center;
-  animation: splashIn 0.5s ease both;
+  animation: splashIn 0.45s ease both;
 }
 
 .splash-powered {
