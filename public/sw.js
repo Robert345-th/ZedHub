@@ -1,4 +1,4 @@
-const CACHE = "zedhub-v4";
+const CACHE = "zedhub-v5";
 const PRECACHE = [
   "/",
   "/index.html",
@@ -7,6 +7,7 @@ const PRECACHE = [
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/zedmarket.png",
+  "/icons/zedevents.png",
   "/events/",
   "/events/index.html",
 ];
