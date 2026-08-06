@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Nexus",
   "short_name": "Nexus",
-  "description": "Install once — Events, Ludo, Fruits and more are downloaded with Nexus.",
+  "description": "Install once — Events, Fruits and more are downloaded with Nexus.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
@@ -41,12 +41,6 @@
       "short_name": "Events",
       "url": "/events/",
       "icons": [{ "src": "/icons/zedevents.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Ludo",
-      "short_name": "Ludo",
-      "url": "/games/ludo/?mode=offline",
-      "icons": [{ "src": "/icons/ludo.png", "sizes": "192x192" }]
     },
     {
       "name": "Fruits",
