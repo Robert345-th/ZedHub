@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
   <title>Fruits · Nexus</title>
   <meta name="theme-color" content="#1a7a3a" />
-  <link rel="manifest" href="/manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Fruits" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/fruits.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -17,6 +20,7 @@
   <header class="bar">
     <a class="back" href="/">‹ Nexus</a>
     <div class="brand">Fruits</div>
+    <button type="button" class="dl-btn" id="appDownloadBtn">Download</button>
     <div class="mode-pill" id="modePill">OFFLINE</div>
   </header>
 
@@ -65,6 +69,10 @@
     <a class="btn ghost link" href="/">Back to Nexus</a>
   </section>
 
+  <script src="/install-app.js"></script>
   <script src="fruits.js"></script>
+  <script>
+    NexusInstall.wireAppInstall({ btn: '#appDownloadBtn', name: 'Fruits' });
+  </script>
 </body>
 </html>

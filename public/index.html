@@ -20,9 +20,6 @@
 
   <header class="top">
     <div class="brand">Nexus</div>
-    <button type="button" class="download-btn" id="downloadBtn" aria-label="Download Nexus">
-      Download
-    </button>
   </header>
 
   <nav class="cats" aria-label="Categories">
@@ -41,42 +38,99 @@
   <main class="grid" id="appGrid" aria-label="Apps"></main>
 
   <template id="tpl-events">
-    <a class="app" href="/events/">
-      <img class="icon-img" src="/icons/zedevents.png" alt="" width="62" height="62" />
-      <span class="label">Events</span>
-    </a>
+    <div class="app-card">
+      <a class="app" href="/events/">
+        <img class="icon-img" src="/icons/zedevents.png" alt="" width="62" height="62" />
+        <span class="label">Events</span>
+      </a>
+      <button
+        type="button"
+        class="app-download"
+        data-name="Events"
+        data-href="/events/?install=1"
+        data-icon="/icons/zedevents.png"
+      >
+        Download
+      </button>
+    </div>
   </template>
 
   <template id="tpl-market">
-    <a class="app" href="https://zedmarket.app" target="_blank" rel="noopener noreferrer">
-      <img class="icon-img" src="/icons/zedmarket.png" alt="" width="62" height="62" />
-      <span class="label">Market</span>
-    </a>
+    <div class="app-card">
+      <a class="app" href="https://zedmarket.app" target="_blank" rel="noopener noreferrer">
+        <img class="icon-img" src="/icons/zedmarket.png" alt="" width="62" height="62" />
+        <span class="label">Market</span>
+      </a>
+      <button
+        type="button"
+        class="app-download"
+        data-name="Market"
+        data-href="https://zedmarket.app"
+        data-external="1"
+        data-icon="/icons/zedmarket.png"
+      >
+        Download
+      </button>
+    </div>
   </template>
 
   <template id="tpl-online">
-    <a class="app" href="/games/ludo/?mode=online">
-      <img class="icon-img" src="/icons/ludo.png" alt="" width="62" height="62" />
-      <span class="label">Ludo</span>
-    </a>
+    <div class="app-card">
+      <a class="app" href="/games/ludo/?mode=online">
+        <img class="icon-img" src="/icons/ludo.png" alt="" width="62" height="62" />
+        <span class="label">Ludo</span>
+      </a>
+      <button
+        type="button"
+        class="app-download"
+        data-name="Ludo"
+        data-href="/games/ludo/?mode=online&install=1"
+        data-icon="/icons/ludo.png"
+      >
+        Download
+      </button>
+    </div>
   </template>
 
   <template id="tpl-offline">
-    <a class="app" href="/games/ludo/?mode=offline">
-      <img class="icon-img" src="/icons/ludo.png" alt="" width="62" height="62" />
-      <span class="label">Ludo</span>
-    </a>
-    <a class="app" href="/games/fruits/?mode=offline">
-      <img class="icon-img" src="/icons/fruits.png" alt="" width="62" height="62" />
-      <span class="label">Fruits</span>
-    </a>
+    <div class="app-card">
+      <a class="app" href="/games/ludo/?mode=offline">
+        <img class="icon-img" src="/icons/ludo.png" alt="" width="62" height="62" />
+        <span class="label">Ludo</span>
+      </a>
+      <button
+        type="button"
+        class="app-download"
+        data-name="Ludo"
+        data-href="/games/ludo/?mode=offline&install=1"
+        data-icon="/icons/ludo.png"
+      >
+        Download
+      </button>
+    </div>
+    <div class="app-card">
+      <a class="app" href="/games/fruits/?mode=offline">
+        <img class="icon-img" src="/icons/fruits.png" alt="" width="62" height="62" />
+        <span class="label">Fruits</span>
+      </a>
+      <button
+        type="button"
+        class="app-download"
+        data-name="Fruits"
+        data-href="/games/fruits/?mode=offline&install=1"
+        data-icon="/icons/fruits.png"
+      >
+        Download
+      </button>
+    </div>
   </template>
 
   <div class="install-sheet" id="installSheet" hidden>
     <div class="install-card" role="dialog" aria-labelledby="installTitle">
       <button type="button" class="install-close" id="installClose" aria-label="Close">×</button>
-      <h2 id="installTitle">Add Nexus to Home Screen</h2>
-      <p id="installBody">Install Nexus like an app so you can open it anytime.</p>
+      <img class="install-icon" id="installIcon" src="" alt="" width="64" height="64" />
+      <h2 id="installTitle">Download app</h2>
+      <p id="installBody">Add this app to your home screen.</p>
       <ol class="install-steps" id="installSteps" hidden></ol>
       <button type="button" class="install-action" id="installAction">Download</button>
     </div>

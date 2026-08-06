@@ -1,0 +1,26 @@
+{
+  "id": "/events/",
+  "name": "Events",
+  "short_name": "Events",
+  "description": "Find event services — catering, DJs, tents and more.",
+  "start_url": "/events/",
+  "scope": "/events/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#C2410C",
+  "background_color": "#F4F1EC",
+  "icons": [
+    {
+      "src": "/icons/zedevents.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/zedevents.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

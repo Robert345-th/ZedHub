@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
   <title>Ludo · Nexus</title>
   <meta name="theme-color" content="#0b2e1f" />
-  <link rel="manifest" href="/manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Ludo" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/ludo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -15,6 +18,7 @@
   <header class="bar">
     <a class="back" href="/">‹ Nexus</a>
     <div class="brand">Ludo</div>
+    <button type="button" class="dl-btn" id="appDownloadBtn">Download</button>
     <div class="room-pill" id="roomPill" hidden></div>
   </header>
 
@@ -91,9 +95,13 @@
     <a class="btn ghost" href="/" style="display:block;text-align:center;text-decoration:none;margin-top:8px">Back to Nexus</a>
   </section>
 
+  <script src="/install-app.js"></script>
   <script src="engine.js"></script>
   <script src="board.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="ludo.js"></script>
+  <script>
+    NexusInstall.wireAppInstall({ btn: '#appDownloadBtn', name: 'Ludo' });
+  </script>
 </body>
 </html>

@@ -1,0 +1,26 @@
+{
+  "id": "/games/fruits/",
+  "name": "Fruits",
+  "short_name": "Fruits",
+  "description": "Match-3 fruit levels.",
+  "start_url": "/games/fruits/?mode=offline",
+  "scope": "/games/fruits/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1a7a3a",
+  "background_color": "#7ec8ff",
+  "icons": [
+    {
+      "src": "/icons/fruits.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/fruits.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
