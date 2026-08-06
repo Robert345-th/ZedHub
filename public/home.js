@@ -2,7 +2,7 @@
   const INFO = {
     events: 'Find and book event services — catering, DJs, tents, décor and more.',
     market: 'Buy and sell on ZedMarket. Opens the live Market app.',
-    games: 'Play live multiplayer games with friends — start with Ludo.',
+    games: 'ZedLudo — play Online with friends, or Offline vs bots.',
   };
 
   const grid = document.getElementById('appGrid');

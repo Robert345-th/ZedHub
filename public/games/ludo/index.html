@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
-  <title>Ludo · ZedHub</title>
+  <title>ZedLudo · ZedHub</title>
   <meta name="theme-color" content="#0b2e1f" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,13 +14,13 @@
 <body>
   <header class="bar">
     <a class="back" href="/">‹ Hub</a>
-    <div class="title">Ludo</div>
+    <div class="brand">ZedLudo</div>
     <div class="room-pill" id="roomPill" hidden></div>
   </header>
 
-  <section class="screen" id="lobbyScreen">
-    <h1>Play Ludo together</h1>
-    <p class="lead">Create a room, share the code, play with up to 4 friends live.</p>
+  <section class="screen" id="lobbyScreen" hidden>
+    <h1>Online</h1>
+    <p class="lead">Create a room, share the code, play live with up to 4 friends.</p>
 
     <label class="field">
       <span>Your name</span>
@@ -37,6 +37,27 @@
     </label>
     <button type="button" class="btn" id="joinBtn">Join room</button>
     <p class="err" id="lobbyErr" hidden></p>
+  </section>
+
+  <section class="screen" id="offlineSetup" hidden>
+    <h1>Offline</h1>
+    <p class="lead">Play against bots on this phone — no internet room needed.</p>
+
+    <label class="field">
+      <span>Your name</span>
+      <input id="offlineName" maxlength="16" placeholder="e.g. Rob" autocomplete="nickname" />
+    </label>
+
+    <label class="field">
+      <span>Bots</span>
+      <select id="botCount">
+        <option value="1">1 bot</option>
+        <option value="2">2 bots</option>
+        <option value="3" selected>3 bots</option>
+      </select>
+    </label>
+
+    <button type="button" class="btn primary" id="offlineStart">Start game</button>
   </section>
 
   <section class="screen" id="waitScreen" hidden>
@@ -66,9 +87,11 @@
 
   <section class="screen" id="winScreen" hidden>
     <h2 id="winTitle">Winner!</h2>
-    <button type="button" class="btn primary" id="againBtn">Back to lobby</button>
+    <button type="button" class="btn primary" id="againBtn">Play again</button>
+    <a class="btn ghost" href="/" style="display:block;text-align:center;text-decoration:none;margin-top:8px">Back to Hub</a>
   </section>
 
+  <script src="engine.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="ludo.js"></script>
 </body>

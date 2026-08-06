@@ -47,9 +47,13 @@
   </template>
 
   <template id="tpl-games">
-    <a class="app" href="/games/ludo/">
-      <img class="icon-img" src="/icons/ludo.png" alt="" width="62" height="62" />
-      <span class="label">Ludo</span>
+    <a class="app" href="/games/ludo/?mode=online">
+      <span class="icon online" aria-hidden="true">On</span>
+      <span class="label">Online</span>
+    </a>
+    <a class="app" href="/games/ludo/?mode=offline">
+      <span class="icon offline" aria-hidden="true">Off</span>
+      <span class="label">Offline</span>
     </a>
   </template>
 
