@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZedHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="bg"></div>
+
+  <header class="top">
+    <div class="brand">ZedHub</div>
+    <p class="tag">One door. Your apps inside.</p>
+  </header>
+
+  <main class="hero">
+    <h1>Your Zambia apps,<br />one home.</h1>
+    <p class="lead">
+      Start with Events. Market stays separate and untouched.
+    </p>
+
+    <section class="modules" aria-label="Apps">
+      <a class="module live" href="#events" id="events-card">
+        <span class="mod-label">Connected soon</span>
+        <span class="mod-name">Events</span>
+        <span class="mod-desc">Browse and book services — linked to ZedEvents.</span>
+        <span class="mod-status" id="events-status">Checking…</span>
+      </a>
+
+      <div class="module locked" aria-disabled="true">
+        <span class="mod-label">Not in Hub</span>
+        <span class="mod-name">Market</span>
+        <span class="mod-desc">ZedMarket stays live on its own. Hub will never change it.</span>
+        <span class="mod-status off">Excluded on purpose</span>
+      </div>
+
+      <div class="module soon">
+        <span class="mod-label">Later</span>
+        <span class="mod-name">More apps</span>
+        <span class="mod-desc">Trading tools and other modules can join here later.</span>
+        <span class="mod-status">Coming later</span>
+      </div>
+    </section>
+
+    <p class="note">
+      This is a brand-new project folder. It does not edit your existing Market or Events code.
+    </p>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
