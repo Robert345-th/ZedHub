@@ -25,7 +25,8 @@
   <nav class="cats" aria-label="Categories">
     <button type="button" class="cat active" data-cat="events">Events</button>
     <button type="button" class="cat" data-cat="market">Market</button>
-    <button type="button" class="cat" data-cat="games">Games</button>
+    <button type="button" class="cat" data-cat="online">Online</button>
+    <button type="button" class="cat" data-cat="offline">Offline</button>
   </nav>
 
   <p class="intro" id="introDesc"></p>
@@ -46,14 +47,17 @@
     </a>
   </template>
 
-  <template id="tpl-games">
+  <template id="tpl-online">
     <a class="app" href="/games/ludo/?mode=online">
-      <span class="icon online" aria-hidden="true">On</span>
-      <span class="label">Online</span>
+      <img class="icon-img" src="/icons/ludo.png" alt="" width="62" height="62" />
+      <span class="label">ZedLudo</span>
     </a>
+  </template>
+
+  <template id="tpl-offline">
     <a class="app" href="/games/ludo/?mode=offline">
-      <span class="icon offline" aria-hidden="true">Off</span>
-      <span class="label">Offline</span>
+      <img class="icon-img" src="/icons/ludo.png" alt="" width="62" height="62" />
+      <span class="label">ZedLudo</span>
     </a>
   </template>
 
