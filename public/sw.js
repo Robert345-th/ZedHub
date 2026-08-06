@@ -1,4 +1,4 @@
-const CACHE = "zedhub-v17";
+const CACHE = "zedhub-v18";
 const PRECACHE = [
   "/",
   "/index.html",
