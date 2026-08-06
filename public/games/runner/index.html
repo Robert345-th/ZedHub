@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
-  <title>Rush · Nexus</title>
+  <title>Rush 3D · Nexus</title>
   <meta name="theme-color" content="#0b1220" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="manifest.json" />
@@ -15,7 +15,7 @@
 <body>
   <header class="bar">
     <a class="back" href="/">‹ Nexus</a>
-    <div class="brand">Rush</div>
+    <div class="brand">Rush 3D</div>
   </header>
 
   <main class="wrap">
@@ -25,12 +25,11 @@
       <div class="pill"><span>Best</span><strong id="best">0</strong></div>
     </div>
 
-    <div class="stage">
-      <canvas id="canvas" width="390" height="640" aria-label="Rush runner"></canvas>
+    <div class="stage" id="stage">
       <div class="touch-hint" id="hint">Swipe ← → · ↑ jump · ↓ slide</div>
     </div>
 
-    <button type="button" class="btn primary" id="startBtn">Start run</button>
+    <button type="button" class="btn primary" id="startBtn">Start 3D run</button>
   </main>
 
   <div class="overlay" id="overlay" hidden>
@@ -42,6 +41,7 @@
     </div>
   </div>
 
+  <script src="vendor/three.min.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

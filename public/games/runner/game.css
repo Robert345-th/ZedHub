@@ -1,7 +1,6 @@
 :root {
   --ink: #f4f7ff;
   --muted: #9aa8c7;
-  --bg: #070b14;
   --accent: #ff6a3d;
 }
 
@@ -28,9 +27,9 @@ html, body {
 .brand { font-family: Syne, sans-serif; font-weight: 800; font-size: 1.25rem; letter-spacing: -0.03em; }
 
 .wrap {
-  max-width: 440px;
+  max-width: 480px;
   margin: 0 auto;
-  padding: 4px 14px 28px;
+  padding: 4px 12px 24px;
 }
 
 .hud {
@@ -54,26 +53,24 @@ html, body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.pill strong {
-  font-family: Syne, sans-serif;
-  font-size: 1.15rem;
-}
+.pill strong { font-family: Syne, sans-serif; font-size: 1.15rem; }
 
 .stage {
   position: relative;
-  border-radius: 22px;
+  width: 100%;
+  aspect-ratio: 9 / 14;
+  max-height: 62vh;
+  border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 18px 40px rgba(0,0,0,0.45);
   border: 1px solid rgba(255,255,255,0.08);
-}
-
-#canvas {
-  width: 100%;
-  height: auto;
-  display: block;
   background: #0b1220;
   touch-action: none;
-  user-select: none;
+}
+.stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 .touch-hint {
@@ -81,11 +78,12 @@ html, body {
   left: 0;
   right: 0;
   bottom: 12px;
+  z-index: 2;
   text-align: center;
   font-size: 0.78rem;
   font-weight: 700;
-  color: rgba(255,255,255,0.78);
-  text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  color: rgba(255,255,255,0.82);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.7);
   pointer-events: none;
 }
 

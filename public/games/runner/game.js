@@ -1,7 +1,11 @@
 (function () {
-  const KEY = 'nexus_rush_v2';
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+  if (typeof THREE === 'undefined') {
+    document.getElementById('hint').textContent = '3D engine failed to load';
+    return;
+  }
+
+  const KEY = 'nexus_rush3d_v1';
+  const stage = document.getElementById('stage');
   const scoreEl = document.getElementById('score');
   const coinsEl = document.getElementById('coins');
   const bestEl = document.getElementById('best');
@@ -11,26 +15,296 @@
   const overScore = document.getElementById('overScore');
   const startBtn = document.getElementById('startBtn');
 
-  const W = canvas.width;
-  const H = canvas.height;
-  const LANES = [-1, 0, 1];
-  const LANE_W = 1.15;
-  const HORIZON = 108;
-  const FOCAL = 280;
-  const CAM_Y = 1.35;
+  const LANE_X = [-2.2, 0, 2.2];
+  const TRACK_LEN = 220;
 
   let best = 0;
   let running = false;
   let score = 0;
   let coins = 0;
-  let speed = 0.22;
+  let speed = 18;
   let distance = 0;
-  let raf = 0;
-  let player;
+  let spawnAt = 40;
+  let clock = new THREE.Clock();
   let entities = [];
-  let spawnZ = 28;
-  let shake = 0;
-  let cityOffset = 0;
+  let buildings = [];
+  let rails = [];
+
+  // —— scene ——
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x0b1220);
+  renderer.shadowMap.enabled = true;
+  stage.insertBefore(renderer.domElement, hintEl);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x1a2744, 28, 95);
+
+  const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
+  camera.position.set(0, 4.2, 8.5);
+  camera.lookAt(0, 1.2, -12);
+
+  // lights
+  scene.add(new THREE.AmbientLight(0x8899bb, 0.55));
+  const sun = new THREE.DirectionalLight(0xffe0b0, 1.15);
+  sun.position.set(8, 18, 6);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x88aaff, 0.35);
+  fill.position.set(-10, 6, -4);
+  scene.add(fill);
+
+  // sky backdrop
+  const skyGeo = new THREE.SphereGeometry(120, 24, 16);
+  const skyMat = new THREE.MeshBasicMaterial({
+    color: 0x243556,
+    side: THREE.BackSide,
+  });
+  scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+  // ground / rails area
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(14, TRACK_LEN),
+    new THREE.MeshStandardMaterial({ color: 0x2a3142, roughness: 0.95 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.z = -TRACK_LEN / 2 + 10;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // center platform
+  const platform = new THREE.Mesh(
+    new THREE.BoxGeometry(8.4, 0.25, TRACK_LEN),
+    new THREE.MeshStandardMaterial({ color: 0x3a4256, roughness: 0.9 })
+  );
+  platform.position.set(0, 0.05, -TRACK_LEN / 2 + 10);
+  platform.receiveShadow = true;
+  scene.add(platform);
+
+  function makeRail(x) {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: 0xb8c0d0, metalness: 0.7, roughness: 0.35 });
+    [-0.18, 0.18].forEach((ox) => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, TRACK_LEN), mat);
+      rail.position.set(ox, 0.2, -TRACK_LEN / 2 + 10);
+      rail.castShadow = true;
+      group.add(rail);
+    });
+    // ties
+    const tieMat = new THREE.MeshStandardMaterial({ color: 0x5c4030 });
+    for (let z = 0; z < TRACK_LEN; z += 1.4) {
+      const tie = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.25), tieMat);
+      tie.position.set(0, 0.14, -z + 10);
+      group.add(tie);
+    }
+    group.position.x = x;
+    scene.add(group);
+    return group;
+  }
+  LANE_X.forEach((x) => rails.push(makeRail(x)));
+
+  // city buildings
+  function buildCity() {
+    const colors = [0x151c2c, 0x1b2438, 0x10182a, 0x222b40];
+    for (let side = -1; side <= 1; side += 2) {
+      for (let i = 0; i < 28; i++) {
+        const h = 4 + Math.random() * 14;
+        const w = 2.2 + Math.random() * 2.4;
+        const d = 2 + Math.random() * 3;
+        const mesh = new THREE.Mesh(
+          new THREE.BoxGeometry(w, h, d),
+          new THREE.MeshStandardMaterial({ color: colors[i % colors.length], roughness: 0.85 })
+        );
+        mesh.position.set(side * (7.5 + Math.random() * 3), h / 2, -i * 7 - Math.random() * 3);
+        mesh.castShadow = true;
+        scene.add(mesh);
+        buildings.push(mesh);
+
+        // lit windows
+        const win = new THREE.Mesh(
+          new THREE.PlaneGeometry(w * 0.7, h * 0.7),
+          new THREE.MeshBasicMaterial({
+            color: 0xffd28a,
+            transparent: true,
+            opacity: 0.18 + Math.random() * 0.2,
+          })
+        );
+        win.position.set(side * (7.5 + Math.random() * 3) - side * 0.01, h * 0.55, mesh.position.z);
+        win.lookAt(0, h * 0.55, mesh.position.z);
+        scene.add(win);
+        buildings.push(win);
+      }
+    }
+  }
+  buildCity();
+
+  // player
+  const player = {
+    lane: 1,
+    x: 0,
+    y: 0,
+    jumpV: 0,
+    jumping: false,
+    sliding: false,
+    slideT: 0,
+    alive: true,
+    mesh: null,
+  };
+
+  function makePlayer() {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.35, 0.7, 4, 8),
+      new THREE.MeshStandardMaterial({ color: 0xff6a3d, roughness: 0.55 })
+    );
+    body.position.y = 1.05;
+    body.castShadow = true;
+    g.add(body);
+
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.28, 12, 12),
+      new THREE.MeshStandardMaterial({ color: 0xfbbf8a })
+    );
+    head.position.y = 1.85;
+    head.castShadow = true;
+    g.add(head);
+
+    const visor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.42, 0.12, 0.2),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a })
+    );
+    visor.position.set(0, 1.9, 0.18);
+    g.add(visor);
+
+    const pack = new THREE.Mesh(
+      new THREE.BoxGeometry(0.45, 0.5, 0.25),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b })
+    );
+    pack.position.set(0, 1.15, -0.28);
+    g.add(pack);
+
+    g.position.set(0, 0, 0);
+    scene.add(g);
+    player.mesh = g;
+    player.body = body;
+  }
+  makePlayer();
+
+  // entity factories
+  function makeTrain(lane, z) {
+    const color = Math.random() < 0.5 ? 0xc81e1e : 0x1f4fd6;
+    const g = new THREE.Group();
+    const car = new THREE.Mesh(
+      new THREE.BoxGeometry(1.7, 2.1, 5.5),
+      new THREE.MeshStandardMaterial({ color, metalness: 0.25, roughness: 0.55 })
+    );
+    car.position.y = 1.15;
+    car.castShadow = true;
+    g.add(car);
+    const roof = new THREE.Mesh(
+      new THREE.BoxGeometry(1.75, 0.15, 5.5),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 })
+    );
+    roof.position.y = 2.25;
+    g.add(roof);
+    const win = new THREE.Mesh(
+      new THREE.BoxGeometry(1.4, 0.55, 0.1),
+      new THREE.MeshStandardMaterial({ color: 0xa8d8ff, emissive: 0x335566, emissiveIntensity: 0.3 })
+    );
+    win.position.set(0, 1.45, 2.75);
+    g.add(win);
+    g.position.set(LANE_X[lane], 0, z);
+    scene.add(g);
+    return { type: 'train', lane, mesh: g, z, hitY: [0, 2.2], must: null };
+  }
+
+  function makeBarrier(lane, z, tall) {
+    const g = new THREE.Group();
+    const h = tall ? 2.1 : 1.15;
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, h, 0.7),
+      new THREE.MeshStandardMaterial({ color: 0x8b5a2b })
+    );
+    box.position.y = h / 2;
+    box.castShadow = true;
+    g.add(box);
+    g.position.set(LANE_X[lane], 0, z);
+    scene.add(g);
+    return { type: 'barrier', lane, mesh: g, z, tall, hitY: [0, h], must: tall ? null : 'slide-ok' };
+  }
+
+  function makeJumpObs(lane, z) {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.55, 0.7),
+      new THREE.MeshStandardMaterial({ color: 0xff6a3d })
+    );
+    mesh.position.set(LANE_X[lane], 0.28, z);
+    mesh.castShadow = true;
+    scene.add(mesh);
+    return { type: 'jumpObs', lane, mesh, z, hitY: [0, 0.6], must: 'jump' };
+  }
+
+  function makeSlideObs(lane, z) {
+    const g = new THREE.Group();
+    const beam = new THREE.Mesh(
+      new THREE.BoxGeometry(1.7, 0.55, 0.7),
+      new THREE.MeshStandardMaterial({ color: 0x64748b })
+    );
+    beam.position.y = 1.55;
+    beam.castShadow = true;
+    g.add(beam);
+    const postL = new THREE.Mesh(
+      new THREE.BoxGeometry(0.18, 1.55, 0.18),
+      new THREE.MeshStandardMaterial({ color: 0x475569 })
+    );
+    postL.position.set(-0.7, 0.77, 0);
+    const postR = postL.clone();
+    postR.position.x = 0.7;
+    g.add(postL, postR);
+    g.position.set(LANE_X[lane], 0, z);
+    scene.add(g);
+    return { type: 'slideObs', lane, mesh: g, z, hitY: [1.1, 2.1], must: 'slide' };
+  }
+
+  function makeCoin(lane, z, y) {
+    const mesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.28, 0.28, 0.08, 16),
+      new THREE.MeshStandardMaterial({
+        color: 0xffd24a,
+        metalness: 0.7,
+        roughness: 0.25,
+        emissive: 0xaa7700,
+        emissiveIntensity: 0.25,
+      })
+    );
+    mesh.rotation.x = Math.PI / 2;
+    mesh.position.set(LANE_X[lane], y, z);
+    scene.add(mesh);
+    return { type: 'coin', lane, mesh, z, y, taken: false };
+  }
+
+  function clearEntities() {
+    entities.forEach((e) => scene.remove(e.mesh));
+    entities = [];
+  }
+
+  function spawnWave(z) {
+    const lane = Math.floor(Math.random() * 3);
+    const roll = Math.random();
+    if (roll < 0.24) entities.push(makeTrain(lane, z));
+    else if (roll < 0.42) entities.push(makeBarrier(lane, z, Math.random() < 0.4));
+    else if (roll < 0.58) entities.push(makeJumpObs(lane, z));
+    else if (roll < 0.72) entities.push(makeSlideObs(lane, z));
+
+    if (Math.random() < 0.75) {
+      const coinLane = Math.random() < 0.5 ? lane : Math.floor(Math.random() * 3);
+      const n = 3 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < n; i++) {
+        entities.push(makeCoin(coinLane, z + 2 + i * 1.1, 1.0 + (Math.random() < 0.3 ? 0.8 : 0)));
+      }
+    }
+  }
 
   function loadBest() {
     try {
@@ -52,107 +326,51 @@
     }
   }
 
-  function project(x, y, z) {
-    const zz = Math.max(0.35, z);
-    const scale = FOCAL / (FOCAL * 0.08 + zz * 18);
-    const px = W / 2 + x * scale * 78;
-    const py = HORIZON + (CAM_Y - y) * scale * 90 + zz * 3.2;
-    return { x: px, y: py, s: scale };
+  function resize() {
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    if (!w || !h) return;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
   }
+  window.addEventListener('resize', resize);
+  resize();
 
   function reset() {
-    player = {
-      lane: 0,
-      x: 0,
-      y: 0,
-      z: 2.2,
-      jumpV: 0,
-      jumping: false,
-      sliding: false,
-      slideT: 0,
-      runT: 0,
-      alive: true,
-    };
-    entities = [];
-    spawnZ = 26;
+    clearEntities();
+    player.lane = 1;
+    player.x = LANE_X[1];
+    player.y = 0;
+    player.jumpV = 0;
+    player.jumping = false;
+    player.sliding = false;
+    player.slideT = 0;
+    player.alive = true;
+    player.mesh.position.set(player.x, 0, 0);
+    player.mesh.scale.set(1, 1, 1);
+    player.mesh.rotation.x = 0;
     score = 0;
     coins = 0;
     distance = 0;
-    speed = 0.24;
-    shake = 0;
-    cityOffset = 0;
+    speed = 18;
+    spawnAt = 35;
     scoreEl.textContent = '0';
     coinsEl.textContent = '0';
     hintEl.textContent = 'Swipe ← → · ↑ jump · ↓ slide';
-    // seed track
-    for (let i = 0; i < 10; i++) spawnWave(18 + i * 7);
-  }
-
-  function spawnWave(z) {
-    const roll = Math.random();
-    const lane = LANES[Math.floor(Math.random() * 3)];
-
-    if (roll < 0.22) {
-      // train blocking one lane
-      entities.push({
-        type: 'train',
-        lane,
-        x: lane * LANE_W,
-        y: 0,
-        z,
-        len: 4.2 + Math.random() * 2,
-        color: Math.random() < 0.5 ? '#c81e1e' : '#1f4fd6',
-      });
-    } else if (roll < 0.42) {
-      // barrier / gate
-      entities.push({
-        type: 'barrier',
-        lane,
-        x: lane * LANE_W,
-        y: 0,
-        z,
-        tall: Math.random() < 0.45,
-      });
-    } else if (roll < 0.62) {
-      // low barrier (must jump) or high (must slide)
-      entities.push({
-        type: Math.random() < 0.5 ? 'jumpObs' : 'slideObs',
-        lane,
-        x: lane * LANE_W,
-        y: 0,
-        z,
-      });
-    }
-
-    // coins arcs
-    if (Math.random() < 0.7) {
-      const coinLane = Math.random() < 0.55 ? lane : LANES[Math.floor(Math.random() * 3)];
-      const count = 3 + Math.floor(Math.random() * 4);
-      for (let i = 0; i < count; i++) {
-        entities.push({
-          type: 'coin',
-          lane: coinLane,
-          x: coinLane * LANE_W,
-          y: 0.55 + (Math.random() < 0.25 ? 0.7 : 0),
-          z: z + 1.2 + i * 0.85,
-          taken: false,
-          spin: Math.random() * Math.PI,
-        });
-      }
-    }
+    for (let i = 0; i < 8; i++) spawnWave(-25 - i * 12);
   }
 
   function switchLane(dir) {
     if (!running || !player.alive) return;
-    const next = Math.max(-1, Math.min(1, player.lane + dir));
-    if (next !== player.lane) player.lane = next;
+    player.lane = Math.max(0, Math.min(2, player.lane + dir));
   }
 
   function jump() {
     if (!running || !player.alive) return;
     if (!player.jumping && !player.sliding) {
       player.jumping = true;
-      player.jumpV = 0.2;
+      player.jumpV = 9.5;
     }
   }
 
@@ -160,50 +378,46 @@
     if (!running || !player.alive) return;
     if (!player.jumping && !player.sliding) {
       player.sliding = true;
-      player.slideT = 0.55;
+      player.slideT = 0.7;
     }
+  }
+
+  function crash(msg) {
+    if (!player.alive) return;
+    player.alive = false;
+    running = false;
+    saveBest();
+    overlay.hidden = false;
+    overTitle.textContent = msg || 'Wrecked!';
+    overScore.textContent = `Score ${Math.floor(score)} · Coins ${coins}`;
+    startBtn.textContent = 'Start 3D run';
+    hintEl.textContent = 'Tap Start to try again';
   }
 
   function start() {
     overlay.hidden = true;
     reset();
     running = true;
-    player.alive = true;
+    clock.getDelta();
     startBtn.textContent = 'Running…';
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(loop);
-  }
-
-  function crash(reason) {
-    if (!player.alive) return;
-    player.alive = false;
-    running = false;
-    shake = 10;
-    saveBest();
-    overlay.hidden = false;
-    overTitle.textContent = reason || 'Wrecked!';
-    overScore.textContent = `Score ${Math.floor(score)} · Coins ${coins}`;
-    startBtn.textContent = 'Start run';
-    hintEl.textContent = 'Tap Start to try again';
   }
 
   function update(dt) {
     if (!running || !player.alive) return;
 
-    distance += speed * 60 * dt;
-    score += speed * 55 * dt;
-    speed = Math.min(0.58, 0.24 + distance * 0.00045);
-    cityOffset += speed * 40 * dt;
+    distance += speed * dt;
+    score += speed * 0.9 * dt;
+    speed = Math.min(42, 18 + distance * 0.035);
     scoreEl.textContent = String(Math.floor(score));
 
     // lane lerp
-    const targetX = player.lane * LANE_W;
-    player.x += (targetX - player.x) * Math.min(1, 14 * dt);
+    const targetX = LANE_X[player.lane];
+    player.x += (targetX - player.x) * Math.min(1, 12 * dt);
 
     // jump / slide
     if (player.jumping) {
-      player.jumpV -= 0.55 * dt;
-      player.y += player.jumpV;
+      player.jumpV -= 28 * dt;
+      player.y += player.jumpV * dt;
       if (player.y <= 0) {
         player.y = 0;
         player.jumping = false;
@@ -214,345 +428,95 @@
       player.slideT -= dt;
       if (player.slideT <= 0) player.sliding = false;
     }
-    player.runT += dt * (8 + speed * 10);
 
-    // move world toward camera
-    const dz = speed * 60 * dt;
-    for (const e of entities) e.z -= dz;
+    const scaleY = player.sliding ? 0.45 : 1;
+    player.mesh.scale.set(1, scaleY, 1);
+    player.mesh.rotation.x = player.sliding ? 0.35 : Math.sin(distance * 0.4) * 0.04;
+    player.mesh.position.set(player.x, player.y, 0);
 
-    // spawn ahead
-    spawnZ -= dz;
-    while (spawnZ < 55) {
-      spawnWave(spawnZ + 8 + Math.random() * 4);
-      spawnZ += 6.5 + Math.random() * 3.5;
+    // move world toward player (entities + recycle buildings)
+    const dz = speed * dt;
+    entities.forEach((e) => {
+      e.z += dz;
+      e.mesh.position.z = e.z;
+      if (e.type === 'coin') e.mesh.rotation.z += dt * 6;
+    });
+
+    buildings.forEach((b) => {
+      b.position.z += dz;
+      if (b.position.z > 20) b.position.z -= 28 * 7;
+    });
+
+    // spawn
+    spawnAt -= dz;
+    while (spawnAt < 0) {
+      spawnWave(-70 - Math.random() * 8);
+      spawnAt += 10 + Math.random() * 5;
     }
 
-    // collisions + cleanup
+    // collisions
+    const pz = 0;
     entities = entities.filter((e) => {
-      if (e.z < -1.5) return false;
+      if (e.z > 8) {
+        scene.remove(e.mesh);
+        return false;
+      }
 
-      const sameLane = Math.abs(e.x - player.x) < 0.55;
-      const near = e.z > 1.2 && e.z < 3.1;
+      const near = e.z > -1.2 && e.z < 1.4;
+      const sameLane = e.lane === player.lane && Math.abs(player.x - LANE_X[e.lane]) < 0.85;
 
       if (e.type === 'coin' && !e.taken && sameLane && near) {
-        const py = player.sliding ? 0.25 : player.y + 0.55;
-        if (Math.abs(py - e.y) < 0.7) {
+        const py = player.y + (player.sliding ? 0.4 : 1.1);
+        if (Math.abs(py - e.y) < 0.9) {
           e.taken = true;
           coins += 1;
           coinsEl.textContent = String(coins);
-          score += 8;
+          score += 10;
+          scene.remove(e.mesh);
           return false;
         }
       }
 
-      if (!sameLane || !near) return true;
+      if (!sameLane || !near || e.type === 'coin') return true;
 
-      if (e.type === 'train' || e.type === 'barrier') {
-        if (player.sliding && e.type === 'barrier' && !e.tall) return true;
-        crash(e.type === 'train' ? 'Hit a train!' : 'Smashed!');
+      if (e.must === 'jump') {
+        if (!(player.jumping && player.y > 0.45)) crash('Jump it!');
         return true;
       }
-      if (e.type === 'jumpObs') {
-        if (!player.jumping || player.y < 0.35) crash('Jump it!');
-        return true;
-      }
-      if (e.type === 'slideObs') {
+      if (e.must === 'slide') {
         if (!player.sliding) crash('Slide under!');
         return true;
       }
+      if (e.type === 'barrier' && !e.tall && player.sliding) return true;
+      crash(e.type === 'train' ? 'Hit a train!' : 'Smashed!');
       return true;
     });
 
-    if (shake > 0) shake *= 0.85;
+    // camera follow
+    camera.position.x += (player.x * 0.35 - camera.position.x) * 0.08;
+    camera.position.y = 4.2 + player.y * 0.25;
+    camera.lookAt(player.x * 0.5, 1.2 + player.y * 0.3, -14);
   }
 
-  function drawSky() {
-    const g = ctx.createLinearGradient(0, 0, 0, H * 0.55);
-    g.addColorStop(0, '#1a2744');
-    g.addColorStop(0.45, '#3a5078');
-    g.addColorStop(1, '#7a93b8');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    // sun glow
-    const sg = ctx.createRadialGradient(W * 0.72, 78, 4, W * 0.72, 78, 90);
-    sg.addColorStop(0, 'rgba(255, 200, 120, 0.55)');
-    sg.addColorStop(1, 'rgba(255, 160, 80, 0)');
-    ctx.fillStyle = sg;
-    ctx.fillRect(0, 0, W, HORIZON + 40);
-  }
-
-  function drawCity() {
-    ctx.save();
-    for (let side = -1; side <= 1; side += 2) {
-      for (let i = 0; i < 14; i++) {
-        const z = ((i * 7 + cityOffset * 0.04 * side) % 90) + 4;
-        const p = project(side * 3.4, 0, z);
-        const bw = 46 * p.s;
-        const bh = (70 + ((i * 37) % 90)) * p.s;
-        ctx.fillStyle = i % 2 ? '#1b2438' : '#141c2e';
-        ctx.fillRect(p.x - bw / 2, p.y - bh, bw, bh);
-        // windows
-        ctx.fillStyle = 'rgba(255, 214, 120, 0.35)';
-        for (let wy = 8; wy < bh - 8; wy += 10) {
-          for (let wx = 6; wx < bw - 6; wx += 9) {
-            if (((i + wx + wy) % 5) === 0) continue;
-            ctx.fillRect(p.x - bw / 2 + wx, p.y - bh + wy, 4 * p.s, 4 * p.s);
-          }
-        }
-      }
-    }
-    ctx.restore();
-  }
-
-  function drawTrack() {
-    // perspective track quad
-    const nearL = project(-1.7, 0, 1.2);
-    const nearR = project(1.7, 0, 1.2);
-    const farL = project(-1.7, 0, 40);
-    const farR = project(1.7, 0, 40);
-
-    const g = ctx.createLinearGradient(0, HORIZON, 0, H);
-    g.addColorStop(0, '#3a4558');
-    g.addColorStop(1, '#232b3a');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(farL.x, farL.y);
-    ctx.lineTo(farR.x, farR.y);
-    ctx.lineTo(nearR.x, nearR.y);
-    ctx.lineTo(nearL.x, nearL.y);
-    ctx.closePath();
-    ctx.fill();
-
-    // lane lines
-    for (const laneX of [-0.55, 0.55]) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      for (let z = 1.2; z < 38; z += 0.8) {
-        const dashOn = Math.floor((z + distance * 0.08) * 1.4) % 2 === 0;
-        if (!dashOn) continue;
-        const a = project(laneX, 0.02, z);
-        const b = project(laneX, 0.02, z + 0.45);
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-      }
-      ctx.stroke();
-    }
-
-    // sleepers / stripes for speed feel
-    ctx.fillStyle = 'rgba(0,0,0,0.18)';
-    for (let z = 1.5; z < 36; z += 1.1) {
-      const zz = (z + (distance * 0.15) % 1.1);
-      const a = project(-1.55, 0, zz);
-      const b = project(1.55, 0, zz);
-      const c = project(1.55, 0, zz + 0.18);
-      const d = project(-1.55, 0, zz + 0.18);
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.lineTo(c.x, c.y);
-      ctx.lineTo(d.x, d.y);
-      ctx.fill();
-    }
-  }
-
-  function drawBox(x, y, z, w, h, d, color, topColor) {
-    // approximate 3D box facing camera
-    const front = [
-      project(x - w / 2, y, z),
-      project(x + w / 2, y, z),
-      project(x + w / 2, y + h, z),
-      project(x - w / 2, y + h, z),
-    ];
-    const back = [
-      project(x - w / 2, y, z + d),
-      project(x + w / 2, y, z + d),
-      project(x + w / 2, y + h, z + d),
-      project(x - w / 2, y + h, z + d),
-    ];
-
-    // top
-    ctx.fillStyle = topColor || '#ffffff55';
-    ctx.beginPath();
-    ctx.moveTo(front[3].x, front[3].y);
-    ctx.lineTo(front[2].x, front[2].y);
-    ctx.lineTo(back[2].x, back[2].y);
-    ctx.lineTo(back[3].x, back[3].y);
-    ctx.fill();
-
-    // front face
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(front[0].x, front[0].y);
-    ctx.lineTo(front[1].x, front[1].y);
-    ctx.lineTo(front[2].x, front[2].y);
-    ctx.lineTo(front[3].x, front[3].y);
-    ctx.fill();
-
-    // side
-    ctx.fillStyle = 'rgba(0,0,0,0.22)';
-    ctx.beginPath();
-    ctx.moveTo(front[1].x, front[1].y);
-    ctx.lineTo(back[1].x, back[1].y);
-    ctx.lineTo(back[2].x, back[2].y);
-    ctx.lineTo(front[2].x, front[2].y);
-    ctx.fill();
-  }
-
-  function drawEntities() {
-    const sorted = entities.slice().sort((a, b) => b.z - a.z);
-    for (const e of sorted) {
-      if (e.type === 'coin') {
-        if (e.taken) continue;
-        e.spin += 0.12;
-        const p = project(e.x, e.y, e.z);
-        const r = Math.max(3, 10 * p.s);
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.scale(0.55 + Math.abs(Math.cos(e.spin)) * 0.45, 1);
-        ctx.fillStyle = '#ffd24a';
-        ctx.beginPath();
-        ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#ffe9a0';
-        ctx.beginPath();
-        ctx.arc(-r * 0.2, -r * 0.2, r * 0.35, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-        continue;
-      }
-
-      if (e.type === 'train') {
-        drawBox(e.x, 0, e.z, 0.95, 1.35, e.len, e.color, '#ffffff33');
-        // windows
-        const p = project(e.x, 0.85, e.z + 0.4);
-        ctx.fillStyle = 'rgba(180,220,255,0.55)';
-        ctx.fillRect(p.x - 14 * p.s, p.y - 10 * p.s, 28 * p.s, 14 * p.s);
-        continue;
-      }
-
-      if (e.type === 'barrier') {
-        const h = e.tall ? 1.35 : 0.85;
-        drawBox(e.x, 0, e.z, 0.9, h, 0.55, '#8b5a2b', '#c48a4a');
-        continue;
-      }
-
-      if (e.type === 'jumpObs') {
-        drawBox(e.x, 0, e.z, 0.9, 0.42, 0.5, '#ff6a3d', '#ffb089');
-        continue;
-      }
-
-      if (e.type === 'slideObs') {
-        // overhead beam
-        drawBox(e.x, 0.75, e.z, 0.95, 0.55, 0.45, '#4b5568', '#9ca3af');
-      }
-    }
-  }
-
-  function drawPlayer() {
-    const y = player.y + (player.sliding ? 0 : 0);
-    const h = player.sliding ? 0.55 : 1.05;
-    const bob = player.jumping ? 0 : Math.sin(player.runT) * 0.04;
-    const p = project(player.x, y + bob, player.z);
-    const s = p.s;
-
-    // shadow
-    const sh = project(player.x, 0.02, player.z);
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
-    ctx.beginPath();
-    ctx.ellipse(sh.x, sh.y, 18 * s, 7 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // body
-    const bw = 22 * s;
-    const bh = (player.sliding ? 28 : 52) * s;
-    const x = p.x - bw / 2;
-    const yy = p.y - bh;
-
-    // legs
-    if (!player.sliding) {
-      const swing = Math.sin(player.runT) * 8 * s;
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(x + 4 * s, yy + bh - 18 * s, 6 * s, 18 * s + swing);
-      ctx.fillRect(x + bw - 10 * s, yy + bh - 18 * s, 6 * s, 18 * s - swing);
-    }
-
-    // torso
-    const tg = ctx.createLinearGradient(x, yy, x, yy + bh);
-    tg.addColorStop(0, '#ff8f5c');
-    tg.addColorStop(1, '#e04520');
-    ctx.fillStyle = tg;
-    ctx.fillRect(x + 2 * s, yy + (player.sliding ? 4 : 12) * s, bw - 4 * s, (player.sliding ? 18 : 26) * s);
-
-    // head
-    ctx.fillStyle = '#fbbf8a';
-    ctx.beginPath();
-    ctx.arc(p.x, yy + 10 * s, 9 * s, 0, Math.PI * 2);
-    ctx.fill();
-    // visor / hair
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(p.x - 9 * s, yy + 4 * s, 18 * s, 5 * s);
-
-    // arms
-    if (!player.sliding) {
-      const swing = Math.sin(player.runT + Math.PI) * 7 * s;
-      ctx.fillStyle = '#fbbf8a';
-      ctx.fillRect(x - 3 * s, yy + 16 * s + swing, 5 * s, 14 * s);
-      ctx.fillRect(x + bw - 2 * s, yy + 16 * s - swing, 5 * s, 14 * s);
-    }
-  }
-
-  function drawSpeedLines() {
-    if (speed < 0.3) return;
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 10; i++) {
-      const x = (i * 47 + distance * 2) % W;
-      ctx.beginPath();
-      ctx.moveTo(x, H * 0.55);
-      ctx.lineTo(x - 18, H);
-      ctx.stroke();
-    }
-  }
-
-  function render() {
-    ctx.save();
-    if (shake > 0.2) {
-      ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
-    }
-    drawSky();
-    drawCity();
-    drawTrack();
-    drawEntities();
-    drawPlayer();
-    drawSpeedLines();
-    ctx.restore();
-  }
-
-  let last = 0;
-  function loop(ts) {
-    if (!last) last = ts;
-    const dt = Math.min(0.033, (ts - last) / 1000);
-    last = ts;
+  function loop() {
+    requestAnimationFrame(loop);
+    const dt = Math.min(0.033, clock.getDelta());
     update(dt);
-    render();
-    if (running && player.alive) raf = requestAnimationFrame(loop);
-    else if (shake > 0.4) {
-      render();
-      raf = requestAnimationFrame(loop);
-    }
+    renderer.render(scene, camera);
   }
+  loop();
 
   // controls
   let sx = 0;
   let sy = 0;
-  function onStart(e) {
+  const el = renderer.domElement;
+
+  function onDown(e) {
     const t = e.changedTouches ? e.changedTouches[0] : e;
     sx = t.clientX;
     sy = t.clientY;
   }
-  function onEnd(e) {
+  function onUp(e) {
     const t = e.changedTouches ? e.changedTouches[0] : e;
     const dx = t.clientX - sx;
     const dy = t.clientY - sy;
@@ -569,10 +533,10 @@
     else slide();
   }
 
-  canvas.addEventListener('touchstart', onStart, { passive: true });
-  canvas.addEventListener('touchend', onEnd, { passive: true });
-  canvas.addEventListener('mousedown', onStart);
-  window.addEventListener('mouseup', onEnd);
+  el.addEventListener('touchstart', onDown, { passive: true });
+  el.addEventListener('touchend', onUp, { passive: true });
+  el.addEventListener('mousedown', onDown);
+  window.addEventListener('mouseup', onUp);
 
   window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft' || e.key === 'a') switchLane(-1);
@@ -590,5 +554,4 @@
 
   loadBest();
   reset();
-  render();
 })();

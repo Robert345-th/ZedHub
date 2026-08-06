@@ -1,8 +1,8 @@
 {
   "id": "/games/runner/",
-  "name": "Rush",
+  "name": "Rush 3D",
   "short_name": "Rush",
-  "description": "Subway-style 3-lane endless runner.",
+  "description": "Real 3D endless runner — lanes, jump, slide.",
   "start_url": "/games/runner/",
   "scope": "/games/runner/",
   "display": "standalone",
