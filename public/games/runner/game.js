@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const KEY = 'nexus_rush_v2';
 const stage = document.getElementById('stage');
@@ -380,6 +381,7 @@ const player = {
   root: new THREE.Group(),
   parts: null,
   hitH: HERO_H,
+  glb: false,
 };
 scene.add(player.root);
 
@@ -487,7 +489,6 @@ function animateHero(dt) {
   const p = player.parts;
   if (!p) return;
 
-  // Smooth visual blends — gameplay flags stay abrupt; poses ease
   animBlend.slide = damp(animBlend.slide, player.sliding ? 1 : 0, 14, dt);
   animBlend.jump = damp(animBlend.jump, player.jumping ? 1 : 0, 11, dt);
   const grounded = 1 - Math.max(animBlend.slide, animBlend.jump);
@@ -500,6 +501,19 @@ function animateHero(dt) {
   const bob = Math.abs(Math.sin(bobT * 2.15)) * 0.045 * animBlend.runAmp;
   const s = animBlend.slide;
   const j = animBlend.jump;
+
+  // Meshy GLB has no skeleton — animate as a stylized rigid dancer body
+  if (player.glb) {
+    const rig = p.rig;
+    const bodyBob = bob * 1.15 + 0.02 * Math.sin(bobT * 4.2) * animBlend.runAmp;
+    rig.position.y = damp(rig.position.y, bodyBob - 0.08 * s + 0.06 * j, 18, dt);
+    rig.rotation.x = damp(rig.rotation.x, 0.1 * animBlend.runAmp + 0.95 * s - 0.18 * j, 14, dt);
+    rig.rotation.z = damp(rig.rotation.z, swing * 0.12, 12, dt);
+    rig.scale.y = damp(rig.scale.y, 1 - 0.12 * s + 0.04 * j, 14, dt);
+    rig.scale.x = damp(rig.scale.x, 1 + 0.06 * s - 0.02 * j, 14, dt);
+    rig.scale.z = damp(rig.scale.z, 1 + 0.04 * s, 14, dt);
+    return;
+  }
 
   const hipsY = 0.95 + bob - 0.32 * s + 0.04 * j;
   const hipsRx = 0.06 * animBlend.runAmp + 1.05 * s - 0.12 * j;
@@ -529,6 +543,81 @@ function animateHero(dt) {
   p.rightShin.rotation.x = damp(p.rightShin.rotation.x, Math.max(0, swing) * 0.65 * animBlend.runAmp + 0.45 * s + 0.15 * j, 14, dt);
 }
 
+/** Paint neon vertex colors on Meshy geometry (export has no materials/UVs). */
+function styleMeshyMesh(mesh) {
+  const geo = mesh.geometry;
+  if (!geo.attributes.normal) geo.computeVertexNormals();
+  const pos = geo.attributes.position;
+  const colors = new Float32Array(pos.count * 3);
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const span = Math.max(0.001, maxY - minY);
+  // Neon city dancer palette: magenta → violet → cyan
+  const cA = new THREE.Color(0xff2d95);
+  const cB = new THREE.Color(0x7c3aed);
+  const cC = new THREE.Color(0x22d3ee);
+  const tmp = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const t = (pos.getY(i) - minY) / span;
+    if (t < 0.55) tmp.copy(cA).lerp(cB, t / 0.55);
+    else tmp.copy(cB).lerp(cC, (t - 0.55) / 0.45);
+    colors[i * 3] = tmp.r;
+    colors[i * 3 + 1] = tmp.g;
+    colors[i * 3 + 2] = tmp.b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  mesh.material = new THREE.MeshToonMaterial({
+    vertexColors: true,
+    gradientMap: toonGrad,
+    emissive: new THREE.Color(0x3b0764),
+    emissiveIntensity: 0.35,
+  });
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+}
+
+function fitGlbToTrack(model) {
+  model.updateMatrixWorld(true);
+  let box = new THREE.Box3().setFromObject(model);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const targetH = HERO_H;
+  const s = targetH / Math.max(0.001, size.y);
+  model.scale.setScalar(s);
+  model.updateMatrixWorld(true);
+  box = new THREE.Box3().setFromObject(model);
+  // Plant feet on local y=0; face down the track (-Z)
+  model.position.y = -box.min.y + 0.02;
+  model.rotation.y = Math.PI;
+}
+
+function mountProceduralHero() {
+  player.glb = false;
+  player.parts = buildHero();
+  player.root.clear();
+  player.root.add(player.parts.root);
+}
+
+function mountGlbHero(sceneRoot) {
+  const rig = new THREE.Group();
+  const wrap = new THREE.Group();
+  sceneRoot.traverse((c) => {
+    if (c.isMesh) styleMeshyMesh(c);
+  });
+  wrap.add(sceneRoot);
+  fitGlbToTrack(wrap);
+  rig.add(wrap);
+  player.root.clear();
+  player.root.add(rig);
+  player.glb = true;
+  player.parts = { root: wrap, rig, mesh: sceneRoot };
+}
+
 function syncPlayerPose() {
   const baseY = GROUND_Y + player.y;
   if (player.sliding) {
@@ -540,15 +629,27 @@ function syncPlayerPose() {
   }
 }
 
-function initHero() {
-  player.parts = buildHero();
-  player.root.add(player.parts.root);
+function finishHeroReady() {
   syncPlayerPose();
   characterReady = true;
   hintEl.textContent = 'Swipe ← → · ↑ jump · ↓ slide';
   startBtn.disabled = false;
   startBtn.textContent = 'Start run';
   showMenu(true);
+}
+
+async function initHero() {
+  hintEl.textContent = 'Loading dancer…';
+  startBtn.disabled = true;
+  try {
+    const loader = new GLTFLoader();
+    const gltf = await loader.loadAsync('./models/runner.glb');
+    mountGlbHero(gltf.scene);
+  } catch (err) {
+    console.warn('GLB load failed, using procedural hero', err);
+    mountProceduralHero();
+  }
+  finishHeroReady();
 }
 
 // —— Obstacles ——
@@ -969,4 +1070,8 @@ startBtn.addEventListener('click', start);
 againBtn.addEventListener('click', start);
 
 loadBest();
-initHero();
+initHero().catch((err) => {
+  console.error(err);
+  hintEl.textContent = 'Could not load character';
+  startBtn.textContent = 'Load failed';
+});
