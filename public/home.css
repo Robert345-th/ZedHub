@@ -1,8 +1,8 @@
 :root {
-  --ink: #f4fff8;
-  --muted: rgba(244, 255, 248, 0.72);
-  --leaf: #19a56a;
-  --leaf-deep: #0b2e1f;
+  --ink: #fff8f3;
+  --muted: rgba(255, 248, 243, 0.72);
+  --leaf: #ea580c;
+  --leaf-deep: #9a3412;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,15 +27,28 @@ body {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(ellipse 90% 60% at 15% 10%, rgba(56, 189, 120, 0.35) 0%, transparent 55%),
-    radial-gradient(ellipse 80% 50% at 90% 80%, rgba(16, 185, 129, 0.25) 0%, transparent 50%),
-    linear-gradient(165deg, #071a12 0%, #0b2e1f 45%, #123528 100%);
+    radial-gradient(ellipse 90% 60% at 15% 10%, rgba(251, 146, 60, 0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 50% at 90% 80%, rgba(234, 88, 12, 0.28) 0%, transparent 50%),
+    linear-gradient(165deg, #3b1208 0%, #7c2d12 45%, #9a3412 100%);
 }
 
 .top {
   padding: 22px 20px 8px;
   max-width: 480px;
   margin: 0 auto;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
 }
 
 .brand {
