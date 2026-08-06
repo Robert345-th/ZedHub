@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ZedHub</title>
-  <meta name="theme-color" content="#134a32" />
+  <meta name="theme-color" content="#0b2e1f" />
   <meta name="description" content="Your Zed apps in one place." />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="ZedHub" />
@@ -16,9 +16,10 @@
   <link rel="stylesheet" href="/home.css" />
 </head>
 <body>
+  <div class="wallpaper" aria-hidden="true"></div>
+
   <header class="top">
     <div class="brand">ZedHub</div>
-    <p class="sub">Pick a category</p>
   </header>
 
   <nav class="cats" aria-label="Categories">
@@ -27,39 +28,28 @@
     <button type="button" class="cat" data-cat="games">Games</button>
   </nav>
 
-  <section class="intro" id="intro" aria-live="polite">
-    <h2 class="intro-title" id="introTitle"></h2>
-    <p class="intro-desc" id="introDesc"></p>
-  </section>
+  <p class="intro" id="introDesc"></p>
 
-  <main class="list" id="appList" aria-label="Apps"></main>
+  <main class="grid" id="appGrid" aria-label="Apps"></main>
 
   <template id="tpl-events">
-    <a class="row" href="/events/">
+    <a class="app" href="/events/">
       <span class="icon events" aria-hidden="true">E</span>
-      <span class="meta">
-        <span class="name">Events</span>
-        <span class="desc">Open the Events app</span>
-      </span>
-      <span class="chev" aria-hidden="true">›</span>
+      <span class="label">Events</span>
     </a>
   </template>
 
   <template id="tpl-market">
-    <a class="row" href="https://zedmarket.app" target="_blank" rel="noopener noreferrer">
+    <a class="app" href="https://zedmarket.app" target="_blank" rel="noopener noreferrer">
       <span class="icon market" aria-hidden="true">M</span>
-      <span class="meta">
-        <span class="name">Market</span>
-        <span class="desc">Open ZedMarket</span>
-      </span>
-      <span class="chev" aria-hidden="true">›</span>
+      <span class="label">Market</span>
     </a>
   </template>
 
   <template id="tpl-games">
     <div class="empty">
       <div class="empty-title">No games yet</div>
-      <div class="empty-desc">Games will be added here later.</div>
+      <div class="empty-desc">New game apps will appear here as icons.</div>
     </div>
   </template>
 

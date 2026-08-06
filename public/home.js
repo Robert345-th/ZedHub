@@ -1,34 +1,22 @@
 (function () {
   const INFO = {
-    events: {
-      title: 'Events',
-      desc: 'Find and book event services in Zambia — catering, DJs, tents, décor, and vendors near you.',
-    },
-    market: {
-      title: 'Market',
-      desc: 'Buy and sell items on ZedMarket. Opens the live Market app in a new page.',
-    },
-    games: {
-      title: 'Games',
-      desc: 'Fun games will live here. Nothing to open yet — check back later.',
-    },
+    events: 'Find and book event services — catering, DJs, tents, décor and more.',
+    market: 'Buy and sell on ZedMarket. Opens the live Market app.',
+    games: 'Games will show up here as app icons when we add them.',
   };
 
-  const list = document.getElementById('appList');
-  const introTitle = document.getElementById('introTitle');
-  const introDesc = document.getElementById('introDesc');
+  const grid = document.getElementById('appGrid');
+  const intro = document.getElementById('introDesc');
   const buttons = Array.from(document.querySelectorAll('.cat'));
 
   function show(cat) {
-    const info = INFO[cat];
     const tpl = document.getElementById('tpl-' + cat);
-    if (!list || !tpl || !info) return;
+    if (!grid || !tpl) return;
 
-    introTitle.textContent = info.title;
-    introDesc.textContent = info.desc;
+    if (intro) intro.textContent = INFO[cat] || '';
 
-    list.innerHTML = '';
-    list.appendChild(tpl.content.cloneNode(true));
+    grid.innerHTML = '';
+    grid.appendChild(tpl.content.cloneNode(true));
 
     buttons.forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.cat === cat);
