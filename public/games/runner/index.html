@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
-  <title>Rush Cartoon · Nexus</title>
+  <title>Rush · Nexus</title>
   <meta name="theme-color" content="#7ec8ff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="manifest.json" />
@@ -11,6 +11,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="game.css" />
   <script src="/no-ptr.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three.module.min.js",
+      "three/addons/": "./vendor/addons/"
+    }
+  }
+  </script>
 </head>
 <body>
   <header class="bar">
@@ -26,22 +34,21 @@
     </div>
 
     <div class="stage" id="stage">
-      <div class="touch-hint" id="hint">Swipe ← → · ↑ jump · ↓ slide</div>
+      <div class="touch-hint" id="hint">Loading character…</div>
     </div>
 
-    <button type="button" class="btn primary" id="startBtn">Start cartoon run</button>
+    <button type="button" class="btn primary" id="startBtn" disabled>Loading…</button>
   </main>
 
   <div class="overlay" id="overlay" hidden>
     <div class="card">
-      <h2 id="overTitle">Wrecked!</h2>
+      <h2 id="overTitle">Bonk!</h2>
       <p id="overScore">Score 0 · Coins 0</p>
       <button type="button" class="btn primary" id="againBtn">Run again</button>
       <a class="btn ghost" href="/">Back to Nexus</a>
     </div>
   </div>
 
-  <script src="vendor/three.min.js"></script>
-  <script src="game.js"></script>
+  <script type="module" src="game.js"></script>
 </body>
 </html>
