@@ -339,17 +339,22 @@
         }
         strip.hidden = false;
         strip.innerHTML = list.map((s) => {
-          const initial = (s.name || "S").trim().charAt(0).toUpperCase();
-          const face = s.photo
-            ? `<img src="${escapeHtml(s.photo)}" alt="" />`
-            : initial;
+          const label = escapeHtml(s.shop || s.name || "Status");
+          const hours = ZEStatus.hoursLeft(s.expiresAt);
+          const bg = s.photo
+            ? `style="background-image:url('${escapeHtml(s.photo)}')"`
+            : "";
+          const initial = escapeHtml((s.name || "S").trim().charAt(0).toUpperCase());
           return `
-            <button type="button" class="story" data-id="${escapeHtml(s.id)}">
-              <div class="story-ring"><i>${face}</i></div>
-              <div class="story-name">${escapeHtml(s.shop || s.name || "Status")}</div>
+            <button type="button" class="story-card" data-id="${escapeHtml(s.id)}">
+              <div class="bg" ${bg}></div>
+              ${s.photo ? "" : `<div class="initial">${initial}</div>`}
+              <div class="shade"></div>
+              <span class="badge">${hours}</span>
+              <span class="story-name">${label}</span>
             </button>`;
         }).join("");
-        strip.querySelectorAll(".story").forEach((btn) => {
+        strip.querySelectorAll(".story-card").forEach((btn) => {
           btn.addEventListener("click", () => {
             const item = list.find((x) => x.id === btn.dataset.id);
             if (item) openStatus(item);
@@ -369,15 +374,23 @@
         document.body.appendChild(viewer);
       }
       const hours = ZEStatus.hoursLeft(item.expiresAt);
+      const bg = item.photo
+        ? `style="background-image:url('${escapeHtml(item.photo)}')"`
+        : "";
       viewer.hidden = false;
       viewer.innerHTML = `
         <div class="status-sheet">
-          <h3>${escapeHtml(item.shop || item.name || "Status")}</h3>
-          <div class="meta">${escapeHtml(item.name || "")} ? ${hours}h left</div>
-          ${item.text ? `<p>${escapeHtml(item.text)}</p>` : ""}
-          ${item.photo ? `<img src="${escapeHtml(item.photo)}" alt="" />` : ""}
-          ${item.userId ? `<a href="/events/vendor.html?id=${encodeURIComponent(item.userId)}" style="display:block;margin-top:12px;color:#FFD8B8;font-weight:700;text-align:center;">View shop</a>` : ""}
-          <button type="button" id="closeStatus">Close</button>
+          <div class="full-bg" ${bg}></div>
+          <div class="full-shade"></div>
+          <div class="body">
+            <h3>${escapeHtml(item.shop || item.name || "Status")}</h3>
+            <div class="meta">${escapeHtml(item.name || "")} · ${hours}h left</div>
+            ${item.text ? `<p>${escapeHtml(item.text)}</p>` : ""}
+          </div>
+          <div class="actions">
+            ${item.userId ? `<a href="/events/vendor.html?id=${encodeURIComponent(item.userId)}">View shop</a>` : ""}
+            <button type="button" id="closeStatus">Close</button>
+          </div>
         </div>`;
       viewer.querySelector("#closeStatus").onclick = () => { viewer.hidden = true; };
       viewer.onclick = (e) => { if (e.target === viewer) viewer.hidden = true; };
