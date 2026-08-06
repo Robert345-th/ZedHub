@@ -3,7 +3,7 @@
   "name": "Nexus",
   "short_name": "Nexus",
   "description": "Install once — Events, Ludo, Fruits and more are downloaded with Nexus.",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -53,12 +53,6 @@
       "short_name": "Fruits",
       "url": "/games/fruits/?mode=offline",
       "icons": [{ "src": "/icons/fruits.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Market",
-      "short_name": "Market",
-      "url": "https://zedmarket.app",
-      "icons": [{ "src": "/icons/zedmarket.png", "sizes": "192x192" }]
     }
   ]
 }

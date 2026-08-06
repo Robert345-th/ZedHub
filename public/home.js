@@ -69,11 +69,7 @@
 
   show(start);
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(function () {});
-  }
-
-  // Bottom Download button (Chrome install / fallback hint — no fake alerts)
+  // Bottom Install button — Chrome always shows its own confirm sheet (required).
   const downloadBar = document.getElementById('downloadBar');
   const downloadBtn = document.getElementById('downloadBtn');
   const downloadHint = document.getElementById('downloadHint');
@@ -87,9 +83,14 @@
     downloadBar.hidden = true;
   }
 
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function () {});
+  }
+
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
+    if (downloadBtn) downloadBtn.textContent = 'Install app';
     if (downloadHint) downloadHint.hidden = true;
   });
 
@@ -113,7 +114,7 @@
       downloadHint.hidden = false;
       downloadHint.textContent = ios
         ? 'Tap Share, then Add to Home Screen.'
-        : 'In Chrome tap ⋮ then Install app / Add to Home screen.';
+        : 'Open Chrome menu ⋮ → Install app. That confirm sheet is required by Chrome.';
     });
   }
 })();
