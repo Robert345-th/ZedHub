@@ -26,7 +26,10 @@ const ZEDEVENTS_API =
 const rooms = new Map(); // code -> room
 const DATA_DIR = path.join(__dirname, 'data');
 const STATUSES_FILE = path.join(DATA_DIR, 'statuses.json');
+const SHOPS_FILE = path.join(DATA_DIR, 'shop-galleries.json');
 const STATUS_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const SHOP_PHOTO_MIN = 4;
+const SHOP_PHOTO_MAX = 10;
 
 function ensureDataDir() {
   try {
@@ -48,6 +51,22 @@ function readStatuses() {
 function writeStatuses(list) {
   ensureDataDir();
   fs.writeFileSync(STATUSES_FILE, JSON.stringify(list, null, 2));
+}
+
+function readShops() {
+  ensureDataDir();
+  try {
+    const raw = fs.readFileSync(SHOPS_FILE, 'utf8');
+    const obj = JSON.parse(raw);
+    return obj && typeof obj === 'object' ? obj : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeShops(obj) {
+  ensureDataDir();
+  fs.writeFileSync(SHOPS_FILE, JSON.stringify(obj, null, 2));
 }
 
 function activeStatuses() {
@@ -150,6 +169,48 @@ app.delete('/api/statuses/:id', (req, res) => {
   }
   writeStatuses(list.filter((s) => s.id !== id));
   res.json({ ok: true });
+});
+
+// —— Shop “what they do” gallery (4–10 photos) ——
+app.get('/api/shops/:userId/gallery', (req, res) => {
+  const userId = String(req.params.userId || '').trim();
+  const shops = readShops();
+  const shop = shops[userId] || { userId, photos: [], updatedAt: null };
+  res.json(shop);
+});
+
+app.put('/api/shops/:userId/gallery', (req, res) => {
+  const userId = String(req.params.userId || '').trim();
+  const bodyUser = String(req.body?.userId || '').trim();
+  if (!userId) return res.status(400).json({ error: 'userId required' });
+  if (bodyUser && bodyUser !== userId) {
+    return res.status(403).json({ error: 'Not your shop' });
+  }
+
+  let photos = Array.isArray(req.body?.photos) ? req.body.photos : [];
+  photos = photos
+    .map((p) => String(p || '').trim())
+    .filter(Boolean)
+    .slice(0, SHOP_PHOTO_MAX);
+
+  if (photos.length < SHOP_PHOTO_MIN) {
+    return res.status(400).json({
+      error: `Add at least ${SHOP_PHOTO_MIN} photos (up to ${SHOP_PHOTO_MAX}).`,
+      min: SHOP_PHOTO_MIN,
+      max: SHOP_PHOTO_MAX,
+    });
+  }
+
+  const shops = readShops();
+  shops[userId] = {
+    userId,
+    name: String(req.body?.name || '').trim().slice(0, 80),
+    bio: String(req.body?.bio || '').trim().slice(0, 500),
+    photos,
+    updatedAt: Date.now(),
+  };
+  writeShops(shops);
+  res.json(shops[userId]);
 });
 
 const publicDir = path.join(__dirname, 'public');

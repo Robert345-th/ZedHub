@@ -3,22 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>ZedEvents - My Shop</title>
+  <title>My Shop ∑ Events</title>
   <meta name="theme-color" content="#C2410C" />
   <link rel="manifest" href="/manifest.json" />
   <style>
     :root {
       --bg: #F4F1EC; --card: #FFFFFF; --border: #E2E0DC;
-      --text: #211D1A; --subtext: #5C5955; --black: #111111;
-      --orange: #C2410C; --orange-hot: #EA580C; --cream: #FFF3E8;
-      --price-red: #A3131C; --warn-bg: #FFF3E0; --warn-text: #7A3E00;
+      --text: #211D1A; --subtext: #5C5955; --orange: #C2410C; --cream: #FFF3E8;
+      --warn-bg: #FFF3E0; --warn-text: #7A3E00;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { height: 100%; overflow: hidden; overscroll-behavior: none; }
-    body { height: 100%; overflow-y: auto; overscroll-behavior: none; }
     body {
-      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg); color: var(--text); padding-bottom: 72px; overscroll-behavior: none;}
+      height: 100%; overflow-y: auto; font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg); color: var(--text); padding-bottom: 88px;
+    }
     a { color: inherit; text-decoration: none; }
     button { font: inherit; }
     .topbar {
@@ -31,46 +30,35 @@
       background: #111; color: #F5C518; border: none;
       padding: 8px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; cursor: pointer;
     }
+    .wrap { padding: 14px; max-width: 560px; margin: 0 auto; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 14px; margin-bottom: 12px;
+    }
+    .card h2 { font-size: 15px; margin-bottom: 6px; }
+    .card p { font-size: 13px; color: var(--subtext); line-height: 1.4; margin-bottom: 12px; }
+    .gallery {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;
+    }
+    .gallery img {
+      width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; background: #FBEAD9;
+    }
+    .primary {
+      display: block; width: 100%; text-align: center; border: 0; border-radius: 12px;
+      padding: 12px; background: var(--orange); color: #fff; font-weight: 700; cursor: pointer;
+    }
+    .ghost {
+      display: block; width: 100%; text-align: center; margin-top: 8px;
+      border: 1px solid var(--border); border-radius: 12px; padding: 12px;
+      background: #fff; font-weight: 700; cursor: pointer;
+    }
     .banner {
-      display: none; margin: 12px; padding: 12px 14px; border-radius: 10px;
+      display: none; margin-bottom: 12px; padding: 12px 14px; border-radius: 10px;
       background: var(--warn-bg); color: var(--warn-text); font-size: 13px; font-weight: 600; line-height: 1.4;
     }
     .banner.show { display: block; }
-    .center-box { padding: 60px 24px; text-align: center; color: var(--subtext); }
-    .list { padding: 14px; }
-    .row {
-      display: flex; align-items: center; background: var(--card);
-      border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-bottom: 10px;
-    }
-    .thumb {
-      width: 60px; height: 60px; border-radius: 10px; background: #E9E2D3;
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
-      margin-right: 12px; flex-shrink: 0; font-size: 24px;
-    }
-    .thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .row-info { flex: 1; min-width: 0; }
-    .row-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .row-price { font-size: 13px; color: var(--price-red); font-weight: 700; margin-top: 2px; }
-    .status-badge {
-      display: inline-block; padding: 2px 8px; border-radius: 10px;
-      font-size: 10px; font-weight: 700; margin-top: 4px; text-transform: uppercase;
-    }
-    .status-active { background: #E7F5EC; color: #1F7A43; }
-    .status-pending { background: var(--warn-bg); color: var(--warn-text); }
-    .status-rejected { background: #FBE7E8; color: var(--price-red); }
-    .status-removed { background: #EEE; color: var(--subtext); }
-    .del-btn {
-      width: 40px; height: 40px; border-radius: 20px; margin-left: 8px; flex-shrink: 0;
-      background: var(--bg); border: 1px solid var(--border); color: var(--price-red);
-      font-weight: 700; cursor: pointer; font-size: 18px; line-height: 1;
-    }
-    .thumb-ph {
-      width: 28px; height: 28px; color: var(--subtext); opacity: 0.7;
-    }
-    .thumb-ph svg {
-      width: 100%; height: 100%; stroke: currentColor; fill: none;
-      stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
-    }
+    .meta { font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 8px; }
+    .meta.bad { color: #B42318; }
   </style>
   <script src="/no-ptr.js"></script>
 </head>
@@ -83,105 +71,62 @@
     <button class="sell-btn" type="button" onclick="location.href='/events/status.html'">Status</button>
   </div>
 
-  <div class="banner" id="banner"></div>
-  <div id="status" class="center-box">Loadingù</div>
-  <div class="list" id="list" hidden></div>
+  <div class="wrap">
+    <div class="banner" id="banner"></div>
+    <div class="card">
+      <h2>Photo gallery</h2>
+      <p>Your shop page needs <strong>4ñ10 photos</strong> of what you do.</p>
+      <div class="meta" id="photoMeta">CheckingÖ</div>
+      <div class="gallery" id="gallery"></div>
+      <a class="primary" href="/events/shop-photos.html">Add / edit photos</a>
+      <a class="ghost" id="viewPublic" href="#">View public shop page</a>
+    </div>
+  </div>
 
   <script src="/events/js/api.js"></script>
   <script src="/events/js/auth.js"></script>
-  <script src="/events/js/ui.js"></script>
   <script src="/events/js/bottom-nav.js"></script>
   <script>
-    if (!ZEAuth.requireLogin("/my-shop.html")) {
+    if (!ZEAuth.requireLogin("/events/my-shop.html")) {
       /* redirected */
     } else {
       const user = ZEAuth.getUser();
-      const status = document.getElementById("status");
-      const list = document.getElementById("list");
       const banner = document.getElementById("banner");
       document.getElementById("shopName").textContent =
         user.business_name || user.name || "Your shop";
+      document.getElementById("viewPublic").href =
+        `/events/vendor.html?id=${encodeURIComponent(user.id)}`;
 
       if (!user.is_vendor && !user.business_name) {
-        status.innerHTML =
-          'Set up your shop page ó <a href="/events/register-shop.html" style="color:#C2410C;font-weight:700">register</a> so people can see what you do.';
-      }
-
-      if (new URLSearchParams(location.search).get("posted") === "1") {
-        banner.textContent = "Saved ó waiting for approval. It won't show on Home until approved.";
+        banner.textContent = "Tip: register your shop name, then add 4ñ10 photos.";
         banner.classList.add("show");
       }
 
-      function statusLabel(s) {
-        if (s === "active") return ["Live", "status-active"];
-        if (s === "pending") return ["Pending approval", "status-pending"];
-        if (s === "rejected") return ["Rejected", "status-rejected"];
-        return [s || "Unknown", "status-removed"];
-      }
-
-      function escapeHtml(str) {
-        return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
-      }
-
-      async function load() {
+      (async () => {
+        const meta = document.getElementById("photoMeta");
+        const gallery = document.getElementById("gallery");
         try {
-          const items = await ZE.api("/services/mine");
-          if (!items.length) {
-            status.textContent = "No listings yet. Add what your shop offers from register/edit, or post a 24h status.";
-            list.hidden = true;
-            return;
+          const res = await fetch(`/api/shops/${encodeURIComponent(user.id)}/gallery`);
+          const data = res.ok ? await res.json() : { photos: [] };
+          const photos = Array.isArray(data.photos) ? data.photos : [];
+          const n = photos.length;
+          if (n < 4) {
+            meta.textContent = `${n}/10 photos ∑ add at least 4`;
+            meta.classList.add("bad");
+            banner.textContent = "Your public shop page needs 4ñ10 photos of what you do.";
+            banner.classList.add("show");
+          } else {
+            meta.textContent = `${n}/10 photos ∑ ready`;
+            meta.classList.remove("bad");
           }
-          status.hidden = true;
-          list.hidden = false;
-          list.innerHTML = items.map((item) => {
-            const photo = ZE.firstPhoto(item.photos);
-            const [label, cls] = statusLabel(item.status);
-            const price = item.price != null ? `K${Number(item.price).toLocaleString()}` : "Ask for quote";
-            const img = photo
-              ? `<img src="${photo}" alt="" loading="lazy" />`
-              : `<div class="thumb-ph" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-4 4-2-2-5 5"/></svg></div>`;
-            return `
-              <div class="row" data-id="${item.id}">
-                <a class="row-main" href="/events/edit-service.html?id=${item.id}" style="display:flex;flex:1;align-items:center;min-width:0;">
-                  <div class="thumb">${img}</div>
-                  <div class="row-info">
-                    <div class="row-title">${escapeHtml(item.title || "Untitled")}</div>
-                    <div class="row-price">${price}</div>
-                    <span class="status-badge ${cls}">${label}</span>
-                  </div>
-                </a>
-                <button class="del-btn" type="button" data-del="${item.id}" aria-label="Delete">ù</button>
-              </div>`;
-          }).join("");
-
-          list.querySelectorAll("[data-del]").forEach((btn) => {
-            btn.addEventListener("click", async () => {
-              const ok = await ZEUI.confirm({
-                title: "Remove service",
-                message: "Remove this service?",
-                okText: "Remove",
-                danger: true,
-              });
-              if (!ok) return;
-              try {
-                await ZE.api(`/services/${btn.dataset.del}`, { method: "DELETE" });
-                ZEUI.toast("Service removed.", "success");
-                load();
-              } catch (err) {
-                ZEUI.error(err.message || "Could not delete.");
-              }
-            });
-          });
-        } catch (err) {
-          status.textContent = err.message || "Could not load your shop.";
+          gallery.innerHTML = photos.slice(0, 8).map((url) =>
+            `<img src="${url}" alt="" loading="lazy" />`
+          ).join("") || "<p style='grid-column:1/-1;color:#5C5955;font-size:13px;'>No photos yet.</p>";
+        } catch {
+          meta.textContent = "Could not load gallery";
+          meta.classList.add("bad");
         }
-      }
-
-      load();
+      })();
     }
   </script>
 </body>
