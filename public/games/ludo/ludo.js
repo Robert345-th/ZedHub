@@ -1,13 +1,7 @@
 (function () {
-  const COLORS = {
-    red: '#e11d48',
-    green: '#16a34a',
-    yellow: '#ca8a04',
-    blue: '#2563eb',
-  };
-
   const START = window.LudoEngine.START;
   const MAIN_LEN = window.LudoEngine.MAIN_LEN;
+  const Board = window.LudoBoard;
 
   const params = new URLSearchParams(location.search);
   const mode = (params.get('mode') || 'online').toLowerCase();
@@ -76,45 +70,6 @@
     return n || 'Player';
   }
 
-  function trackXY(i) {
-    const angle = (i / 52) * Math.PI * 2 - Math.PI / 2;
-    const r = 36;
-    return { x: 50 + r * Math.cos(angle), y: 50 + r * Math.sin(angle) };
-  }
-
-  function homeXY(color, step) {
-    const hubs = {
-      red: { x: 50, y: 72 },
-      green: { x: 28, y: 50 },
-      yellow: { x: 50, y: 28 },
-      blue: { x: 72, y: 50 },
-    };
-    const hub = hubs[color];
-    const t = (step + 1) / 6;
-    return { x: hub.x + (50 - hub.x) * t, y: hub.y + (50 - hub.y) * t };
-  }
-
-  function yardXY(color, tokenId) {
-    const bases = {
-      red: { x: 78, y: 78 },
-      green: { x: 22, y: 78 },
-      yellow: { x: 22, y: 22 },
-      blue: { x: 78, y: 22 },
-    };
-    const b = bases[color];
-    const ox = (tokenId % 2) * 8 - 4;
-    const oy = tokenId < 2 ? -4 : 4;
-    return { x: b.x + ox, y: b.y + oy };
-  }
-
-  function tokenPos(color, pos, tokenId) {
-    if (pos < 0) return yardXY(color, tokenId);
-    if (pos >= 56) return { x: 50, y: 50 };
-    if (pos >= MAIN_LEN) return homeXY(color, pos - MAIN_LEN);
-    const abs = (START[color] + pos) % 52;
-    return trackXY(abs);
-  }
-
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, '&amp;')
@@ -126,35 +81,25 @@
     const legal = new Set((s.legalMoves || []).map((m) => m.tokenId));
     const myTurn = s.turnPlayerId === meId;
 
-    let svg = '';
-    svg += `<rect x="62" y="62" width="34" height="34" rx="4" fill="#fecdd3"/>`;
-    svg += `<rect x="4" y="62" width="34" height="34" rx="4" fill="#bbf7d0"/>`;
-    svg += `<rect x="4" y="4" width="34" height="34" rx="4" fill="#fef08a"/>`;
-    svg += `<rect x="62" y="4" width="34" height="34" rx="4" fill="#bfdbfe"/>`;
-    svg += `<circle cx="50" cy="50" r="8" fill="#111827"/>`;
-    svg += `<text x="50" y="52.5" text-anchor="middle" font-size="4" fill="#fff" font-family="Syne,sans-serif" font-weight="700">HOME</text>`;
-
-    for (let i = 0; i < 52; i++) {
-      const p = trackXY(i);
-      const safe = [0, 8, 13, 21, 26, 34, 39, 47].includes(i);
-      svg += `<circle cx="${p.x}" cy="${p.y}" r="${safe ? 2.2 : 1.6}" fill="${safe ? '#86efac' : '#cbd5e1'}" />`;
-    }
-
-    ['red', 'green', 'yellow', 'blue'].forEach((c) => {
-      for (let step = 0; step < 5; step++) {
-        const p = homeXY(c, step);
-        svg += `<circle cx="${p.x}" cy="${p.y}" r="1.8" fill="${COLORS[c]}" opacity="0.45"/>`;
-      }
-    });
+    let svg = Board.drawStaticBoard();
 
     (s.players || []).forEach((player) => {
       player.tokens.forEach((token) => {
-        const p = tokenPos(player.color, token.pos, token.id);
+        if (token.pos === 56) return; // finished — in center triangle
+        const p = Board.tokenXY(player.color, token.pos, token.id);
         const isMine = player.id === meId;
         const canMove = myTurn && isMine && legal.has(token.id);
-        const cls = canMove ? 'token legal' : 'token';
-        svg += `<circle class="${cls}" data-token="${token.id}" cx="${p.x}" cy="${p.y}" r="3.3" fill="${COLORS[player.color]}" stroke="#111" stroke-width="0.6"/>`;
-        svg += `<text x="${p.x}" y="${p.y + 1.1}" text-anchor="middle" font-size="2.6" fill="#fff" font-weight="700" pointer-events="none">${token.id + 1}</text>`;
+        svg += Board.pawn(p.x, p.y, player.color, canMove, token.id);
+      });
+    });
+
+    // finished tokens stacked in center slightly offset
+    (s.players || []).forEach((player) => {
+      const done = player.tokens.filter((t) => t.pos === 56);
+      done.forEach((token, i) => {
+        const ox = (i % 2) * 0.35 - 0.15;
+        const oy = (i < 2 ? -0.2 : 0.25);
+        svg += Board.pawn(7.5 + ox, 7.5 + oy, player.color, false, token.id);
       });
     });
 
@@ -178,10 +123,10 @@
       show(els.wait);
       els.waitCode.textContent = s.code;
       els.waitPlayers.innerHTML = s.players
-        .map(
-          (p) =>
-            `<li><span class="dot ${p.color}"></span><span>${escapeHtml(p.name)}${p.id === meId ? ' (you)' : ''}</span></li>`
-        )
+        .map((p) => {
+          const color = Board.FILL[p.color] || '#fff';
+          return `<li><span class="dot" style="background:${color}"></span><span>${escapeHtml(p.name)}${p.id === meId ? ' (you)' : ''}</span></li>`;
+        })
         .join('');
       const isHost = s.hostId === meId;
       els.startBtn.hidden = !isHost;
@@ -201,21 +146,24 @@
     }
 
     show(els.game);
-    els.diceFace.textContent = s.dice != null ? s.dice : '—';
+    els.diceFace.innerHTML = Board.dicePips(s.dice);
+    if (s.dice) els.diceFace.classList.add('rolled');
+    else els.diceFace.classList.remove('rolled');
     els.eventLine.textContent = s.lastEvent || '';
     const myTurn = s.turnPlayerId === meId;
     els.rollBtn.disabled = !(myTurn && !s.rolled);
     els.statusLine.textContent = myTurn
       ? s.rolled
-        ? 'Tap a glowing token to move'
-        : 'Your turn — roll'
+        ? 'Tap a glowing piece to move'
+        : 'Your turn — roll the dice'
       : `Waiting for ${s.players.find((p) => p.id === s.turnPlayerId)?.name || '…'}`;
 
     els.turnList.innerHTML = s.players
       .map((p) => {
         const active = p.id === s.turnPlayerId ? 'active' : '';
         const me = p.id === meId ? 'me' : '';
-        return `<div class="${active} ${me}"><span class="dot ${p.color}"></span> ${escapeHtml(p.name)}${p.bot ? ' · bot' : ''}${p.connected === false ? ' (away)' : ''}</div>`;
+        const color = Board.FILL[p.color] || '#fff';
+        return `<div class="${active} ${me}"><span class="dot" style="background:${color}"></span> ${escapeHtml(p.name)}${p.bot ? ' · bot' : ''}${p.connected === false ? ' (away)' : ''}</div>`;
       })
       .join('');
 

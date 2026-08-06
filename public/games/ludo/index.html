@@ -73,11 +73,11 @@
   <section class="screen game" id="gameScreen" hidden>
     <div class="status" id="statusLine"></div>
     <div class="board-wrap">
-      <svg id="board" viewBox="0 0 100 100" aria-label="Ludo board"></svg>
+      <svg id="board" viewBox="0 0 15 15" aria-label="Ludo board"></svg>
     </div>
     <div class="hud">
       <div class="dice-box">
-        <div class="dice" id="diceFace">—</div>
+        <div id="diceFace" class="dice-wrap" aria-live="polite"></div>
         <button type="button" class="btn primary" id="rollBtn">Roll dice</button>
       </div>
       <div class="turn-list" id="turnList"></div>
@@ -92,6 +92,7 @@
   </section>
 
   <script src="engine.js"></script>
+  <script src="board.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="ludo.js"></script>
 </body>
