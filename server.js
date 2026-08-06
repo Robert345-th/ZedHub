@@ -1,4 +1,4 @@
-require('dotenv').config();
+const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const express = require('express');
@@ -6,6 +6,10 @@ const cors = require('cors');
 const fetch = require('node-fetch');
 const { Server } = require('socket.io');
 const ludo = require('./lib/ludo');
+
+try {
+  require('dotenv').config();
+} catch (_) {}
 
 const app = express();
 const server = http.createServer(app);
@@ -20,6 +24,39 @@ const ZEDEVENTS_API =
   process.env.ZEDEVENTS_API || 'https://zedevents-production.up.railway.app';
 
 const rooms = new Map(); // code -> room
+const DATA_DIR = path.join(__dirname, 'data');
+const STATUSES_FILE = path.join(DATA_DIR, 'statuses.json');
+const STATUS_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function ensureDataDir() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (_) {}
+}
+
+function readStatuses() {
+  ensureDataDir();
+  try {
+    const raw = fs.readFileSync(STATUSES_FILE, 'utf8');
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStatuses(list) {
+  ensureDataDir();
+  fs.writeFileSync(STATUSES_FILE, JSON.stringify(list, null, 2));
+}
+
+function activeStatuses() {
+  const now = Date.now();
+  const all = readStatuses();
+  const list = all.filter((s) => s && s.expiresAt > now);
+  if (list.length !== all.length) writeStatuses(list);
+  return list.sort((a, b) => b.createdAt - a.createdAt);
+}
 
 function makeCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -36,7 +73,7 @@ function emitRoom(code) {
 }
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', (req, res) => {
   res.json({
@@ -45,8 +82,9 @@ app.get('/api/health', (req, res) => {
     home: 'app-list',
     eventsApi: ZEDEVENTS_API,
     eventsUi: '/events/',
-    games: ['ludo'],
+    games: ['ludo', 'fruits', 'words'],
     market: 'link-only',
+    statuses: true,
   });
 });
 
@@ -68,6 +106,52 @@ app.get('/api/events/status', async (req, res) => {
   }
 });
 
+// —— 24h statuses (Facebook-style) ——
+app.get('/api/statuses', (req, res) => {
+  res.json(activeStatuses());
+});
+
+app.post('/api/statuses', (req, res) => {
+  const userId = String(req.body?.userId || '').trim();
+  const name = String(req.body?.name || 'Guest').trim().slice(0, 48) || 'Guest';
+  const text = String(req.body?.text || '').trim().slice(0, 280);
+  const photo = String(req.body?.photo || '').trim().slice(0, 500);
+  const shop = String(req.body?.shop || '').trim().slice(0, 80);
+  if (!userId) return res.status(400).json({ error: 'userId required' });
+  if (!text && !photo) return res.status(400).json({ error: 'Add text or a photo' });
+
+  const now = Date.now();
+  const status = {
+    id: `st_${now}_${Math.random().toString(36).slice(2, 8)}`,
+    userId,
+    name,
+    shop,
+    text,
+    photo: photo || null,
+    createdAt: now,
+    expiresAt: now + STATUS_TTL_MS,
+  };
+
+  // One active status per user — replace older
+  const list = activeStatuses().filter((s) => String(s.userId) !== userId);
+  list.unshift(status);
+  writeStatuses(list.slice(0, 200));
+  res.status(201).json(status);
+});
+
+app.delete('/api/statuses/:id', (req, res) => {
+  const id = req.params.id;
+  const userId = String(req.body?.userId || req.query.userId || '').trim();
+  const list = readStatuses();
+  const item = list.find((s) => s.id === id);
+  if (!item) return res.status(404).json({ error: 'Not found' });
+  if (userId && String(item.userId) !== userId) {
+    return res.status(403).json({ error: 'Not your status' });
+  }
+  writeStatuses(list.filter((s) => s.id !== id));
+  res.json({ ok: true });
+});
+
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir));
 
@@ -83,6 +167,10 @@ app.get('/games/fruits', (req, res) => {
   res.redirect('/games/fruits/');
 });
 
+app.get('/games/words', (req, res) => {
+  res.redirect('/games/words/');
+});
+
 app.get('/games/ludo/', (req, res) => {
   res.sendFile(path.join(publicDir, 'games', 'ludo', 'index.html'));
 });
@@ -91,10 +179,15 @@ app.get('/games/fruits/', (req, res) => {
   res.sendFile(path.join(publicDir, 'games', 'fruits', 'index.html'));
 });
 
+app.get('/games/words/', (req, res) => {
+  res.sendFile(path.join(publicDir, 'games', 'words', 'index.html'));
+});
+
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io')) return next();
+  // Let missing static assets 404; don't force every /events/* onto index
   if (req.path.startsWith('/events/')) {
-    return res.sendFile(path.join(publicDir, 'events', 'index.html'));
+    return res.status(404).send('Not found');
   }
   if (req.path.startsWith('/games/')) {
     return res.status(404).send('Game not found');

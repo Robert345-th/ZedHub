@@ -116,6 +116,47 @@
     .remind-banner[hidden] { display: none !important; }
     .remind-banner strong { display: block; margin-bottom: 4px; color: var(--orange); }
     .remind-banner a { color: var(--orange); font-weight: 700; }
+    .status-strip {
+      display: flex; gap: 10px; overflow-x: auto; padding: 4px 12px 14px;
+      scrollbar-width: none;
+    }
+    .status-strip::-webkit-scrollbar { display: none; }
+    .status-strip[hidden] { display: none !important; }
+    .story {
+      flex: 0 0 auto; width: 72px; text-align: center; text-decoration: none; color: inherit;
+      cursor: pointer; background: none; border: 0; padding: 0; font: inherit;
+    }
+    .story-ring {
+      width: 62px; height: 62px; margin: 0 auto 6px; border-radius: 50%;
+      padding: 3px; background: linear-gradient(135deg, #C2410C, #F59E0B, #EA580C);
+    }
+    .story-ring > i {
+      display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%;
+      background: #fff; font-weight: 800; color: var(--orange); font-style: normal; font-size: 18px;
+      overflow: hidden;
+    }
+    .story-ring img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .story-name {
+      font-size: 11px; font-weight: 600; max-width: 72px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .status-viewer {
+      position: fixed; inset: 0; z-index: 200; background: rgba(10,8,6,0.92);
+      display: grid; place-items: center; padding: 20px;
+    }
+    .status-viewer[hidden] { display: none !important; }
+    .status-sheet {
+      width: min(420px, 100%); background: #1a1410; color: #fff; border-radius: 18px;
+      padding: 18px; max-height: 80vh; overflow: auto;
+    }
+    .status-sheet h3 { font-size: 16px; margin-bottom: 4px; }
+    .status-sheet .meta { font-size: 12px; opacity: 0.7; margin-bottom: 12px; }
+    .status-sheet p { font-size: 15px; line-height: 1.45; white-space: pre-wrap; }
+    .status-sheet img { width: 100%; border-radius: 12px; margin-top: 12px; }
+    .status-sheet button {
+      margin-top: 14px; width: 100%; border: 0; border-radius: 12px; padding: 12px;
+      font-weight: 700; background: #C2410C; color: #fff; cursor: pointer;
+    }
     .chip {
       background: var(--card); border: 1px solid var(--border); border-radius: 20px;
       padding: 7px 14px; font-size: 13px; white-space: nowrap; cursor: pointer; flex-shrink: 0;
@@ -170,7 +211,7 @@
         </button>
         <div>
           <div class="brand">ZedEvents</div>
-          <div class="brand-sub" id="greet">Event services near you</div>
+          <div class="brand-sub" id="greet">Shops &amp; 24h statuses</div>
         </div>
       </div>
       <div class="topbar-right">
@@ -181,13 +222,6 @@
           </button>
           <button class="icon-btn" type="button" id="favBtn" aria-label="Favorites">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-          </button>
-          <button class="icon-btn" type="button" id="chatBtn" aria-label="Chats">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span class="badge" id="chatBadge"></span>
-          </button>
-          <button class="icon-btn" type="button" id="postBtn" aria-label="Post">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
         </div>
       </div>
@@ -210,13 +244,15 @@
   </div>
 
   <div class="remind-banner" id="remindBanner" hidden></div>
-  <div id="status" class="status">Loading services?</div>
+  <div class="status-strip" id="statusStrip" hidden></div>
+  <div id="status" class="status">Loading?</div>
   <div class="grid" id="grid" hidden></div>
 
   <script src="/events/js/api.js"></script>
   <script src="/events/js/auth.js"></script>
   <script src="/events/js/location.js"></script>
   <script src="/events/js/reminders.js"></script>
+  <script src="/events/js/status.js"></script>
   <script src="/events/js/bottom-nav.js"></script>
   <script>
     const grid = document.getElementById("grid");
@@ -239,8 +275,6 @@
 
     document.getElementById("menuBtn").onclick = () => goLogin("/events/settings.html");
     document.getElementById("favBtn").onclick = () => goLogin("/events/favorites.html");
-    document.getElementById("chatBtn").onclick = () => goLogin("/events/chats.html");
-    document.getElementById("postBtn").onclick = () => goLogin("/events/post-service.html");
     document.getElementById("mapBtn").onclick = () => { location.href = "/events/map-view.html"; };
 
     function escapeHtml(str) {
@@ -259,22 +293,64 @@
         greet.textContent = `Hi, ${user.name || "there"}`;
         authBtn.textContent = user.name || "Account";
         authBtn.onclick = () => { location.href = "/events/settings.html"; };
-        loadUnread();
       } else {
         authBtn.onclick = () => { location.href = "/events/login.html"; };
       }
     }
 
-    async function loadUnread() {
+    async function loadStatuses() {
+      const strip = document.getElementById("statusStrip");
+      if (!strip || !window.ZEStatus) return;
       try {
-        const data = await ZE.api("/messages/unread-count");
-        const badge = document.getElementById("chatBadge");
-        const n = data.count || 0;
-        if (n > 0) {
-          badge.style.display = "flex";
-          badge.textContent = n > 9 ? "9+" : String(n);
+        const list = await ZEStatus.list();
+        if (!list.length) {
+          strip.hidden = true;
+          return;
         }
-      } catch { /* ignore */ }
+        strip.hidden = false;
+        strip.innerHTML = list.map((s) => {
+          const initial = (s.name || "S").trim().charAt(0).toUpperCase();
+          const face = s.photo
+            ? `<img src="${escapeHtml(s.photo)}" alt="" />`
+            : initial;
+          return `
+            <button type="button" class="story" data-id="${escapeHtml(s.id)}">
+              <div class="story-ring"><i>${face}</i></div>
+              <div class="story-name">${escapeHtml(s.shop || s.name || "Status")}</div>
+            </button>`;
+        }).join("");
+        strip.querySelectorAll(".story").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const item = list.find((x) => x.id === btn.dataset.id);
+            if (item) openStatus(item);
+          });
+        });
+      } catch {
+        strip.hidden = true;
+      }
+    }
+
+    function openStatus(item) {
+      let viewer = document.getElementById("statusViewer");
+      if (!viewer) {
+        viewer = document.createElement("div");
+        viewer.id = "statusViewer";
+        viewer.className = "status-viewer";
+        document.body.appendChild(viewer);
+      }
+      const hours = ZEStatus.hoursLeft(item.expiresAt);
+      viewer.hidden = false;
+      viewer.innerHTML = `
+        <div class="status-sheet">
+          <h3>${escapeHtml(item.shop || item.name || "Status")}</h3>
+          <div class="meta">${escapeHtml(item.name || "")} ? ${hours}h left</div>
+          ${item.text ? `<p>${escapeHtml(item.text)}</p>` : ""}
+          ${item.photo ? `<img src="${escapeHtml(item.photo)}" alt="" />` : ""}
+          ${item.userId ? `<a href="/events/vendor.html?id=${encodeURIComponent(item.userId)}" style="display:block;margin-top:12px;color:#FFD8B8;font-weight:700;text-align:center;">View shop</a>` : ""}
+          <button type="button" id="closeStatus">Close</button>
+        </div>`;
+      viewer.querySelector("#closeStatus").onclick = () => { viewer.hidden = true; };
+      viewer.onclick = (e) => { if (e.target === viewer) viewer.hidden = true; };
     }
 
     function formatDistance(km) {
@@ -433,7 +509,7 @@
 
     async function loadServices(force) {
       status.hidden = false;
-        status.textContent = "Loading services?";
+        status.textContent = "Loading?";
       grid.hidden = true;
       try {
         if (activeCategory && activeCategory !== "__nearby__") {
@@ -496,6 +572,7 @@
     });
     paintAuth();
     showReminders();
+    loadStatuses();
     loadCategories();
     loadServices(true);
   </script>

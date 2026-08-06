@@ -78,13 +78,13 @@
   <div class="topbar">
     <div>
       <div class="brand">My Shop</div>
-      <div class="sub-brand" id="shopName">Your services</div>
+      <div class="sub-brand" id="shopName">What you do</div>
     </div>
-    <button class="sell-btn" type="button" onclick="location.href='/events/post-service.html'">Post</button>
+    <button class="sell-btn" type="button" onclick="location.href='/events/status.html'">Status</button>
   </div>
 
   <div class="banner" id="banner"></div>
-  <div id="status" class="center-box">LoadingÖ</div>
+  <div id="status" class="center-box">Loadingù</div>
   <div class="list" id="list" hidden></div>
 
   <script src="/events/js/api.js"></script>
@@ -100,15 +100,15 @@
       const list = document.getElementById("list");
       const banner = document.getElementById("banner");
       document.getElementById("shopName").textContent =
-        user.business_name || user.name || "Your services";
+        user.business_name || user.name || "Your shop";
 
       if (!user.is_vendor && !user.business_name) {
         status.innerHTML =
-          'Sell on Events ó <a href="/events/register-shop.html" style="color:#C2410C;font-weight:700">register your shop</a> to post services.';
+          'Set up your shop page ó <a href="/events/register-shop.html" style="color:#C2410C;font-weight:700">register</a> so people can see what you do.';
       }
 
       if (new URLSearchParams(location.search).get("posted") === "1") {
-        banner.textContent = "Saved ó waiting for approval. It wonít show on Home until approved.";
+        banner.textContent = "Saved ó waiting for approval. It won't show on Home until approved.";
         banner.classList.add("show");
       }
 
@@ -131,7 +131,7 @@
         try {
           const items = await ZE.api("/services/mine");
           if (!items.length) {
-            status.textContent = "No services yet. Tap Post to add one.";
+            status.textContent = "No listings yet. Add what your shop offers from register/edit, or post a 24h status.";
             list.hidden = true;
             return;
           }
@@ -154,7 +154,7 @@
                     <span class="status-badge ${cls}">${label}</span>
                   </div>
                 </a>
-                <button class="del-btn" type="button" data-del="${item.id}" aria-label="Delete">◊</button>
+                <button class="del-btn" type="button" data-del="${item.id}" aria-label="Delete">ù</button>
               </div>`;
           }).join("");
 

@@ -75,24 +75,25 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <div>
-      <div class="header-title">Vendor</div>
-      <div class="header-sub">Profile & reviews</div>
+      <div class="header-title">Shop</div>
+      <div class="header-sub">What they do</div>
     </div>
   </div>
 
-  <div id="status" class="center-box">LoadingÖ</div>
+  <div id="status" class="center-box">Loadingù</div>
   <div class="content" id="content" hidden>
     <div class="profile-card">
       <div class="profile-head">
         <div class="avatar" id="avatar">V</div>
         <div>
-          <div class="profile-name" id="name">ó</div>
-          <div class="profile-type">Event vendor</div>
+          <div class="profile-name" id="name">ù</div>
+          <div class="profile-type">Shop page</div>
         </div>
       </div>
       <p class="bio" id="bio"></p>
-      <button type="button" class="primary-btn" id="msgBtn" hidden>Message vendor</button>
     </div>
+    <div class="section-label">What they do</div>
+    <div id="offerings" class="empty-text">Loadingù</div>
     <div class="section-label">Reviews</div>
     <div id="reviews"></div>
   </div>
@@ -133,14 +134,31 @@
           avatar.textContent = name.charAt(0).toUpperCase();
         }
 
-        const me = ZEAuth.getUser();
-        const msgBtn = document.getElementById("msgBtn");
-        if (me && String(me.id) !== String(vendorId)) {
-          msgBtn.hidden = false;
-          msgBtn.onclick = () => {
-            if (!ZEAuth.requireLogin(location.pathname + location.search)) return;
-            location.href = `/events/chat.html?userId=${vendorId}`;
-          };
+        const offerings = document.getElementById("offerings");
+        try {
+          let list = [];
+          try {
+            const services = await ZE.api(`/services?vendor_id=${encodeURIComponent(vendorId)}`);
+            list = Array.isArray(services) ? services : [];
+          } catch {
+            const all = await ZE.api("/services");
+            list = (Array.isArray(all) ? all : []).filter(
+              (s) => String(s.vendor_id) === String(vendorId)
+            );
+          }
+          if (!list.length) {
+            offerings.textContent = "No offerings listed yet.";
+          } else {
+            offerings.className = "";
+            offerings.innerHTML = list.map((s) => `
+              <a class="review" href="/events/service.html?id=${s.id}" style="display:block;text-decoration:none;color:inherit;margin-bottom:8px;">
+                <div class="review-stars">${esc(s.category || "Offering")}</div>
+                <div class="review-text"><strong>${esc(s.title || "Untitled")}</strong></div>
+                <div class="review-meta">${esc(ZE.formatPrice(s.price))}</div>
+              </a>`).join("");
+          }
+        } catch {
+          offerings.textContent = "Could not load offerings.";
         }
 
         const box = document.getElementById("reviews");

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Status · Events</title>
+  <meta name="theme-color" content="#C2410C" />
+  <link rel="manifest" href="/events/app-manifest.json" />
+  <style>
+    :root {
+      --bg: #F4F1EC; --card: #FFFFFF; --border: #E2E0DC;
+      --text: #211D1A; --subtext: #5C5955; --orange: #C2410C; --cream: #FFF3E8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body {
+      height: 100%; overflow-y: auto; overscroll-behavior: none;
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg); color: var(--text); padding-bottom: 88px;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 40;
+      background: var(--orange); padding: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .back-button {
+      width: 40px; height: 40px; border: 0; background: none; color: var(--cream);
+      font-size: 1.4rem; cursor: pointer;
+    }
+    .header-title { color: var(--cream); font-size: 18px; font-weight: 700; }
+    .header-sub { color: #FFD8B8; font-size: 12px; margin-top: 2px; }
+    .wrap { padding: 14px; max-width: 520px; margin: 0 auto; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 14px; margin-bottom: 12px;
+    }
+    label { display: block; font-size: 12px; font-weight: 700; color: var(--subtext); margin-bottom: 6px; }
+    textarea {
+      width: 100%; min-height: 110px; border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px; font: inherit; resize: vertical; outline: none;
+    }
+    .hint { font-size: 12px; color: var(--subtext); margin-top: 8px; line-height: 1.4; }
+    .primary {
+      width: 100%; margin-top: 12px; border: 0; border-radius: 12px; padding: 14px;
+      background: var(--orange); color: #fff; font-weight: 700; font-size: 15px; cursor: pointer;
+    }
+    .ghost {
+      width: 100%; margin-top: 8px; border: 1px solid var(--border); border-radius: 12px; padding: 12px;
+      background: #fff; color: var(--text); font-weight: 700; cursor: pointer;
+    }
+    .photo-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+    .photo-row input { flex: 1; font-size: 13px; }
+    .preview {
+      width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: #FBEAD9;
+      display: none;
+    }
+    .mine { font-size: 13px; color: var(--subtext); margin-top: 8px; }
+    .toast {
+      position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%);
+      background: #211D1A; color: #fff; padding: 10px 14px; border-radius: 999px;
+      font-size: 13px; font-weight: 700; z-index: 50;
+    }
+    .toast[hidden] { display: none !important; }
+  </style>
+  <script src="/no-ptr.js"></script>
+</head>
+<body data-nav-active="status">
+  <div class="topbar">
+    <button class="back-button" type="button" onclick="location.href='/events/'" aria-label="Back">‹</button>
+    <div>
+      <div class="header-title">Status</div>
+      <div class="header-sub">Visible for 24 hours</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <label for="statusText">What’s happening?</label>
+      <textarea id="statusText" maxlength="280" placeholder="Share an update about your shop or event…"></textarea>
+      <div class="photo-row">
+        <input type="file" id="photoInput" accept="image/*" />
+        <img class="preview" id="preview" alt="" />
+      </div>
+      <p class="hint">Statuses disappear automatically after 24 hours — like a story.</p>
+      <button type="button" class="primary" id="postBtn">Post status</button>
+      <button type="button" class="ghost" id="clearBtn" hidden>Remove my status</button>
+      <p class="mine" id="mineMeta"></p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="/events/js/api.js"></script>
+  <script src="/events/js/auth.js"></script>
+  <script src="/events/js/status.js"></script>
+  <script src="/events/js/bottom-nav.js"></script>
+  <script>
+    if (!ZEAuth.requireLogin("/events/status.html")) {
+      /* redirected */
+    } else {
+      const user = ZEAuth.getUser();
+      const textEl = document.getElementById("statusText");
+      const photoInput = document.getElementById("photoInput");
+      const preview = document.getElementById("preview");
+      const postBtn = document.getElementById("postBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const mineMeta = document.getElementById("mineMeta");
+      const toast = document.getElementById("toast");
+      let photoUrl = "";
+      let myStatus = null;
+
+      function toastMsg(msg) {
+        toast.textContent = msg;
+        toast.hidden = false;
+        clearTimeout(toastMsg._t);
+        toastMsg._t = setTimeout(() => { toast.hidden = true; }, 2000);
+      }
+
+      photoInput.addEventListener("change", async () => {
+        const file = photoInput.files && photoInput.files[0];
+        if (!file) return;
+        try {
+          postBtn.disabled = true;
+          postBtn.textContent = "Uploading…";
+          photoUrl = await ZE.uploadImage(file);
+          preview.src = photoUrl;
+          preview.style.display = "block";
+        } catch (err) {
+          toastMsg(err.message || "Upload failed");
+          photoUrl = "";
+        } finally {
+          postBtn.disabled = false;
+          postBtn.textContent = "Post status";
+        }
+      });
+
+      async function refreshMine() {
+        try {
+          const list = await ZEStatus.list();
+          myStatus = list.find((s) => String(s.userId) === String(user.id)) || null;
+          if (myStatus) {
+            clearBtn.hidden = false;
+            textEl.value = myStatus.text || "";
+            mineMeta.textContent = `Live now · ~${ZEStatus.hoursLeft(myStatus.expiresAt)}h left`;
+            if (myStatus.photo) {
+              preview.src = myStatus.photo;
+              preview.style.display = "block";
+              photoUrl = myStatus.photo;
+            }
+          } else {
+            clearBtn.hidden = true;
+            mineMeta.textContent = "No active status";
+          }
+        } catch {
+          mineMeta.textContent = "Could not load statuses";
+        }
+      }
+
+      postBtn.addEventListener("click", async () => {
+        const text = textEl.value.trim();
+        if (!text && !photoUrl) {
+          toastMsg("Add text or a photo");
+          return;
+        }
+        try {
+          postBtn.disabled = true;
+          await ZEStatus.create({
+            userId: user.id,
+            name: user.name || "Guest",
+            shop: user.business_name || "",
+            text,
+            photo: photoUrl,
+          });
+          toastMsg("Status posted");
+          await refreshMine();
+        } catch (err) {
+          toastMsg(err.message || "Failed");
+        } finally {
+          postBtn.disabled = false;
+        }
+      });
+
+      clearBtn.addEventListener("click", async () => {
+        if (!myStatus) return;
+        try {
+          await ZEStatus.remove(myStatus.id, user.id);
+          textEl.value = "";
+          photoUrl = "";
+          preview.style.display = "none";
+          toastMsg("Status removed");
+          await refreshMine();
+        } catch (err) {
+          toastMsg(err.message || "Failed");
+        }
+      });
+
+      refreshMine();
+    }
+  </script>
+</body>
+</html>

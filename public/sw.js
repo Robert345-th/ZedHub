@@ -1,4 +1,4 @@
-const CACHE = "nexus-v46";
+const CACHE = "nexus-v47";
 
 // Everything users need offline after installing Nexus once.
 const PRECACHE = [
@@ -28,6 +28,8 @@ const PRECACHE = [
   "/events/js/bottom-nav.js",
   "/events/js/location.js",
   "/events/js/reminders.js",
+  "/events/js/status.js",
+  "/events/status.html",
   "/events/login.html",
   "/events/signup.html",
   "/events/account.html",

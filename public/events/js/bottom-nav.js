@@ -1,15 +1,19 @@
+/**
+ * Events bottom nav — Apps / Home / Status / My Shop
+ * (No chats — Events is shops + statuses, not marketplace messaging.)
+ */
 (function () {
   const STYLE_ID = "ze-bottom-nav-styles";
   const ICONS = {
     hub: '<circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     home: '<path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/>',
-    chats: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    status: '<circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/>',
     shop: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
   };
   const ITEMS = [
     { key: "hub", href: "/", label: "Apps" },
     { key: "home", href: "/events/", label: "Home" },
-    { key: "chats", href: "/events/chats.html", label: "Chats", login: true },
+    { key: "status", href: "/events/status.html", label: "Status", login: true },
     { key: "shop", href: "/events/my-shop.html", label: "My Shop", login: true },
   ];
 
