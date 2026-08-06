@@ -11,34 +11,45 @@
   <link rel="apple-touch-icon" href="/icons/fruits.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="fruits.css" />
   <script src="/no-ptr.js"></script>
 </head>
 <body class="theme-meadow">
-  <div class="sky" aria-hidden="true"></div>
+  <div class="sky" aria-hidden="true">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-c"></span>
+    <span class="leaf leaf-a"></span>
+    <span class="leaf leaf-b"></span>
+  </div>
 
   <header class="bar">
-    <a class="back" href="/">‹ Nexus</a>
-    <div class="brand">Fruits</div>
-    <div class="lives-pill" id="livesPill" title="Lives">❤️ <span id="livesVal">5</span></div>
+    <a class="back" href="/" aria-label="Back to Nexus">‹</a>
+    <div class="lives-pill" id="livesPill" title="Lives"><span class="heart" aria-hidden="true"></span><span id="livesVal">5</span></div>
   </header>
 
-  <section class="screen" id="menuScreen">
-    <div class="hero-fruit" aria-hidden="true">🍓🍋🍇🍉🍊🫐</div>
-    <h1>Fruits</h1>
-    <p class="lead">100 levels, boosters, ice, daily challenge &amp; 2-player fun.</p>
+  <section class="screen menu" id="menuScreen">
+    <div class="menu-hero">
+      <p class="kicker">Nexus</p>
+      <h1>Fruits</h1>
+      <p class="lead">Match fruit. Clear 100 levels. Race a friend.</p>
+    </div>
 
-    <button type="button" class="btn primary" id="mapBtn">Level Map</button>
-    <button type="button" class="btn" id="continueBtn">Continue</button>
-    <button type="button" class="btn" id="dailyBtn">Daily Challenge</button>
-    <button type="button" class="btn" id="versusBtn">2 Players</button>
+    <div class="menu-actions">
+      <button type="button" class="btn primary" id="continueBtn">Continue</button>
+      <div class="menu-links">
+        <button type="button" class="linkish" id="mapBtn">Map</button>
+        <button type="button" class="linkish" id="dailyBtn">Daily</button>
+        <button type="button" class="linkish" id="versusBtn">2 Players</button>
+      </div>
+    </div>
 
     <div class="theme-row" aria-label="Themes">
-      <button type="button" class="theme-chip active" data-theme="meadow">Meadow</button>
-      <button type="button" class="theme-chip" data-theme="night">Night</button>
-      <button type="button" class="theme-chip" data-theme="jungle">Jungle</button>
-      <button type="button" class="theme-chip" data-theme="candy">Candy</button>
+      <button type="button" class="theme-chip active" data-theme="meadow" title="Meadow"><i class="swatch"></i>Meadow</button>
+      <button type="button" class="theme-chip" data-theme="night" title="Night"><i class="swatch"></i>Night</button>
+      <button type="button" class="theme-chip" data-theme="jungle" title="Jungle"><i class="swatch"></i>Jungle</button>
+      <button type="button" class="theme-chip" data-theme="candy" title="Berry"><i class="swatch"></i>Berry</button>
     </div>
     <p class="meta" id="progressMeta"></p>
   </section>
