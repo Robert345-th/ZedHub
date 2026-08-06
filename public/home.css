@@ -124,6 +124,19 @@ body {
   background: linear-gradient(145deg, #60a5fa, #1d4ed8);
 }
 
+.icon-img {
+  width: 62px;
+  height: 62px;
+  border-radius: 16px;
+  display: block;
+  object-fit: cover;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
+.app:active .icon-img {
+  transform: scale(0.92);
+}
+
 .label {
   font-size: 0.72rem;
   font-weight: 600;
@@ -159,5 +172,6 @@ body {
 
 @media (min-width: 420px) {
   .icon { width: 68px; height: 68px; border-radius: 18px; }
+  .icon-img { width: 68px; height: 68px; border-radius: 18px; }
   .label { font-size: 0.78rem; }
 }
