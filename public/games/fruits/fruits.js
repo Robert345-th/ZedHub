@@ -67,13 +67,9 @@
 
   const els = {
     menu: document.getElementById('menuScreen'),
-    map: document.getElementById('mapScreen'),
     play: document.getElementById('playScreen'),
     result: document.getElementById('resultScreen'),
     mapGrid: document.getElementById('mapGrid'),
-    mapBtn: document.getElementById('mapBtn'),
-    mapBackBtn: document.getElementById('mapBackBtn'),
-    continueBtn: document.getElementById('continueBtn'),
     dailyBtn: document.getElementById('dailyBtn'),
     versusBtn: document.getElementById('versusBtn'),
     progressMeta: document.getElementById('progressMeta'),
@@ -176,7 +172,7 @@
   }
 
   function show(screen) {
-    [els.menu, els.map, els.play, els.result].forEach((s) => {
+    [els.menu, els.play, els.result].forEach((s) => {
       if (s) s.hidden = s !== screen;
     });
   }
@@ -220,12 +216,9 @@
   }
 
   function applyTheme(theme) {
-    document.body.className = 'theme-' + theme;
-    progress.theme = theme;
+    document.body.className = 'theme-' + (theme || 'meadow');
+    progress.theme = theme || 'meadow';
     saveProgress();
-    document.querySelectorAll('.theme-chip').forEach((c) => {
-      c.classList.toggle('active', c.dataset.theme === theme);
-    });
   }
 
   function updateBoostUi() {
@@ -248,10 +241,10 @@
     refreshLives();
     const cleared = Object.keys(progress.stars || {}).length;
     levelIndex = Math.min(Math.max(0, progress.level || 0), 99);
-    els.progressMeta.textContent = `Campaign ${levelIndex + 1}/100 · ${cleared} cleared`;
-    els.continueBtn.textContent = `Continue Lv ${levelIndex + 1}`;
+    els.progressMeta.textContent = `${levelIndex + 1}/100 · ${cleared}★`;
     applyTheme(progress.theme || 'meadow');
     updateBoostUi();
+    renderMap();
   }
 
   function renderMap() {
@@ -265,6 +258,7 @@
       const stars = progress.stars[i] || 0;
       const lock = i > unlocked;
       if (lock) btn.classList.add('locked');
+      if (stars > 0) btn.classList.add('cleared');
       if (i === unlocked) {
         btn.classList.add('current');
         currentBtn = btn;
@@ -880,19 +874,6 @@
   }
 
   // —— UI wiring ——
-  els.mapBtn.addEventListener('click', () => {
-    renderMap();
-    show(els.map);
-  });
-  els.mapBackBtn.addEventListener('click', () => {
-    updateMenu();
-    show(els.menu);
-  });
-  els.continueBtn.addEventListener('click', () => {
-    mode = 'campaign';
-    levelIndex = Math.min(progress.level || 0, 99);
-    startLevel();
-  });
   els.dailyBtn.addEventListener('click', () => {
     mode = 'daily';
     startLevel();
@@ -907,8 +888,8 @@
     show(els.menu);
   });
   els.resultMapBtn.addEventListener('click', () => {
-    renderMap();
-    show(els.map);
+    updateMenu();
+    show(els.menu);
   });
   els.retryBtn.addEventListener('click', () => {
     if ((mode === 'campaign' || mode === 'daily') && progress.lives <= 0) {
@@ -944,17 +925,13 @@
       startLevel();
       return;
     }
-    renderMap();
-    show(els.map);
+    updateMenu();
+    show(els.menu);
   });
 
   els.boostHammer.addEventListener('click', () => useBooster('hammer'));
   els.boostShuffle.addEventListener('click', () => useBooster('shuffle'));
   els.boostMoves.addEventListener('click', () => useBooster('moves'));
-
-  document.querySelectorAll('.theme-chip').forEach((chip) => {
-    chip.addEventListener('click', () => applyTheme(chip.dataset.theme));
-  });
 
   // swipe
   let touchStart = null;
