@@ -17,6 +17,7 @@ body {
   color: var(--ink);
   background: var(--cream);
   overflow-x: hidden;
+  overscroll-behavior: none;
 }
 
 .bg {
