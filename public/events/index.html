@@ -58,11 +58,6 @@
       background: rgba(255,255,255,0.12);
       color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
     }
-    .dl-btn {
-      min-height: 30px; padding: 0 12px; border-radius: 999px; border: 0;
-      background: #fff; color: #C2410C; font-size: 12px; font-weight: 800; cursor: pointer;
-    }
-    .dl-btn:disabled { opacity: 0.65; }
     .icon-row { display: flex; gap: 8px; }
     .icon-btn {
       width: 36px; height: 36px; border-radius: 18px;
@@ -158,7 +153,6 @@
         </div>
       </div>
       <div class="topbar-right">
-        <button class="dl-btn" type="button" id="appDownloadBtn">Add to Home</button>
         <button class="auth-btn" type="button" id="authBtn">Login / Sign Up</button>
         <div class="icon-row">
           <button class="icon-btn" type="button" id="mapBtn" aria-label="Map">
@@ -394,10 +388,6 @@
         .catch(() => {});
     }
     loadServices();
-  </script>
-  <script src="/install-app.js"></script>
-  <script>
-    NexusInstall.wireAppInstall({ btn: '#appDownloadBtn', name: 'Events', id: 'events' });
   </script>
 </body>
 </html>

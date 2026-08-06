@@ -75,28 +75,6 @@ body {
   border-radius: 999px;
 }
 
-.dl-btn {
-  margin-left: auto;
-  border: 0;
-  border-radius: 999px;
-  padding: 7px 12px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  cursor: pointer;
-  color: #042f1a;
-  background: linear-gradient(135deg, #4ade80, #16a34a);
-}
-
-.dl-btn:disabled {
-  opacity: 0.6;
-  background: rgba(255,255,255,0.2);
-  color: #fff;
-}
-
-.room-pill:not([hidden]) {
-  margin-left: 8px;
-}
-
 .screen {
   max-width: 440px;
   margin: 0 auto;

@@ -18,7 +18,6 @@
   <header class="bar">
     <a class="back" href="/">‹ Nexus</a>
     <div class="brand">Ludo</div>
-    <button type="button" class="dl-btn" id="appDownloadBtn">Add to Home</button>
     <div class="room-pill" id="roomPill" hidden></div>
   </header>
 
@@ -95,13 +94,9 @@
     <a class="btn ghost" href="/" style="display:block;text-align:center;text-decoration:none;margin-top:8px">Back to Nexus</a>
   </section>
 
-  <script src="/install-app.js"></script>
   <script src="engine.js"></script>
   <script src="board.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="ludo.js"></script>
-  <script>
-    NexusInstall.wireAppInstall({ btn: '#appDownloadBtn', name: 'Ludo', id: 'ludo' });
-  </script>
 </body>
 </html>
