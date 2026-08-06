@@ -102,6 +102,11 @@
       document.getElementById("shopName").textContent =
         user.business_name || user.name || "Your services";
 
+      if (!user.is_vendor && !user.business_name) {
+        status.innerHTML =
+          'Sell on Events — <a href="/events/register-shop.html" style="color:#C2410C;font-weight:700">register your shop</a> to post services.';
+      }
+
       if (new URLSearchParams(location.search).get("posted") === "1") {
         banner.textContent = "Saved — waiting for approval. It won’t show on Home until approved.";
         banner.classList.add("show");

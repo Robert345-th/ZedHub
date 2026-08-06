@@ -22,9 +22,18 @@
     localStorage.removeItem("ze_user");
   }
 
+  /** Keep Events links inside /events/ even if callers pass bare paths. */
+  function eventsPath(path) {
+    if (!path) return "/events/";
+    if (/^https?:\/\//i.test(path)) return path;
+    if (path.startsWith("/events/") || path === "/events") return path;
+    if (path.startsWith("/")) return "/events" + path;
+    return "/events/" + path;
+  }
+
   function requireLogin(redirectTo) {
     if (!getToken()) {
-      const next = encodeURIComponent(redirectTo || location.pathname + location.search);
+      const next = encodeURIComponent(eventsPath(redirectTo || location.pathname + location.search));
       location.href = `/events/login.html?next=${next}`;
       return false;
     }
@@ -35,5 +44,5 @@
     return !!getToken();
   }
 
-  window.ZEAuth = { getUser, getToken, setSession, clearSession, requireLogin, isLoggedIn };
+  window.ZEAuth = { getUser, getToken, setSession, clearSession, requireLogin, isLoggedIn, eventsPath };
 })();

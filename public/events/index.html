@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ZedEvents</title>
   <meta name="theme-color" content="#C2410C" />
-  <meta name="description" content="Find event services in Zambia — catering, DJs, tents, décor and more." />
+  <meta name="description" content="Find event services in Zambia ? catering, DJs, tents, d?cor and more." />
   <link rel="manifest" href="/events/app-manifest.json" />
   <link rel="apple-touch-icon" href="/icons/zedevents.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -183,7 +183,7 @@
     </div>
   </div>
 
-  <div id="status" class="status">Loading services…</div>
+  <div id="status" class="status">Loading services?</div>
   <div class="grid" id="grid" hidden></div>
 
   <script src="/events/js/api.js"></script>
@@ -201,15 +201,16 @@
     let myCoords = ZELocation.getSavedCoords();
 
     function goLogin(next) {
-      if (!ZEAuth.requireLogin(next)) return false;
-      location.href = next;
+      const path = ZEAuth.eventsPath(next);
+      if (!ZEAuth.requireLogin(path)) return false;
+      location.href = path;
       return true;
     }
 
-    document.getElementById("menuBtn").onclick = () => goLogin("/settings.html");
-    document.getElementById("favBtn").onclick = () => goLogin("/favorites.html");
-    document.getElementById("chatBtn").onclick = () => goLogin("/chats.html");
-    document.getElementById("postBtn").onclick = () => goLogin("/post-service.html");
+    document.getElementById("menuBtn").onclick = () => goLogin("/events/settings.html");
+    document.getElementById("favBtn").onclick = () => goLogin("/events/favorites.html");
+    document.getElementById("chatBtn").onclick = () => goLogin("/events/chats.html");
+    document.getElementById("postBtn").onclick = () => goLogin("/events/post-service.html");
     document.getElementById("mapBtn").onclick = () => { location.href = "/events/map-view.html"; };
 
     function escapeHtml(str) {
@@ -288,11 +289,11 @@
       status.hidden = true;
       grid.hidden = false;
       grid.innerHTML = rows.map((item) => {
-        const photo = ZE.firstPhoto(item.photos);
+        const photo = ZE.thumbUrl(ZE.firstPhoto(item.photos), 400);
         const vendor = item.business_name || item.vendor_name || "Vendor";
         const dist = formatDistance(item.distanceKm);
         const img = photo
-          ? `<img src="${photo}" alt="" loading="lazy" />`
+          ? `<img src="${photo}" alt="" loading="lazy" decoding="async" />`
           : `<div class="thumb-ph" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-4 4-2-2-5 5"/></svg></div>`;
         return `
           <a class="card" href="/events/service.html?id=${item.id}">
@@ -327,7 +328,15 @@
 
     async function loadCategories() {
       try {
-        const cats = await ZE.api("/services/categories");
+        let cats;
+        try {
+          const cached = sessionStorage.getItem("ze_categories");
+          if (cached) cats = JSON.parse(cached);
+        } catch { /* ignore */ }
+        if (!Array.isArray(cats) || !cats.length) {
+          cats = await ZE.api("/services/categories");
+          try { sessionStorage.setItem("ze_categories", JSON.stringify(cats)); } catch { /* ignore */ }
+        }
         cats.forEach((c) => {
           const btn = document.createElement("button");
           btn.type = "button";
@@ -339,15 +348,21 @@
       } catch { /* ignore */ }
     }
 
-    async function loadServices() {
+    let allServicesCache = null;
+
+    async function loadServices(force) {
       status.hidden = false;
-      status.textContent = "Loading services…";
+      status.textContent = "Loading services?";
       grid.hidden = true;
       try {
-        const path = activeCategory && activeCategory !== "__nearby__"
-          ? `/services?category_id=${encodeURIComponent(activeCategory)}`
-          : "/services";
-        services = await ZE.api(path);
+        if (activeCategory && activeCategory !== "__nearby__") {
+          services = await ZE.api(`/services?category_id=${encodeURIComponent(activeCategory)}`);
+        } else if (!force && Array.isArray(allServicesCache)) {
+          services = allServicesCache;
+        } else {
+          services = await ZE.api("/services");
+          allServicesCache = services;
+        }
         applyFilter();
       } catch {
         status.hidden = false;
@@ -364,32 +379,35 @@
       const id = btn.dataset.id || "";
       sortNearby = id === "__nearby__";
       activeCategory = sortNearby ? "" : id;
-      if (sortNearby && !myCoords) {
-        ZELocation.getDeviceCoords()
-          .then((coords) => {
-            myCoords = coords;
-            ZELocation.saveCoords(coords);
-            loadServices();
-          })
-          .catch(() => loadServices());
+      if (sortNearby) {
+        const finishNearby = () => {
+          if (allServicesCache) {
+            services = allServicesCache;
+            applyFilter();
+          } else {
+            loadServices(true);
+          }
+        };
+        if (!myCoords) {
+          ZELocation.getDeviceCoords()
+            .then((coords) => {
+              myCoords = coords;
+              ZELocation.saveCoords(coords);
+              finishNearby();
+            })
+            .catch(() => finishNearby());
+          return;
+        }
+        finishNearby();
         return;
       }
-      loadServices();
+      loadServices(false);
     });
 
     search.addEventListener("input", applyFilter);
     paintAuth();
     loadCategories();
-    if (!myCoords) {
-      ZELocation.getDeviceCoords()
-        .then((coords) => {
-          myCoords = coords;
-          ZELocation.saveCoords(coords);
-          if (services.length) applyFilter();
-        })
-        .catch(() => {});
-    }
-    loadServices();
+    loadServices(true);
   </script>
 </body>
 </html>

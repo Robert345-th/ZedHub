@@ -73,7 +73,13 @@
 <script src="/events/js/phone.js"></script>
 <script>
   const params = new URLSearchParams(location.search);
-  const next = params.get("next") || "/";
+  function safeNext(raw) {
+    if (!raw || raw === "/") return "/events/";
+    if (raw.startsWith("/events/") || raw === "/events") return raw;
+    if (raw.startsWith("/") && !raw.startsWith("//")) return "/events" + raw;
+    return "/events/";
+  }
+  const next = safeNext(params.get("next"));
   const phoneInput = document.getElementById("phone");
   const passwordInput = document.getElementById("password");
   const loginBtn = document.getElementById("loginBtn");
@@ -117,7 +123,7 @@
       return;
     }
     loginBtn.disabled = true;
-    loginBtn.textContent = "Logging inÖ";
+    loginBtn.textContent = "Logging inù";
     try {
       const data = await ZE.api("/auth/login", {
         method: "POST",

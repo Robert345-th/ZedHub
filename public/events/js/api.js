@@ -39,6 +39,16 @@
     return "";
   }
 
+  /** Smaller Cloudinary thumbs for lists (falls back to original URL). */
+  function thumbUrl(url, width) {
+    const w = width || 400;
+    if (!url || typeof url !== "string") return "";
+    if (url.includes("res.cloudinary.com") && url.includes("/upload/")) {
+      return url.replace("/upload/", `/upload/w_${w},c_fill,q_auto,f_auto/`);
+    }
+    return url;
+  }
+
   function formatPrice(price) {
     if (price == null || price === "") return "Ask for price";
     const n = Number(price);
@@ -59,7 +69,7 @@
     return data.secure_url;
   }
 
-  window.ZE = { API_URL, api, firstPhoto, formatPrice, uploadImage };
+  window.ZE = { API_URL, api, firstPhoto, thumbUrl, formatPrice, uploadImage };
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {

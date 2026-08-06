@@ -51,12 +51,12 @@
     for (let i = 0; i < 100; i++) {
       const t = i / 99;
       levels.push({
-        moves: Math.max(7, Math.round(18 - t * 10 - (i % 4))),
+        moves: Math.max(12, Math.round(20 - t * 8)),
         goalType: i % FRUITS.length,
-        goalNeed: Math.round(16 + t * 44 + (i % 7)),
+        goalNeed: Math.min(40, Math.round(12 + t * 28 + (i % 5))),
         fruitCount: i < 5 ? 5 : 6,
-        iceChance: Math.min(0.35, 0.05 + t * 0.3),
-        starScores: [900 + i * 70, Math.round((900 + i * 70) * 2.2), Math.round((900 + i * 70) * 3.6)],
+        iceChance: Math.min(0.28, 0.04 + t * 0.22),
+        starScores: [800 + i * 55, Math.round((800 + i * 55) * 2), Math.round((800 + i * 55) * 3.2)],
         mask: shapeMask(i),
       });
     }
@@ -85,6 +85,7 @@
     levelChip: document.getElementById('levelChip'),
     goalEmoji: document.getElementById('goalEmoji'),
     goalCount: document.getElementById('goalCount'),
+    goalBox: document.getElementById('goalBox'),
     scoreVal: document.getElementById('scoreVal'),
     turnLine: document.getElementById('turnLine'),
     starsBox: document.getElementById('starsBox'),
@@ -229,10 +230,18 @@
 
   function updateBoostUi() {
     const b = progress.boosters || { hammer: 0, shuffle: 0, moves: 0 };
-    els.boostHammer.querySelector('span').textContent = String(b.hammer || 0);
-    els.boostShuffle.querySelector('span').textContent = String(b.shuffle || 0);
-    els.boostMoves.querySelector('span').textContent = String(b.moves || 0);
-    els.boostHammer.classList.toggle('active', boosterMode === 'hammer');
+    const set = (el, n, active) => {
+      if (!el) return;
+      el.querySelector('span').textContent = String(n || 0);
+      el.classList.toggle('active', !!active);
+      el.disabled = (n || 0) <= 0 && !active;
+      el.style.opacity = el.disabled ? '0.45' : '1';
+    };
+    set(els.boostHammer, b.hammer, boosterMode === 'hammer');
+    set(els.boostShuffle, b.shuffle, false);
+    set(els.boostMoves, b.moves, false);
+    const boosters = document.getElementById('boosters');
+    if (boosters) boosters.hidden = mode === 'versus';
   }
 
   function updateMenu() {
@@ -248,6 +257,7 @@
   function renderMap() {
     const unlocked = Math.max(0, progress.level || 0);
     els.mapGrid.innerHTML = '';
+    let currentBtn = null;
     for (let i = 0; i < 100; i++) {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -255,7 +265,10 @@
       const stars = progress.stars[i] || 0;
       const lock = i > unlocked;
       if (lock) btn.classList.add('locked');
-      if (i === unlocked) btn.classList.add('current');
+      if (i === unlocked) {
+        btn.classList.add('current');
+        currentBtn = btn;
+      }
       btn.innerHTML = `<span class="n">${i + 1}</span><span class="s">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>`;
       if (!lock) {
         btn.addEventListener('click', () => {
@@ -266,6 +279,9 @@
       }
       els.mapGrid.appendChild(btn);
     }
+    requestAnimationFrame(() => {
+      currentBtn?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
   }
 
   function randFruit() {
@@ -470,12 +486,12 @@
     const d = new Date();
     const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
     const idx = seed % 100;
-    const base = LEVELS[Math.max(30, idx)];
+    const base = LEVELS[idx];
     return {
       ...base,
-      moves: Math.max(8, base.moves - 2),
-      goalNeed: base.goalNeed + 6,
-      iceChance: Math.min(0.4, base.iceChance + 0.1),
+      moves: Math.max(10, base.moves - 1),
+      goalNeed: Math.min(42, base.goalNeed + 4),
+      iceChance: Math.min(0.32, base.iceChance + 0.06),
       dailyKey: String(seed),
     };
   }
@@ -677,7 +693,7 @@
       haptic(15);
       await resolveBoard();
       renderBoard();
-      if (collected >= level.goalNeed) return finish(true);
+      if (mode !== 'versus' && collected >= level.goalNeed) return finish(true);
       busy = false;
       els.hintBar.textContent = 'Tap a fruit to pick it up';
       return;
@@ -724,8 +740,9 @@
 
     if (mode === 'versus') pTurn = 1 - pTurn;
 
-    if (collected >= level.goalNeed) return finish(true);
-    if (moves <= 0) return finish(false);
+    // Versus is score-only — don't end early on collect goal
+    if (mode !== 'versus' && collected >= level.goalNeed) return finish(true);
+    if (moves <= 0) return finish(mode === 'versus' ? true : false);
     els.hintBar.textContent = 'Tap a fruit to pick it up';
     busy = false;
   }
@@ -736,6 +753,8 @@
     const stars = starsFromScore(level, score);
     els.continueLifeBtn.hidden = true;
     advanceOnNext = false;
+    // Track whether this result already spent a life (avoid double charge on retry)
+    finish._spentLife = false;
 
     if (mode === 'versus') {
       const winner =
@@ -772,12 +791,16 @@
         els.resultExtra.textContent = 'Come back tomorrow for a new board';
         els.nextBtn.textContent = 'Menu';
       }
-      els.resultStars.textContent = '★'.repeat(Math.max(1, stars)) + '☆'.repeat(Math.max(0, 3 - stars));
+      const shown = Math.max(0, Math.min(3, stars));
+      els.resultStars.textContent = '★'.repeat(shown) + '☆'.repeat(3 - shown);
     } else {
       soundFail();
-      spendLife();
+      if (mode === 'campaign' || mode === 'daily') {
+        spendLife();
+        finish._spentLife = true;
+      }
       els.resultTitle.textContent = 'Out of moves';
-      els.resultExtra.textContent = progress.lives > 0 ? 'Retry or continue with a life' : 'Lives empty — wait to refill';
+      els.resultExtra.textContent = progress.lives > 0 ? 'Retry free, or continue (−1 ❤️ for +5 moves)' : 'Lives empty — wait to refill';
       els.resultStars.textContent = '💔';
       els.nextBtn.textContent = 'Map';
       if (progress.lives > 0) els.continueLifeBtn.hidden = false;
@@ -806,11 +829,12 @@
         ? 'Pass & play — highest score wins'
         : `Collect ${level.goalNeed} ${FRUITS[level.goalType].emoji}`;
     renderBoard();
+    updateBoostUi();
     show(els.play);
     beep(440, 0.05);
   }
 
-  function useBooster(type) {
+  async function useBooster(type) {
     if (busy || mode === 'versus') return;
     const b = progress.boosters || {};
     if (type === 'hammer') {
@@ -837,6 +861,10 @@
       renderBoard();
       flashFx('SHUFFLE');
       beep(360, 0.1);
+      updateBoostUi();
+      busy = true;
+      await resolveBoard();
+      busy = false;
       return;
     }
     if (type === 'moves') {
@@ -847,6 +875,7 @@
       updateHud(currentLevel());
       flashFx('+5 MOVES');
       beep(600, 0.08);
+      updateBoostUi();
     }
   }
 
@@ -882,13 +911,13 @@
     show(els.map);
   });
   els.retryBtn.addEventListener('click', () => {
-    if (mode === 'campaign' && progress.lives <= 0) {
+    if ((mode === 'campaign' || mode === 'daily') && progress.lives <= 0) {
       els.hintBar.textContent = 'No lives left';
       updateMenu();
       show(els.menu);
       return;
     }
-    if (mode === 'campaign') spendLife();
+    // Life already spent on fail — retry is free
     startLevel();
   });
   els.continueLifeBtn.addEventListener('click', () => {

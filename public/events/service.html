@@ -145,7 +145,7 @@
     const authLink = document.getElementById("authLink");
     if (user) {
       authLink.textContent = "Account";
-      authLink.href = "/settings.html";
+      authLink.href = "/events/settings.html";
     } else {
       authLink.href = `/events/login.html?next=${encodeURIComponent(location.pathname + location.search)}`;
     }
