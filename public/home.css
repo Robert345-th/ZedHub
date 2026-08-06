@@ -252,10 +252,6 @@ body {
   line-height: 1.35;
 }
 
-.grid {
-  padding-bottom: 28px;
-}
-
 @media (min-width: 420px) {
   .icon { width: 68px; height: 68px; border-radius: 18px; }
   .icon-img { width: 68px; height: 68px; border-radius: 18px; }
