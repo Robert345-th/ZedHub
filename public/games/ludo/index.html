@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
+  <title>Ludo · ZedHub</title>
+  <meta name="theme-color" content="#0b2e1f" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="ludo.css" />
+</head>
+<body>
+  <header class="bar">
+    <a class="back" href="/">‹ Hub</a>
+    <div class="title">Ludo</div>
+    <div class="room-pill" id="roomPill" hidden></div>
+  </header>
+
+  <section class="screen" id="lobbyScreen">
+    <h1>Play Ludo together</h1>
+    <p class="lead">Create a room, share the code, play with up to 4 friends live.</p>
+
+    <label class="field">
+      <span>Your name</span>
+      <input id="nameInput" maxlength="16" placeholder="e.g. Rob" autocomplete="nickname" />
+    </label>
+
+    <button type="button" class="btn primary" id="createBtn">Create room</button>
+
+    <div class="or">or join</div>
+
+    <label class="field">
+      <span>Room code</span>
+      <input id="codeInput" maxlength="5" placeholder="ABC12" autocomplete="off" style="text-transform:uppercase" />
+    </label>
+    <button type="button" class="btn" id="joinBtn">Join room</button>
+    <p class="err" id="lobbyErr" hidden></p>
+  </section>
+
+  <section class="screen" id="waitScreen" hidden>
+    <h2>Waiting room</h2>
+    <div class="code-big" id="waitCode">————</div>
+    <p class="hint">Share this code with friends</p>
+    <button type="button" class="btn ghost" id="copyBtn">Copy code</button>
+    <ul class="players" id="waitPlayers"></ul>
+    <button type="button" class="btn primary" id="startBtn" hidden>Start game</button>
+    <p class="hint" id="waitHint">Waiting for host to start…</p>
+  </section>
+
+  <section class="screen game" id="gameScreen" hidden>
+    <div class="status" id="statusLine"></div>
+    <div class="board-wrap">
+      <svg id="board" viewBox="0 0 100 100" aria-label="Ludo board"></svg>
+    </div>
+    <div class="hud">
+      <div class="dice-box">
+        <div class="dice" id="diceFace">—</div>
+        <button type="button" class="btn primary" id="rollBtn">Roll dice</button>
+      </div>
+      <div class="turn-list" id="turnList"></div>
+    </div>
+    <p class="event" id="eventLine"></p>
+  </section>
+
+  <section class="screen" id="winScreen" hidden>
+    <h2 id="winTitle">Winner!</h2>
+    <button type="button" class="btn primary" id="againBtn">Back to lobby</button>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="ludo.js"></script>
+</body>
+</html>

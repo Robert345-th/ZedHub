@@ -1,4 +1,4 @@
-const CACHE = "zedhub-v5";
+const CACHE = "zedhub-v6";
 const PRECACHE = [
   "/",
   "/index.html",
@@ -8,8 +8,10 @@ const PRECACHE = [
   "/icons/icon-512.png",
   "/icons/zedmarket.png",
   "/icons/zedevents.png",
+  "/icons/ludo.png",
   "/events/",
   "/events/index.html",
+  "/games/ludo/",
 ];
 
 self.addEventListener("install", (event) => {
