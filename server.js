@@ -41,7 +41,7 @@ app.use(express.json());
 app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
-    app: 'ZedHub',
+    app: 'Nexus',
     home: 'app-list',
     eventsApi: ZEDEVENTS_API,
     eventsUi: '/events/',
@@ -198,7 +198,7 @@ setInterval(() => {
 }, 15 * 60 * 1000);
 
 server.listen(PORT, () => {
-  console.log(`ZedHub running on http://localhost:${PORT}`);
+  console.log(`Nexus running on http://localhost:${PORT}`);
   console.log(`Ludo multiplayer ready at /games/ludo/`);
   console.log(`Events API: ${ZEDEVENTS_API}`);
 });

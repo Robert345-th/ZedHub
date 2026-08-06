@@ -1,8 +1,8 @@
 {
-  "name": "zedhub",
+  "name": "nexus",
   "version": "1.0.0",
   "private": true,
-  "description": "ZedHub — one login home for Zed apps (Events first). ZedMarket is intentionally excluded.",
+  "description": "Nexus — one home for apps, games, events, market, and more.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

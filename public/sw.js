@@ -1,4 +1,4 @@
-const CACHE = "zedhub-v19";
+const CACHE = "nexus-v1";
 const PRECACHE = [
   "/",
   "/index.html",
@@ -39,7 +39,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Prefer fresh HTML/CSS/JS so Hub updates show up without a hard clear.
+  // Prefer fresh HTML/CSS/JS so Nexus updates show up without a hard clear.
   const isPageAsset =
     req.mode === "navigate" ||
     url.pathname === "/" ||

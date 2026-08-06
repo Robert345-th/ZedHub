@@ -39,8 +39,8 @@
     }
 
     try {
-      localStorage.setItem('zedhub_cat', cat);
-      if (cat === 'games') localStorage.setItem('zedhub_game_mode', gameMode);
+      localStorage.setItem('nexus_cat', cat);
+      if (cat === 'games') localStorage.setItem('nexus_game_mode', gameMode);
     } catch (_) {}
   }
 
@@ -57,13 +57,13 @@
 
   let start = 'events';
   try {
-    const saved = localStorage.getItem('zedhub_cat');
+    const saved = localStorage.getItem('nexus_cat') || localStorage.getItem('zedhub_cat');
     if (saved === 'events' || saved === 'market' || saved === 'games') start = saved;
     if (saved === 'online' || saved === 'offline') {
       start = 'games';
       gameMode = saved;
     }
-    const savedMode = localStorage.getItem('zedhub_game_mode');
+    const savedMode = localStorage.getItem('nexus_game_mode') || localStorage.getItem('zedhub_game_mode');
     if (savedMode === 'online' || savedMode === 'offline') gameMode = savedMode;
   } catch (_) {}
 

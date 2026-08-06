@@ -1,7 +1,7 @@
 {
-  "name": "ZedHub",
-  "short_name": "ZedHub",
-  "description": "Your Zed apps in one place. Open Events from the list.",
+  "name": "Nexus",
+  "short_name": "Nexus",
+  "description": "Your apps in one place — Events, Market, Games, and more.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
