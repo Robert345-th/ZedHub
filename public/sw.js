@@ -1,4 +1,4 @@
-const CACHE = "nexus-v4";
+const CACHE = "nexus-v5";
 const PRECACHE = [
   "/",
   "/index.html",
