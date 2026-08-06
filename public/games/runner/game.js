@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 const KEY = 'nexus_rush_v2';
 const stage = document.getElementById('stage');
@@ -21,6 +21,8 @@ const LANE_X = [-2.15, 0, 2.15];
 const TRACK_LEN = 240;
 const GROUND_Y = 0.32;
 const HERO_H = 1.72;
+const CHAR_SCALE = 0.0115;
+const FOOT_CLEARANCE = 0.03;
 
 function makeToonGradient() {
   const data = new Uint8Array([55, 55, 55, 255, 120, 120, 120, 255, 190, 190, 190, 255, 255, 255, 255, 255]);
@@ -368,7 +370,7 @@ function buildCity() {
 }
 buildCity();
 
-// —— Stylized Nexus hero (no gray mannequin) ——
+// —— Player character (single Mixamo skinned runner) ——
 const player = {
   lane: 1,
   x: 0,
@@ -381,9 +383,96 @@ const player = {
   root: new THREE.Group(),
   parts: null,
   hitH: HERO_H,
-  glb: false,
+  skinned: false,
+  model: null,
+  mixer: null,
+  actions: {},
+  current: null,
 };
 scene.add(player.root);
+
+function isHipPositionTrack(trackName) {
+  const lower = trackName.toLowerCase();
+  if (!lower.endsWith('.position')) return false;
+  return lower.includes('hips') || lower.includes('pelvis') || lower.startsWith('root.');
+}
+
+function stripHipRootMotion(clip) {
+  if (!clip || !clip.tracks) return clip;
+  clip.tracks = clip.tracks.filter((t) => !isHipPositionTrack(t.name));
+  return clip;
+}
+
+function styleSkinnedRunner(root) {
+  const neonMap = canvasTex((g, W, H) => {
+    const grd = g.createLinearGradient(0, 0, 0, H);
+    grd.addColorStop(0, '#22d3ee');
+    grd.addColorStop(0.45, '#7c3aed');
+    grd.addColorStop(1, '#ff2d95');
+    g.fillStyle = grd;
+    g.fillRect(0, 0, W, H);
+    g.fillStyle = 'rgba(255,255,255,0.12)';
+    g.fillRect(0, H * 0.35, W, H * 0.08);
+  }, 64, 128);
+
+  root.traverse((c) => {
+    if (!c.isMesh) return;
+    c.castShadow = true;
+    c.receiveShadow = true;
+    c.material = new THREE.MeshToonMaterial({
+      map: neonMap,
+      color: 0xffffff,
+      gradientMap: toonGrad,
+      emissive: new THREE.Color(0x2e1065),
+      emissiveIntensity: 0.25,
+      skinning: !!c.isSkinnedMesh,
+    });
+  });
+}
+
+function lowestFootWorldY(model) {
+  model.updateMatrixWorld(true);
+  let lowest = Infinity;
+  const pos = new THREE.Vector3();
+  model.traverse((o) => {
+    if (!o.isBone) return;
+    if (/Hand|Finger|Thumb|Index|Middle|Ring|Pinky/i.test(o.name)) return;
+    if (!/(Left|Right)(Foot|Toe)/i.test(o.name)) return;
+    o.getWorldPosition(pos);
+    lowest = Math.min(lowest, pos.y);
+  });
+  return lowest;
+}
+
+function alignSkinnedFeet(model, mixer, runAction) {
+  const samples = runAction ? 16 : 1;
+  const duration = runAction ? Math.max(0.01, runAction.getClip().duration || 1) : 0;
+  let lowest = Infinity;
+  if (runAction) {
+    runAction.reset().play();
+    runAction.setEffectiveWeight(1);
+  }
+  for (let i = 0; i < samples; i++) {
+    if (mixer && runAction) mixer.setTime((i / samples) * duration);
+    const y = lowestFootWorldY(model);
+    if (Number.isFinite(y)) lowest = Math.min(lowest, y);
+  }
+  if (mixer) mixer.setTime(0);
+  if (!Number.isFinite(lowest) || lowest === Infinity) {
+    model.updateMatrixWorld(true);
+    lowest = new THREE.Box3().setFromObject(model).min.y;
+  }
+  model.position.y += -lowest + FOOT_CLEARANCE;
+}
+
+function playAnim(name, fade = 0.18) {
+  if (!player.mixer || !player.actions[name]) return;
+  const next = player.actions[name];
+  if (player.current === next) return;
+  if (player.current) player.current.fadeOut(fade);
+  next.reset().fadeIn(fade).play();
+  player.current = next;
+}
 
 function addMesh(parent, geo, matOrColor, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0) {
   const mat = typeof matOrColor === 'number' ? toon(matOrColor) : matOrColor;
@@ -419,7 +508,6 @@ function buildHero() {
   addMesh(torso, new THREE.BoxGeometry(0.64, 0.16, 0.54), matHoodieDark, 0, 0.02, 0);
   addMesh(torso, new THREE.BoxGeometry(0.24, 0.3, 0.08), toon(0xffe8d6), 0, 0.42, 0.27);
   addMesh(torso, new THREE.BoxGeometry(0.2, 0.15, 0.05), matWhite, 0.17, 0.38, 0.28);
-  // hood
   addMesh(torso, new THREE.SphereGeometry(0.22, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), matHoodie, 0, 0.62, -0.12, 1.05, 0.85, 1);
 
   const head = new THREE.Group();
@@ -459,16 +547,13 @@ function buildHero() {
     shin.position.y = -0.55;
     leg.add(shin);
     addMesh(shin, new THREE.CapsuleGeometry(0.095, 0.28, 6, 10), matPants, 0, -0.16, 0);
-    // Slight lift so soles clear the asphalt (visual only)
     addMesh(shin, new THREE.BoxGeometry(0.22, 0.12, 0.34), matShoe, 0, -0.36, 0.05);
     addMesh(shin, new THREE.BoxGeometry(0.22, 0.05, 0.1), toon(0xff6a3d), 0, -0.3, 0.16);
     return { leg, shin };
   }
   const leftLeg = makeLeg(-1);
   const rightLeg = makeLeg(1);
-
   root.rotation.y = Math.PI;
-
   return {
     root,
     hips,
@@ -486,6 +571,26 @@ function buildHero() {
 }
 
 function animateHero(dt) {
+  if (player.skinned && player.mixer) {
+    animBlend.slide = damp(animBlend.slide, player.sliding ? 1 : 0, 12, dt);
+    animBlend.jump = damp(animBlend.jump, player.jumping ? 1 : 0, 10, dt);
+    const laneDelta = LANE_X[player.lane] - player.x;
+    animBlend.lean = damp(animBlend.lean, THREE.MathUtils.clamp(laneDelta * 0.35, -0.4, 0.4), 11, dt);
+
+    if (player.actions.run) {
+      const wantRun = !player.jumping && !player.sliding;
+      player.actions.run.timeScale = wantRun ? THREE.MathUtils.clamp(speed / 18, 0.9, 1.6) : 1;
+      if (wantRun && player.current !== player.actions.run) playAnim('run', 0.15);
+    }
+
+    player.mixer.update(dt);
+    const s = animBlend.slide;
+    const lean = animBlend.lean;
+    player.root.rotation.z = damp(player.root.rotation.z, lean * 0.55, 12, dt);
+    player.root.rotation.x = damp(player.root.rotation.x, 0.85 * s, 12, dt);
+    return;
+  }
+
   const p = player.parts;
   if (!p) return;
 
@@ -493,59 +598,24 @@ function animateHero(dt) {
   animBlend.jump = damp(animBlend.jump, player.jumping ? 1 : 0, 10, dt);
   const grounded = 1 - Math.max(animBlend.slide, animBlend.jump * 0.85);
   animBlend.runAmp = damp(animBlend.runAmp, grounded, 9, dt);
-
-  // Lean into lane changes (visual only — player.x / collision unchanged)
   const laneDelta = LANE_X[player.lane] - player.x;
   animBlend.lean = damp(animBlend.lean, THREE.MathUtils.clamp(laneDelta * 0.42, -0.5, 0.5), 11, dt);
-
-  // Jump stretch from vertical velocity (visual only)
-  const stretchTarget = player.jumping
-    ? THREE.MathUtils.clamp(player.jumpV * 0.035, -0.12, 0.14)
-    : 0;
+  const stretchTarget = player.jumping ? THREE.MathUtils.clamp(player.jumpV * 0.035, -0.12, 0.14) : 0;
   animBlend.stretch = damp(animBlend.stretch, stretchTarget, 14, dt);
 
   const pace = player.jumping ? 0 : speed * 0.58;
   bobT += dt * pace;
-
   const swing = Math.sin(bobT * 2.2) * animBlend.runAmp;
   const bob = Math.abs(Math.sin(bobT * 2.2)) * 0.055 * animBlend.runAmp;
   const s = animBlend.slide;
   const j = animBlend.jump;
   const lean = animBlend.lean;
 
-  // Meshy mesh is a static dancer — bob, lean, jump & slide as one body
-  if (player.glb) {
-    const rig = p.rig;
-    const bodyBob = bob * 1.35 + 0.025 * Math.sin(bobT * 4.4) * animBlend.runAmp;
-    const yTarget = bodyBob - 0.1 * s + 0.08 * j + animBlend.stretch * 0.15;
-    const rxTarget = 0.12 * animBlend.runAmp + 1.05 * s - 0.22 * j;
-    const rzTarget = swing * 0.14 + lean;
-    const ryTarget = lean * 0.55;
-    const syTarget = 1 - 0.18 * s + 0.06 * j + animBlend.stretch;
-    const sxTarget = 1 + 0.1 * s - animBlend.stretch * 0.5 + Math.abs(lean) * 0.08;
-    const szTarget = 1 + 0.06 * s - animBlend.stretch * 0.35;
-
-    rig.position.y = damp(rig.position.y, yTarget, 16, dt);
-    rig.rotation.x = damp(rig.rotation.x, rxTarget, 12, dt);
-    rig.rotation.y = damp(rig.rotation.y, ryTarget, 12, dt);
-    rig.rotation.z = damp(rig.rotation.z, rzTarget, 12, dt);
-    rig.scale.y = damp(rig.scale.y, syTarget, 13, dt);
-    rig.scale.x = damp(rig.scale.x, sxTarget, 13, dt);
-    rig.scale.z = damp(rig.scale.z, szTarget, 13, dt);
-    return;
-  }
-
-  const hipsY = 0.95 + bob - 0.32 * s + 0.04 * j;
-  const hipsRx = 0.06 * animBlend.runAmp + 1.05 * s - 0.12 * j;
-  const torsoRx = 0.05 * animBlend.runAmp + 0.18 * s + 0.04 * j;
-  const torsoRz = swing * 0.045 + lean * 0.6;
-  const headRx = -0.04 * animBlend.runAmp - 0.32 * s + 0.08 * j;
-
-  p.hips.position.y = damp(p.hips.position.y, hipsY, 18, dt);
-  p.hips.rotation.x = damp(p.hips.rotation.x, hipsRx, 16, dt);
-  p.torso.rotation.x = damp(p.torso.rotation.x, torsoRx, 16, dt);
-  p.torso.rotation.z = damp(p.torso.rotation.z, torsoRz, 14, dt);
-  p.head.rotation.x = damp(p.head.rotation.x, headRx, 14, dt);
+  p.hips.position.y = damp(p.hips.position.y, 0.95 + bob - 0.32 * s + 0.04 * j, 18, dt);
+  p.hips.rotation.x = damp(p.hips.rotation.x, 0.06 * animBlend.runAmp + 1.05 * s - 0.12 * j, 16, dt);
+  p.torso.rotation.x = damp(p.torso.rotation.x, 0.05 * animBlend.runAmp + 0.18 * s + 0.04 * j, 16, dt);
+  p.torso.rotation.z = damp(p.torso.rotation.z, swing * 0.045 + lean * 0.6, 14, dt);
+  p.head.rotation.x = damp(p.head.rotation.x, -0.04 * animBlend.runAmp - 0.32 * s + 0.08 * j, 14, dt);
 
   const armAmp = 0.9 * animBlend.runAmp + 0.35 * j + 0.12 * s;
   const armJump = -0.75 * j;
@@ -563,203 +633,87 @@ function animateHero(dt) {
   p.rightShin.rotation.x = damp(p.rightShin.rotation.x, Math.max(0, swing) * 0.65 * animBlend.runAmp + 0.45 * s + 0.15 * j, 14, dt);
 }
 
-/**
- * Meshy "Neon City Dancers" packs 3 figures in one mesh.
- * Keep only the center dancer by clustering triangle centroids on X.
- */
-function extractSingleDancer(geometry) {
-  const src = geometry.index ? geometry.toNonIndexed() : geometry.clone();
-  const pos = src.attributes.position;
-  const triCount = pos.count / 3;
-  if (triCount < 3) return geometry;
-
-  const centroids = new Float32Array(triCount);
-  let xmin = Infinity;
-  let xmax = -Infinity;
-  for (let t = 0; t < triCount; t++) {
-    const i = t * 3;
-    const cx = (pos.getX(i) + pos.getX(i + 1) + pos.getX(i + 2)) / 3;
-    centroids[t] = cx;
-    if (cx < xmin) xmin = cx;
-    if (cx > xmax) xmax = cx;
-  }
-
-  // 3-means on X
-  let c0 = xmin + (xmax - xmin) * 0.2;
-  let c1 = (xmin + xmax) * 0.5;
-  let c2 = xmin + (xmax - xmin) * 0.8;
-  for (let iter = 0; iter < 10; iter++) {
-    let s0 = 0;
-    let s1 = 0;
-    let s2 = 0;
-    let n0 = 0;
-    let n1 = 0;
-    let n2 = 0;
-    for (let t = 0; t < triCount; t++) {
-      const x = centroids[t];
-      const d0 = Math.abs(x - c0);
-      const d1 = Math.abs(x - c1);
-      const d2 = Math.abs(x - c2);
-      if (d0 <= d1 && d0 <= d2) {
-        s0 += x;
-        n0++;
-      } else if (d1 <= d2) {
-        s1 += x;
-        n1++;
-      } else {
-        s2 += x;
-        n2++;
-      }
-    }
-    if (n0) c0 = s0 / n0;
-    if (n1) c1 = s1 / n1;
-    if (n2) c2 = s2 / n2;
-  }
-
-  const centers = [
-    { c: c0, i: 0 },
-    { c: c1, i: 1 },
-    { c: c2, i: 2 },
-  ].sort((a, b) => a.c - b.c);
-  const midId = centers[1].i;
-  const midC = centers[1].c;
-
-  const keep = [];
-  for (let t = 0; t < triCount; t++) {
-    const x = centroids[t];
-    const d0 = Math.abs(x - c0);
-    const d1 = Math.abs(x - c1);
-    const d2 = Math.abs(x - c2);
-    let id = 2;
-    if (d0 <= d1 && d0 <= d2) id = 0;
-    else if (d1 <= d2) id = 1;
-    if (id === midId) keep.push(t);
-  }
-
-  // Fallback: keep triangles near median center if clustering failed
-  if (keep.length < triCount * 0.15) {
-    keep.length = 0;
-    for (let t = 0; t < triCount; t++) {
-      if (Math.abs(centroids[t] - midC) < (xmax - xmin) * 0.18) keep.push(t);
-    }
-  }
-  if (!keep.length) return geometry;
-
-  const newPos = new Float32Array(keep.length * 9);
-  for (let k = 0; k < keep.length; k++) {
-    const t = keep[k];
-    const srcI = t * 9;
-    const dstI = k * 9;
-    for (let j = 0; j < 9; j++) newPos[dstI + j] = pos.array[srcI + j];
-  }
-
-  const out = new THREE.BufferGeometry();
-  out.setAttribute('position', new THREE.BufferAttribute(newPos, 3));
-  out.computeVertexNormals();
-  out.computeBoundingBox();
-  // Center on X/Z so the single dancer sits in-lane
-  const bb = out.boundingBox;
-  const ox = (bb.min.x + bb.max.x) * 0.5;
-  const oz = (bb.min.z + bb.max.z) * 0.5;
-  const arr = out.attributes.position.array;
-  for (let i = 0; i < arr.length; i += 3) {
-    arr[i] -= ox;
-    arr[i + 2] -= oz;
-  }
-  out.attributes.position.needsUpdate = true;
-  out.computeBoundingBox();
-  out.computeVertexNormals();
-  return out;
-}
-
-/** Paint neon vertex colors on Meshy geometry (export has no materials/UVs). */
-function styleMeshyMesh(mesh) {
-  mesh.geometry = extractSingleDancer(mesh.geometry);
-  const geo = mesh.geometry;
-  if (!geo.attributes.normal) geo.computeVertexNormals();
-  const pos = geo.attributes.position;
-  const colors = new Float32Array(pos.count * 3);
-  let minY = Infinity;
-  let maxY = -Infinity;
-  for (let i = 0; i < pos.count; i++) {
-    const y = pos.getY(i);
-    if (y < minY) minY = y;
-    if (y > maxY) maxY = y;
-  }
-  const span = Math.max(0.001, maxY - minY);
-  const cA = new THREE.Color(0xff2d95);
-  const cB = new THREE.Color(0x7c3aed);
-  const cC = new THREE.Color(0x22d3ee);
-  const tmp = new THREE.Color();
-  for (let i = 0; i < pos.count; i++) {
-    const t = (pos.getY(i) - minY) / span;
-    if (t < 0.55) tmp.copy(cA).lerp(cB, t / 0.55);
-    else tmp.copy(cB).lerp(cC, (t - 0.55) / 0.45);
-    colors[i * 3] = tmp.r;
-    colors[i * 3 + 1] = tmp.g;
-    colors[i * 3 + 2] = tmp.b;
-  }
-  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  mesh.material = new THREE.MeshToonMaterial({
-    vertexColors: true,
-    gradientMap: toonGrad,
-    emissive: new THREE.Color(0x3b0764),
-    emissiveIntensity: 0.4,
-  });
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-}
-
-function fitGlbToTrack(model) {
-  model.updateMatrixWorld(true);
-  let box = new THREE.Box3().setFromObject(model);
-  const size = new THREE.Vector3();
-  box.getSize(size);
-  const targetH = HERO_H;
-  const s = targetH / Math.max(0.001, size.y);
-  model.scale.setScalar(s);
-  model.updateMatrixWorld(true);
-  box = new THREE.Box3().setFromObject(model);
-  model.position.y = -box.min.y + 0.02;
-  model.rotation.y = Math.PI;
-}
-
-function mountProceduralHero() {
-  player.glb = false;
-  player.parts = buildHero();
-  player.root.clear();
-  player.root.add(player.parts.root);
-}
-
-function mountGlbHero(sceneRoot) {
-  const rig = new THREE.Group();
-  const wrap = new THREE.Group();
-  // Only keep / style the first mesh (single dancer after extract)
-  let used = false;
-  sceneRoot.traverse((c) => {
-    if (!c.isMesh) return;
-    if (used) {
-      c.visible = false;
-      return;
-    }
-    styleMeshyMesh(c);
-    used = true;
-  });
-  wrap.add(sceneRoot);
-  fitGlbToTrack(wrap);
-  rig.add(wrap);
-  player.root.clear();
-  player.root.add(rig);
-  player.glb = true;
-  player.parts = { root: wrap, rig, mesh: sceneRoot };
-}
-
 function syncPlayerPose() {
   const baseY = GROUND_Y + player.y;
-  // Soft visual settle into slide height without changing hit logic abruptly
   const slideLift = 0.05 * animBlend.slide;
   player.root.position.set(player.x, baseY + slideLift, 0);
   player.hitH = player.sliding ? 0.7 : HERO_H;
+}
+
+function mountProceduralHero() {
+  player.skinned = false;
+  player.mixer = null;
+  player.actions = {};
+  player.current = null;
+  player.model = null;
+  player.parts = buildHero();
+  player.root.clear();
+  player.root.rotation.set(0, 0, 0);
+  player.root.add(player.parts.root);
+}
+
+async function mountMixamoHero() {
+  const loader = new FBXLoader();
+  const runObj = await loader.loadAsync('./models/run.fbx');
+
+  // Single character only — hide any extra meshes if present
+  let meshCount = 0;
+  runObj.traverse((c) => {
+    if (!c.isMesh && !c.isSkinnedMesh) return;
+    meshCount += 1;
+    if (meshCount > 1) c.visible = false;
+  });
+
+  runObj.scale.setScalar(CHAR_SCALE);
+  runObj.rotation.y = Math.PI;
+  runObj.position.set(0, 0, 0);
+  styleSkinnedRunner(runObj);
+
+  player.root.clear();
+  player.root.rotation.set(0, 0, 0);
+  player.root.add(runObj);
+  player.model = runObj;
+  player.skinned = true;
+  player.parts = null;
+  player.mixer = new THREE.AnimationMixer(runObj);
+  player.actions = {};
+  player.current = null;
+
+  if (runObj.animations && runObj.animations.length) {
+    const clip = stripHipRootMotion(runObj.animations[0].clone());
+    clip.name = 'run';
+    player.actions.run = player.mixer.clipAction(clip);
+    player.actions.run.setLoop(THREE.LoopRepeat);
+    player.actions.run.play();
+    player.current = player.actions.run;
+  }
+
+  try {
+    const jumpObj = await loader.loadAsync('./models/jump.fbx');
+    if (jumpObj.animations && jumpObj.animations.length) {
+      const clip = stripHipRootMotion(jumpObj.animations[0].clone());
+      clip.name = 'jump';
+      player.actions.jump = player.mixer.clipAction(clip);
+      player.actions.jump.setLoop(THREE.LoopOnce);
+      player.actions.jump.clampWhenFinished = true;
+    }
+  } catch (_) {}
+
+  if (!player.actions.jump) {
+    try {
+      const bigObj = await loader.loadAsync('./models/bigjump.fbx');
+      if (bigObj.animations && bigObj.animations.length) {
+        const clip = stripHipRootMotion(bigObj.animations[0].clone());
+        clip.name = 'jump';
+        player.actions.jump = player.mixer.clipAction(clip);
+        player.actions.jump.setLoop(THREE.LoopOnce);
+        player.actions.jump.clampWhenFinished = true;
+      }
+    } catch (_) {}
+  }
+
+  alignSkinnedFeet(runObj, player.mixer, player.actions.run);
+  playAnim('run', 0);
 }
 
 function finishHeroReady() {
@@ -772,14 +726,13 @@ function finishHeroReady() {
 }
 
 async function initHero() {
-  hintEl.textContent = 'Loading dancer…';
+  hintEl.textContent = 'Loading runner…';
   startBtn.disabled = true;
   try {
-    const loader = new GLTFLoader();
-    const gltf = await loader.loadAsync('./models/runner.glb');
-    mountGlbHero(gltf.scene);
+    // Mixamo FBX = one skinned character + real run cycle (Meshy GLB has no skeleton/anims)
+    await mountMixamoHero();
   } catch (err) {
-    console.warn('GLB load failed, using procedural hero', err);
+    console.warn('Mixamo load failed, procedural fallback', err);
     mountProceduralHero();
   }
   finishHeroReady();
@@ -1000,6 +953,7 @@ function jump() {
   if (!player.jumping && !player.sliding) {
     player.jumping = true;
     player.jumpV = 9.6;
+    playAnim('jump', 0.1);
   }
 }
 
@@ -1082,6 +1036,7 @@ function update(dt) {
       player.y = 0;
       player.jumping = false;
       player.jumpV = 0;
+      playAnim('run', 0.12);
     }
   }
   if (player.sliding) {

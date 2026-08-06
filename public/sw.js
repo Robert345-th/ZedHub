@@ -1,4 +1,4 @@
-const CACHE = "nexus-v36";
+const CACHE = "nexus-v37";
 
 // Everything users need offline after installing Nexus once.
 const PRECACHE = [
@@ -53,16 +53,20 @@ const PRECACHE = [
   "/games/2048/game.css",
   "/games/2048/game.js",
   "/games/2048/manifest.json",
-  // Runner 3D
+  // Runner 3D — single Mixamo skinned runner
   "/games/runner/",
   "/games/runner/index.html",
   "/games/runner/game.css",
   "/games/runner/game.js",
   "/games/runner/manifest.json",
   "/games/runner/vendor/three.module.min.js",
-  "/games/runner/vendor/addons/loaders/GLTFLoader.js",
-  "/games/runner/vendor/addons/utils/BufferGeometryUtils.js",
-  "/games/runner/models/runner.glb",
+  "/games/runner/vendor/addons/loaders/FBXLoader.js",
+  "/games/runner/vendor/addons/libs/fflate.module.js",
+  "/games/runner/vendor/addons/curves/NURBSCurve.js",
+  "/games/runner/vendor/addons/curves/NURBSUtils.js",
+  "/games/runner/models/run.fbx",
+  "/games/runner/models/jump.fbx",
+  "/games/runner/models/bigjump.fbx",
 ];
 
 self.addEventListener("install", (event) => {
