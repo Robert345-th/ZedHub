@@ -54,6 +54,31 @@
       width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: #FBEAD9;
       display: none;
     }
+    .colors {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;
+    }
+    .color-field {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+      background: #fff;
+    }
+    .color-field span { font-size: 12px; font-weight: 700; color: var(--subtext); }
+    .color-field input[type="color"] {
+      width: 36px; height: 36px; border: 0; background: none; padding: 0; cursor: pointer;
+    }
+    .live-preview {
+      margin-top: 12px; border-radius: 14px; min-height: 140px; padding: 16px;
+      display: flex; align-items: flex-end; overflow: hidden; position: relative;
+      background-size: cover; background-position: center;
+    }
+    .live-preview .shade {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.45));
+    }
+    .live-preview .words {
+      position: relative; z-index: 1; font-size: 15px; font-weight: 700;
+      line-height: 1.35; word-break: break-word;
+    }
     .mine { font-size: 13px; color: var(--subtext); margin-top: 8px; }
     .toast {
       position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%);
@@ -81,6 +106,22 @@
         <input type="file" id="photoInput" accept="image/*" />
         <img class="preview" id="preview" alt="" />
       </div>
+
+      <div class="colors">
+        <label class="color-field">
+          <span>Background</span>
+          <input type="color" id="bgColor" value="#C2410C" />
+        </label>
+        <label class="color-field">
+          <span>Words</span>
+          <input type="color" id="textColor" value="#FFFFFF" />
+        </label>
+      </div>
+      <div class="live-preview" id="livePreview">
+        <div class="shade"></div>
+        <div class="words" id="previewWords">Your status text…</div>
+      </div>
+
       <p class="hint">Statuses disappear automatically after 24 hours — like a story.</p>
       <button type="button" class="primary" id="postBtn">Post status</button>
       <button type="button" class="ghost" id="clearBtn" hidden>Remove my status</button>
@@ -102,6 +143,10 @@
       const textEl = document.getElementById("statusText");
       const photoInput = document.getElementById("photoInput");
       const preview = document.getElementById("preview");
+      const bgColorEl = document.getElementById("bgColor");
+      const textColorEl = document.getElementById("textColor");
+      const livePreview = document.getElementById("livePreview");
+      const previewWords = document.getElementById("previewWords");
       const postBtn = document.getElementById("postBtn");
       const clearBtn = document.getElementById("clearBtn");
       const mineMeta = document.getElementById("mineMeta");
@@ -109,12 +154,29 @@
       let photoUrl = "";
       let myStatus = null;
 
+      const prefs = ZEStatus.getColorPrefs();
+      bgColorEl.value = prefs.bgColor;
+      textColorEl.value = prefs.textColor;
+
       function toastMsg(msg) {
         toast.textContent = msg;
         toast.hidden = false;
         clearTimeout(toastMsg._t);
         toastMsg._t = setTimeout(() => { toast.hidden = true; }, 2000);
       }
+
+      function syncPreview() {
+        const bg = ZEStatus.safeColor(bgColorEl.value, "#C2410C");
+        const words = ZEStatus.safeColor(textColorEl.value, "#FFFFFF");
+        livePreview.style.backgroundColor = bg;
+        livePreview.style.backgroundImage = photoUrl ? `url('${photoUrl}')` : "none";
+        previewWords.style.color = words;
+        previewWords.textContent = textEl.value.trim() || "Your status text…";
+      }
+
+      textEl.addEventListener("input", syncPreview);
+      bgColorEl.addEventListener("input", syncPreview);
+      textColorEl.addEventListener("input", syncPreview);
 
       photoInput.addEventListener("change", async () => {
         const file = photoInput.files && photoInput.files[0];
@@ -125,6 +187,7 @@
           photoUrl = await ZE.uploadImage(file);
           preview.src = photoUrl;
           preview.style.display = "block";
+          syncPreview();
         } catch (err) {
           toastMsg(err.message || "Upload failed");
           photoUrl = "";
@@ -142,6 +205,8 @@
             clearBtn.hidden = false;
             textEl.value = myStatus.text || "";
             mineMeta.textContent = `Live now · ~${ZEStatus.hoursLeft(myStatus.expiresAt)}h left`;
+            if (myStatus.bgColor) bgColorEl.value = ZEStatus.safeColor(myStatus.bgColor, prefs.bgColor);
+            if (myStatus.textColor) textColorEl.value = ZEStatus.safeColor(myStatus.textColor, prefs.textColor);
             if (myStatus.photo) {
               preview.src = myStatus.photo;
               preview.style.display = "block";
@@ -151,6 +216,7 @@
             clearBtn.hidden = true;
             mineMeta.textContent = "No active status";
           }
+          syncPreview();
         } catch {
           mineMeta.textContent = "Could not load statuses";
         }
@@ -164,12 +230,17 @@
         }
         try {
           postBtn.disabled = true;
+          const bgColor = ZEStatus.safeColor(bgColorEl.value, "#C2410C");
+          const textColor = ZEStatus.safeColor(textColorEl.value, "#FFFFFF");
+          ZEStatus.setColorPrefs({ bgColor, textColor });
           await ZEStatus.create({
             userId: user.id,
             name: user.name || "Guest",
             shop: user.business_name || "",
             text,
             photo: photoUrl,
+            bgColor,
+            textColor,
           });
           toastMsg("Status posted");
           await refreshMine();
@@ -194,6 +265,7 @@
         }
       });
 
+      syncPreview();
       refreshMine();
     }
   </script>

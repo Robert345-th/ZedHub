@@ -130,12 +130,19 @@ app.get('/api/statuses', (req, res) => {
   res.json(activeStatuses());
 });
 
+function safeHexColor(value, fallback) {
+  const raw = String(value || '').trim();
+  return /^#[0-9A-Fa-f]{6}$/.test(raw) ? raw.toUpperCase() : fallback;
+}
+
 app.post('/api/statuses', (req, res) => {
   const userId = String(req.body?.userId || '').trim();
   const name = String(req.body?.name || 'Guest').trim().slice(0, 48) || 'Guest';
   const text = String(req.body?.text || '').trim().slice(0, 280);
   const photo = String(req.body?.photo || '').trim().slice(0, 500);
   const shop = String(req.body?.shop || '').trim().slice(0, 80);
+  const bgColor = safeHexColor(req.body?.bgColor, '#C2410C');
+  const textColor = safeHexColor(req.body?.textColor, '#FFFFFF');
   if (!userId) return res.status(400).json({ error: 'userId required' });
   if (!text && !photo) return res.status(400).json({ error: 'Add text or a photo' });
 
@@ -147,6 +154,8 @@ app.post('/api/statuses', (req, res) => {
     shop,
     text,
     photo: photo || null,
+    bgColor,
+    textColor,
     createdAt: now,
     expiresAt: now + STATUS_TTL_MS,
   };

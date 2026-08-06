@@ -253,6 +253,10 @@
           <button class="icon-btn" type="button" id="favBtn" aria-label="Favorites">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
           </button>
+          <button class="icon-btn" type="button" id="chatBtn" aria-label="Chats">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="badge" id="chatBadge"></span>
+          </button>
         </div>
       </div>
     </div>
@@ -305,6 +309,7 @@
 
     document.getElementById("menuBtn").onclick = () => goLogin("/events/settings.html");
     document.getElementById("favBtn").onclick = () => goLogin("/events/favorites.html");
+    document.getElementById("chatBtn").onclick = () => goLogin("/events/chats.html");
     document.getElementById("mapBtn").onclick = () => { location.href = "/events/map-view.html"; };
 
     function escapeHtml(str) {
@@ -323,9 +328,22 @@
         greet.textContent = `Hi, ${user.name || "there"}`;
         authBtn.textContent = user.name || "Account";
         authBtn.onclick = () => { location.href = "/events/settings.html"; };
+        loadUnread();
       } else {
         authBtn.onclick = () => { location.href = "/events/login.html"; };
       }
+    }
+
+    async function loadUnread() {
+      try {
+        const data = await ZE.api("/messages/unread-count");
+        const badge = document.getElementById("chatBadge");
+        const n = data.count || 0;
+        if (n > 0) {
+          badge.style.display = "flex";
+          badge.textContent = n > 9 ? "9+" : String(n);
+        }
+      } catch { /* ignore */ }
     }
 
     async function loadStatuses() {
@@ -341,17 +359,18 @@
         strip.innerHTML = list.map((s) => {
           const label = escapeHtml(s.shop || s.name || "Status");
           const hours = ZEStatus.hoursLeft(s.expiresAt);
-          const bg = s.photo
-            ? `style="background-image:url('${escapeHtml(s.photo)}')"`
-            : "";
+          const bgColor = ZEStatus.safeColor(s.bgColor, "#5c4033");
+          const textColor = ZEStatus.safeColor(s.textColor, "#ffffff");
+          const bgParts = [`background-color:${bgColor}`];
+          if (s.photo) bgParts.push(`background-image:url('${escapeHtml(s.photo)}')`);
           const initial = escapeHtml((s.name || "S").trim().charAt(0).toUpperCase());
           return `
             <button type="button" class="story-card" data-id="${escapeHtml(s.id)}">
-              <div class="bg" ${bg}></div>
-              ${s.photo ? "" : `<div class="initial">${initial}</div>`}
+              <div class="bg" style="${bgParts.join(";")}"></div>
+              ${s.photo ? "" : `<div class="initial" style="color:${textColor}">${initial}</div>`}
               <div class="shade"></div>
               <span class="badge">${hours}</span>
-              <span class="story-name">${label}</span>
+              <span class="story-name" style="color:${textColor}">${label}</span>
             </button>`;
         }).join("");
         strip.querySelectorAll(".story-card").forEach((btn) => {
@@ -374,15 +393,16 @@
         document.body.appendChild(viewer);
       }
       const hours = ZEStatus.hoursLeft(item.expiresAt);
-      const bg = item.photo
-        ? `style="background-image:url('${escapeHtml(item.photo)}')"`
-        : "";
+      const bgColor = ZEStatus.safeColor(item.bgColor, "#3a2a20");
+      const textColor = ZEStatus.safeColor(item.textColor, "#ffffff");
+      const bgParts = [`background-color:${bgColor}`];
+      if (item.photo) bgParts.push(`background-image:url('${escapeHtml(item.photo)}')`);
       viewer.hidden = false;
       viewer.innerHTML = `
-        <div class="status-sheet">
-          <div class="full-bg" ${bg}></div>
+        <div class="status-sheet" style="background:${bgColor};color:${textColor}">
+          <div class="full-bg" style="${bgParts.join(";")}"></div>
           <div class="full-shade"></div>
-          <div class="body">
+          <div class="body" style="color:${textColor}">
             <h3>${escapeHtml(item.shop || item.name || "Status")}</h3>
             <div class="meta">${escapeHtml(item.name || "")} · ${hours}h left</div>
             ${item.text ? `<p>${escapeHtml(item.text)}</p>` : ""}

@@ -94,6 +94,32 @@
     .modal-cancel-btn { background: var(--card); border: 1px solid var(--border); color: var(--subtext); }
     .modal-ok-btn { background: var(--price-red); color: #fff; }
     .modal-ok-btn.orange { background: var(--orange); }
+    .color-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px; margin-bottom: 8px;
+    }
+    .color-card p { font-size: 12px; color: var(--subtext); margin-bottom: 12px; line-height: 1.4; }
+    .colors {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .color-field {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+      background: #fff;
+    }
+    .color-field span { font-size: 12px; font-weight: 700; color: var(--subtext); }
+    .color-field input[type="color"] {
+      width: 36px; height: 36px; border: 0; background: none; padding: 0; cursor: pointer;
+    }
+    .status-preview {
+      margin-top: 12px; border-radius: 14px; min-height: 110px; padding: 16px;
+      display: flex; align-items: flex-end;
+    }
+    .status-preview .words { font-size: 15px; font-weight: 700; line-height: 1.35; }
+    .save-colors {
+      width: 100%; margin-top: 12px; border: 0; border-radius: 12px; padding: 12px;
+      background: var(--orange); color: #fff; font-weight: 700; cursor: pointer;
+    }
   </style>
   <script src="/no-ptr.js"></script>
 </head>
@@ -130,6 +156,15 @@
         <div class="row-sub">24-hour update · like a story</div>
       </div>
     </button>
+    <button class="row" type="button" onclick="location.href='/events/chats.html'">
+      <div>
+        <div class="row-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Chats
+        </div>
+        <div class="row-sub">Messages with shops</div>
+      </div>
+    </button>
     <button class="row" type="button" onclick="location.href='/events/favorites.html'">
       <div>
         <div class="row-title">
@@ -138,6 +173,27 @@
         </div>
       </div>
     </button>
+
+    <div class="section-label">Status look</div>
+    <div class="color-card">
+      <p>Choose your default background and word colours for statuses. You can still change them when posting.</p>
+      <div class="colors">
+        <label class="color-field">
+          <span>Background</span>
+          <input type="color" id="statusBgColor" value="#C2410C" />
+        </label>
+        <label class="color-field">
+          <span>Words</span>
+          <input type="color" id="statusTextColor" value="#FFFFFF" />
+        </label>
+      </div>
+      <div class="status-preview" id="statusPreview">
+        <div class="words" id="statusPreviewWords">Sample status words</div>
+      </div>
+      <button type="button" class="save-colors" id="saveStatusColors">Save colours</button>
+    </div>
+
+    <div class="section-label">Shop setup</div>
     <button class="row" type="button" onclick="location.href='/events/register-shop.html'">
       <div>
         <div class="row-title">
@@ -220,6 +276,7 @@
   <script src="/events/js/api.js"></script>
   <script src="/events/js/auth.js"></script>
   <script src="/events/js/ui.js"></script>
+  <script src="/events/js/status.js"></script>
   <script>
     if (!ZEAuth.requireLogin("/settings.html")) {
       /* redirected */
@@ -307,6 +364,27 @@
           ZEUI.error(err.message || "Could not update setting.");
         }
       });
+
+      const bgEl = document.getElementById("statusBgColor");
+      const textEl = document.getElementById("statusTextColor");
+      const preview = document.getElementById("statusPreview");
+      const previewWords = document.getElementById("statusPreviewWords");
+      const prefs = ZEStatus.getColorPrefs();
+      bgEl.value = prefs.bgColor;
+      textEl.value = prefs.textColor;
+      function syncStatusPreview() {
+        const bg = ZEStatus.safeColor(bgEl.value, "#C2410C");
+        const words = ZEStatus.safeColor(textEl.value, "#FFFFFF");
+        preview.style.background = bg;
+        previewWords.style.color = words;
+      }
+      bgEl.addEventListener("input", syncStatusPreview);
+      textEl.addEventListener("input", syncStatusPreview);
+      syncStatusPreview();
+      document.getElementById("saveStatusColors").onclick = () => {
+        ZEStatus.setColorPrefs({ bgColor: bgEl.value, textColor: textEl.value });
+        ZEUI.toast("Status colours saved.", "success");
+      };
     }
   </script>
 </body>
