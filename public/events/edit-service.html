@@ -1,0 +1,294 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ZedEvents - Edit service</title>
+  <meta name="theme-color" content="#C2410C" />
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    :root {
+      --bg: #F4F1EC; --card: #FFFFFF; --border: #E2E0DC;
+      --text: #211D1A; --subtext: #5C5955; --orange: #C2410C;
+      --cream: #FFF3E8; --peach: #FFD8B8; --price-red: #A3131C;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg); color: var(--text); padding-bottom: 32px;
+    }
+    button, input, select, textarea { font: inherit; }
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--orange); padding: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .back-button {
+      width: 40px; height: 40px; padding: 0; background: none; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .back-button svg {
+      width: 22px; height: 22px; stroke: var(--cream); fill: none;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .header-title { color: var(--cream); font-size: 18px; font-weight: 700; }
+    .header-sub { color: var(--peach); font-size: 12px; margin-top: 2px; }
+    .center-box { padding: 60px 24px; text-align: center; color: var(--subtext); }
+    .content { padding: 16px; max-width: 560px; margin: 0 auto; }
+    .form-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px;
+    }
+    .form-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .hint {
+      font-size: 12px; color: var(--subtext); margin-bottom: 18px; line-height: 1.45;
+      background: var(--cream); border-radius: 10px; padding: 10px 12px;
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 700; color: var(--subtext);
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; font-size: 14px; color: var(--text);
+    }
+    .field textarea { min-height: 100px; resize: vertical; }
+    .loc-btn {
+      width: 100%; background: var(--cream); border: 1px solid #F0D2A8;
+      border-radius: 10px; padding: 12px; color: var(--orange);
+      font-weight: 700; font-size: 13px; cursor: pointer; margin-bottom: 8px;
+    }
+    .photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .photo-thumb-wrap {
+      width: 72px; height: 72px; border-radius: 10px; overflow: hidden;
+      position: relative; background: #FBEAD9;
+    }
+    .photo-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .remove-btn {
+      position: absolute; top: 3px; right: 3px; width: 22px; height: 22px;
+      border: none; border-radius: 11px; background: rgba(17,17,17,0.75);
+      color: #fff; font-weight: 700; cursor: pointer; line-height: 1;
+    }
+    .error {
+      display: none; background: #FBE7E8; color: var(--price-red);
+      border: 1px solid #F0C1C4; border-radius: 10px;
+      padding: 11px 14px; font-size: 13px; font-weight: 600; margin-bottom: 14px;
+    }
+    .error.show { display: block; }
+    .submit-btn {
+      width: 100%; background: var(--orange); border: none; border-radius: 12px;
+      padding: 15px; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer;
+    }
+    .submit-btn:disabled { opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="back-button" type="button" onclick="location.href='/events/my-shop.html'" aria-label="Go back">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div>
+      <div class="header-title">Edit service</div>
+      <div class="header-sub">Update your listing</div>
+    </div>
+  </div>
+
+  <div class="center-box" id="status">Loading…</div>
+  <div class="content" id="content" hidden>
+    <form class="form-card" id="form">
+      <div class="form-title">Edit service</div>
+      <div class="hint">After you save, the post goes back to pending and won't show on Home until approved again.</div>
+      <div class="error" id="error"></div>
+
+      <div class="field">
+        <label>Photos (up to 5)</label>
+        <input id="photos" type="file" accept="image/*" multiple />
+        <div class="photo-grid" id="preview"></div>
+      </div>
+
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category" required></select>
+      </div>
+
+      <div class="field">
+        <label for="title">Title</label>
+        <input id="title" required maxlength="120" />
+      </div>
+
+      <div class="field">
+        <label for="description">Description</label>
+        <textarea id="description"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="price">Price (K) — optional</label>
+        <input id="price" type="number" min="0" step="1" placeholder="Leave blank to ask for quote" />
+      </div>
+
+      <div class="field">
+        <label>Service location</label>
+        <button type="button" class="loc-btn" id="locBtn">Use my current location</button>
+        <input id="locationLabel" placeholder="Area covered (e.g. Lusaka, Kabulonga)" />
+        <input type="hidden" id="latitude" />
+        <input type="hidden" id="longitude" />
+      </div>
+
+      <button class="submit-btn" type="submit" id="submitBtn">Save changes</button>
+    </form>
+  </div>
+
+  <script src="/events/js/api.js"></script>
+  <script src="/events/js/auth.js"></script>
+  <script src="/events/js/location.js"></script>
+  <script src="/events/js/ui.js"></script>
+  <script>
+    if (!ZEAuth.requireLogin(location.pathname + location.search)) {
+      /* redirected */
+    } else {
+      const id = new URLSearchParams(location.search).get("id");
+      const status = document.getElementById("status");
+      const content = document.getElementById("content");
+      const error = document.getElementById("error");
+      const preview = document.getElementById("preview");
+      const categoryEl = document.getElementById("category");
+      let photoUrls = [];
+
+      function showError(msg) {
+        error.textContent = msg;
+        error.classList.add("show");
+      }
+
+      function normalizePhotos(photos) {
+        if (!photos) return [];
+        if (Array.isArray(photos)) return photos.filter(Boolean);
+        if (typeof photos === "string") {
+          try {
+            const parsed = JSON.parse(photos);
+            return Array.isArray(parsed) ? parsed.filter(Boolean) : [photos];
+          } catch { return photos ? [photos] : []; }
+        }
+        return [];
+      }
+
+      function renderPhotos() {
+        preview.innerHTML = photoUrls.map((url, i) => `
+          <div class="photo-thumb-wrap">
+            <img src="${url}" alt="" />
+            <button type="button" class="remove-btn" data-i="${i}" aria-label="Remove">×</button>
+          </div>
+        `).join("");
+        preview.querySelectorAll("[data-i]").forEach((btn) => {
+          btn.onclick = () => {
+            photoUrls.splice(Number(btn.dataset.i), 1);
+            renderPhotos();
+          };
+        });
+      }
+
+      if (!id) {
+        status.textContent = "No service specified.";
+      } else {
+        (async () => {
+          try {
+            const [cats, item] = await Promise.all([
+              ZE.api("/services/categories"),
+              ZE.api(`/services/${id}`),
+            ]);
+            const me = ZEAuth.getUser();
+            if (!me || String(me.id) !== String(item.vendor_id)) {
+              status.textContent = "You can only edit your own services.";
+              return;
+            }
+            categoryEl.innerHTML = cats.map((c) => `<option value="${c.id}">${c.name}</option>`).join("");
+            document.getElementById("title").value = item.title || "";
+            document.getElementById("description").value = item.description || "";
+            document.getElementById("price").value = item.price != null ? item.price : "";
+            if (item.category_id) categoryEl.value = String(item.category_id);
+            if (item.location_label) document.getElementById("locationLabel").value = item.location_label;
+            if (item.latitude) document.getElementById("latitude").value = item.latitude;
+            if (item.longitude) document.getElementById("longitude").value = item.longitude;
+            photoUrls = normalizePhotos(item.photos);
+            renderPhotos();
+            status.hidden = true;
+            content.hidden = false;
+          } catch (err) {
+            status.textContent = err.message || "Could not load service.";
+          }
+        })();
+      }
+
+      document.getElementById("locBtn").onclick = () => {
+        const btn = document.getElementById("locBtn");
+        btn.disabled = true;
+        btn.textContent = "Getting location…";
+        ZELocation.getDeviceCoords()
+          .then((coords) => {
+            document.getElementById("latitude").value = coords.lat;
+            document.getElementById("longitude").value = coords.lng;
+            ZELocation.saveCoords(coords);
+            btn.textContent = "Location saved";
+          })
+          .catch(() => showError("Could not get location. Type your area instead."))
+          .finally(() => {
+            btn.disabled = false;
+            if (btn.textContent === "Getting location…") btn.textContent = "Use my current location";
+          });
+      };
+
+      document.getElementById("photos").addEventListener("change", (e) => {
+        const files = Array.from(e.target.files || []);
+        e.target.value = "";
+        const room = Math.max(0, 5 - photoUrls.length);
+        const batch = files.slice(0, room);
+        if (!batch.length) {
+          if (files.length) ZEUI.error("You can add up to 5 photos.");
+          return;
+        }
+        (async () => {
+          try {
+            for (const file of batch) {
+              photoUrls.push(await ZE.uploadImage(file));
+            }
+            renderPhotos();
+          } catch (err) {
+            ZEUI.error(err.message || "Photo upload failed.");
+          }
+        })();
+      });
+
+      document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        error.classList.remove("show");
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = true;
+        btn.textContent = "Saving…";
+        try {
+          const priceVal = document.getElementById("price").value;
+          const latVal = document.getElementById("latitude").value;
+          const lngVal = document.getElementById("longitude").value;
+          await ZE.api(`/services/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+              title: document.getElementById("title").value.trim(),
+              description: document.getElementById("description").value.trim(),
+              price: priceVal ? Number(priceVal) : null,
+              category_id: Number(categoryEl.value) || null,
+              photos: photoUrls,
+              latitude: latVal ? Number(latVal) : null,
+              longitude: lngVal ? Number(lngVal) : null,
+              location_label: document.getElementById("locationLabel").value.trim() || null,
+            }),
+          });
+          location.href = "/events/my-shop.html?posted=1";
+        } catch (err) {
+          showError(err.message || "Could not save changes.");
+          btn.disabled = false;
+          btn.textContent = "Save changes";
+        }
+      });
+    }
+  </script>
+</body>
+</html>

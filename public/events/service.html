@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ZedEvents - Service</title>
+  <meta name="theme-color" content="#C2410C" />
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    :root {
+      --bg: #F4F1EC; --card: #FFFFFF; --border: #E2E0DC;
+      --text: #211D1A; --subtext: #5C5955; --orange: #C2410C;
+      --cream: #FFF3E8; --peach: #FFD8B8; --black: #111111;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg); color: var(--text); padding-bottom: 24px;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; }
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--orange); padding: 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .back-button {
+      width: 40px; height: 40px; padding: 0; background: none; border: none;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .back-button svg {
+      width: 22px; height: 22px; stroke: var(--cream); fill: none;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .header-title { color: var(--cream); font-size: 18px; font-weight: 700; }
+    .header-sub { color: var(--peach); font-size: 12px; margin-top: 2px; }
+    .auth-btn {
+      flex-shrink: 0; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35);
+      border-radius: 999px; padding: 8px 14px; color: #fff; font-size: 12px; font-weight: 700;
+    }
+    .center-box { padding: 60px 24px; text-align: center; color: var(--subtext); }
+    .content { padding: 12px; max-width: 640px; margin: 0 auto; }
+    .media-main {
+      width: 100%; aspect-ratio: 4/3; border-radius: 14px; overflow: hidden;
+      background: #FBEAD9; margin-bottom: 10px;
+    }
+    .media-main img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .media-thumbs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; }
+    .media-thumbs img {
+      width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex-shrink: 0;
+      border: 2px solid transparent; cursor: pointer;
+    }
+    .media-thumbs img.active { border-color: var(--orange); }
+    .thumb-ph {
+      width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    }
+    .thumb-ph svg {
+      width: 64px; height: 64px; stroke: var(--orange); fill: none; opacity: 0.45;
+      stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px;
+    }
+    .card-cat {
+      font-size: 10px; font-weight: 700; color: var(--orange);
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .title { font-size: 22px; font-weight: 700; margin: 6px 0 4px; line-height: 1.25; }
+    .vendor { font-size: 13px; color: var(--subtext); }
+    .price { font-size: 20px; font-weight: 700; color: var(--orange); margin: 10px 0; }
+    .location {
+      font-size: 13px; color: var(--subtext); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .location svg {
+      width: 16px; height: 16px; stroke: var(--orange); fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
+    }
+    .desc { font-size: 14px; line-height: 1.55; color: var(--text); white-space: pre-wrap; }
+    .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+    .primary-btn {
+      width: 100%; background: var(--orange); border: none; border-radius: 12px;
+      padding: 14px; color: #fff; font-weight: 700; font-size: 15px;
+    }
+    .ghost-btn {
+      width: 100%; background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 13px; color: var(--text);
+      font-weight: 700; font-size: 14px; text-align: center; display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-button" type="button" onclick="history.back()" aria-label="Go back">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div>
+        <div class="header-title">Service</div>
+        <div class="header-sub">Details</div>
+      </div>
+    </div>
+    <a class="auth-btn" href="/events/login.html" id="authLink">Login</a>
+  </div>
+
+  <div id="status" class="center-box">Loading…</div>
+  <div class="content" id="detail" hidden>
+    <div class="media-main" id="mediaMain">
+      <div class="thumb-ph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-4 4-2-2-5 5"/></svg></div>
+    </div>
+    <div class="media-thumbs" id="mediaThumbs" hidden></div>
+    <div class="panel">
+      <div class="card-cat" id="category">Service</div>
+      <h1 class="title" id="title">—</h1>
+      <div class="vendor" id="vendor">—</div>
+      <div class="price" id="price">—</div>
+      <div class="location" id="locationRow" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span id="location"></span>
+      </div>
+      <p class="desc" id="desc"></p>
+      <div class="actions">
+        <button type="button" class="primary-btn" id="msgBtn">Message vendor</button>
+        <button type="button" class="ghost-btn" id="favBtn">Save to favorites</button>
+        <a class="ghost-btn" id="vendorLink" href="#">View vendor profile</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/events/js/api.js"></script>
+  <script src="/events/js/ui.js"></script>
+  <script src="/events/js/auth.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+    const status = document.getElementById("status");
+    const detail = document.getElementById("detail");
+    let itemData = null;
+
+    const user = ZEAuth.getUser();
+    const authLink = document.getElementById("authLink");
+    if (user) {
+      authLink.textContent = "Account";
+      authLink.href = "/settings.html";
+    } else {
+      authLink.href = `/events/login.html?next=${encodeURIComponent(location.pathname + location.search)}`;
+    }
+
+    function parsePhotos(photos) {
+      if (!photos) return [];
+      if (Array.isArray(photos)) return photos.filter(Boolean);
+      if (typeof photos === "string") {
+        try {
+          const parsed = JSON.parse(photos);
+          return Array.isArray(parsed) ? parsed.filter(Boolean) : [photos];
+        } catch { return photos ? [photos] : []; }
+      }
+      return [];
+    }
+
+    function setMainPhoto(url) {
+      document.getElementById("mediaMain").innerHTML = url
+        ? `<img src="${url}" alt="" />`
+        : `<div class="thumb-ph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-4 4-2-2-5 5"/></svg></div>`;
+    }
+
+    async function load() {
+      if (!id) {
+        status.textContent = "Missing service id.";
+        return;
+      }
+      try {
+        itemData = await ZE.api(`/services/${id}`);
+        status.hidden = true;
+        detail.hidden = false;
+        document.getElementById("category").textContent = itemData.category || "Service";
+        document.getElementById("title").textContent = itemData.title || "Untitled";
+        document.getElementById("vendor").textContent =
+          itemData.business_name || itemData.vendor_name || "Vendor";
+        document.getElementById("price").textContent = ZE.formatPrice(itemData.price);
+        document.getElementById("desc").textContent = itemData.description || "No description yet.";
+
+        if (itemData.location_label) {
+          document.getElementById("locationRow").hidden = false;
+          document.getElementById("location").textContent = itemData.location_label;
+        }
+
+        const photos = parsePhotos(itemData.photos);
+        if (photos.length) {
+          setMainPhoto(photos[0]);
+          if (photos.length > 1) {
+            const thumbs = document.getElementById("mediaThumbs");
+            thumbs.hidden = false;
+            thumbs.innerHTML = photos.map((url, i) =>
+              `<img src="${url}" alt="" class="${i === 0 ? "active" : ""}" data-i="${i}" loading="lazy" />`
+            ).join("");
+            thumbs.querySelectorAll("img").forEach((img) => {
+              img.onclick = () => {
+                thumbs.querySelectorAll("img").forEach((el) => el.classList.remove("active"));
+                img.classList.add("active");
+                setMainPhoto(img.src);
+              };
+            });
+          }
+        }
+
+        const vendorLink = document.getElementById("vendorLink");
+        if (itemData.vendor_id) {
+          vendorLink.href = `/events/vendor.html?id=${itemData.vendor_id}`;
+        } else {
+          vendorLink.hidden = true;
+        }
+
+        document.getElementById("favBtn").onclick = async () => {
+          if (!ZEAuth.requireLogin(location.pathname + location.search)) return;
+          try {
+            await ZE.api(`/favorites/${id}`, { method: "POST" });
+            document.getElementById("favBtn").textContent = "Saved to favorites";
+            ZEUI.toast("Saved to favorites.", "success");
+          } catch (err) {
+            ZEUI.error(err.message || "Could not save favorite.");
+          }
+        };
+
+        document.getElementById("msgBtn").onclick = () => {
+          if (!itemData.vendor_id) {
+            ZEUI.error("This service has no vendor to message.");
+            return;
+          }
+          if (!ZEAuth.requireLogin(location.pathname + location.search)) return;
+          const me = ZEAuth.getUser();
+          if (me && String(me.id) === String(itemData.vendor_id)) {
+            ZEUI.error("This is your own service.");
+            return;
+          }
+          location.href = `/events/chat.html?userId=${itemData.vendor_id}`;
+        };
+      } catch {
+        status.textContent = "Could not load this service.";
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

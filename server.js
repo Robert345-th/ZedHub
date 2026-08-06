@@ -7,24 +7,24 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 4100;
 
-// ZedEvents API only — NEVER point this at ZedMarket.
+// Live ZedEvents API only — NEVER point this at ZedMarket.
 const ZEDEVENTS_API =
   process.env.ZEDEVENTS_API || 'https://zedevents-production.up.railway.app';
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
     app: 'ZedHub',
     eventsApi: ZEDEVENTS_API,
+    eventsUi: '/events/',
     market: 'excluded',
   });
 });
 
-/** Proxy health check to ZedEvents (read-only). Does not modify Events code. */
+/** Read-only connectivity check to live ZedEvents API. */
 app.get('/api/events/status', async (req, res) => {
   try {
     const response = await fetch(ZEDEVENTS_API, { timeout: 10000 });
@@ -43,12 +43,25 @@ app.get('/api/events/status', async (req, res) => {
   }
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir));
+
+// Events SPA-ish fallback inside /events
+app.get('/events', (req, res) => {
+  res.redirect('/events/');
+});
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  if (req.path.startsWith('/events/')) {
+    return res.sendFile(path.join(publicDir, 'events', 'index.html'));
+  }
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
 app.listen(PORT, () => {
   console.log(`ZedHub running on http://localhost:${PORT}`);
+  console.log(`Events UI:  http://localhost:${PORT}/events/`);
   console.log(`Events API: ${ZEDEVENTS_API}`);
   console.log('ZedMarket: excluded (not touched)');
 });

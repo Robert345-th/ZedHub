@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ZedEvents - Vendor</title>
+  <meta name="theme-color" content="#C2410C" />
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    :root {
+      --bg: #F4F1EC; --card: #FFFFFF; --border: #E2E0DC;
+      --text: #211D1A; --subtext: #5C5955; --orange: #C2410C;
+      --cream: #FFF3E8; --peach: #FFD8B8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg); color: var(--text); padding-bottom: 24px;
+    }
+    button { font: inherit; cursor: pointer; }
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--orange); padding: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .back-button {
+      width: 40px; height: 40px; padding: 0; background: none; border: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .back-button svg {
+      width: 22px; height: 22px; stroke: var(--cream); fill: none;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .header-title { color: var(--cream); font-size: 18px; font-weight: 700; }
+    .header-sub { color: var(--peach); font-size: 12px; margin-top: 2px; }
+    .center-box { padding: 60px 24px; text-align: center; color: var(--subtext); }
+    .content { padding: 12px; max-width: 640px; margin: 0 auto; }
+    .profile-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px; margin-bottom: 12px;
+    }
+    .profile-head { display: flex; gap: 14px; align-items: center; }
+    .avatar {
+      width: 72px; height: 72px; border-radius: 14px; background: #FBEAD9;
+      overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 700; color: var(--orange);
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-name { font-size: 20px; font-weight: 700; }
+    .profile-type { font-size: 12px; color: var(--subtext); margin-top: 2px; }
+    .bio { font-size: 14px; line-height: 1.55; color: var(--text); margin-top: 14px; }
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--subtext);
+      text-transform: uppercase; margin: 16px 0 8px;
+    }
+    .review {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px; margin-bottom: 8px;
+    }
+    .review-stars { font-size: 14px; font-weight: 700; color: var(--orange); }
+    .review-text { font-size: 13px; color: var(--text); margin-top: 6px; line-height: 1.45; }
+    .review-meta { font-size: 11px; color: var(--subtext); margin-top: 6px; }
+    .empty-text { font-size: 13px; color: var(--subtext); text-align: center; padding: 16px; }
+    .primary-btn {
+      width: 100%; margin-top: 14px; background: var(--orange); border: none;
+      border-radius: 12px; padding: 14px; color: #fff; font-weight: 700; font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="back-button" type="button" onclick="history.back()" aria-label="Go back">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div>
+      <div class="header-title">Vendor</div>
+      <div class="header-sub">Profile & reviews</div>
+    </div>
+  </div>
+
+  <div id="status" class="center-box">Loading…</div>
+  <div class="content" id="content" hidden>
+    <div class="profile-card">
+      <div class="profile-head">
+        <div class="avatar" id="avatar">V</div>
+        <div>
+          <div class="profile-name" id="name">—</div>
+          <div class="profile-type">Event vendor</div>
+        </div>
+      </div>
+      <p class="bio" id="bio"></p>
+      <button type="button" class="primary-btn" id="msgBtn" hidden>Message vendor</button>
+    </div>
+    <div class="section-label">Reviews</div>
+    <div id="reviews"></div>
+  </div>
+
+  <script src="/events/js/api.js"></script>
+  <script src="/events/js/auth.js"></script>
+  <script src="/events/js/ui.js"></script>
+  <script>
+    const vendorId = new URLSearchParams(location.search).get("id");
+    const status = document.getElementById("status");
+    const content = document.getElementById("content");
+
+    function esc(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    (async () => {
+      if (!vendorId) {
+        status.textContent = "Missing vendor id.";
+        return;
+      }
+      try {
+        const [profile, reviews] = await Promise.all([
+          ZE.api(`/reviews/vendor/${vendorId}/profile`),
+          ZE.api(`/reviews/vendor/${vendorId}`),
+        ]);
+        status.hidden = true;
+        content.hidden = false;
+
+        const name = profile.business_name || profile.name || "Vendor";
+        document.getElementById("name").textContent = name;
+        document.getElementById("bio").textContent = profile.business_bio || "No bio yet.";
+        const avatar = document.getElementById("avatar");
+        if (profile.business_photo_url) {
+          avatar.innerHTML = `<img src="${esc(profile.business_photo_url)}" alt="" />`;
+        } else {
+          avatar.textContent = name.charAt(0).toUpperCase();
+        }
+
+        const me = ZEAuth.getUser();
+        const msgBtn = document.getElementById("msgBtn");
+        if (me && String(me.id) !== String(vendorId)) {
+          msgBtn.hidden = false;
+          msgBtn.onclick = () => {
+            if (!ZEAuth.requireLogin(location.pathname + location.search)) return;
+            location.href = `/events/chat.html?userId=${vendorId}`;
+          };
+        }
+
+        const box = document.getElementById("reviews");
+        if (!reviews.length) {
+          box.innerHTML = `<div class="empty-text">No reviews yet.</div>`;
+        } else {
+          box.innerHTML = reviews.map((r) => `
+            <div class="review">
+              <div class="review-stars">${"★".repeat(r.rating || 0)}${"☆".repeat(5 - (r.rating || 0))}</div>
+              <div class="review-text">${esc(r.comment || "No comment.")}</div>
+              ${r.reviewer_name ? `<div class="review-meta">${esc(r.reviewer_name)}</div>` : ""}
+            </div>`).join("");
+        }
+      } catch {
+        status.textContent = "Could not load vendor.";
+      }
+    })();
+  </script>
+</body>
+</html>

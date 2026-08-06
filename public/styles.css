@@ -67,11 +67,35 @@ body {
 
 .lead {
   margin-top: 16px;
-  max-width: 34ch;
+  max-width: 36ch;
   color: var(--muted);
   font-size: 1.05rem;
   line-height: 1.5;
   animation: rise 0.7s ease 0.08s both;
+}
+
+.install-row {
+  margin-top: 22px;
+  animation: rise 0.7s ease 0.12s both;
+}
+
+.install-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 22px;
+  background: var(--leaf-deep);
+  color: #f7f3eb;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.install-btn:active { transform: scale(0.98); }
+
+.install-hint {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.88rem;
 }
 
 .modules {
@@ -82,9 +106,7 @@ body {
 }
 
 @media (min-width: 720px) {
-  .modules {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .modules { grid-template-columns: repeat(3, 1fr); }
 }
 
 .module {

@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ZedEvents - Favorites</title>
+  <meta name="theme-color" content="#C2410C" />
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    :root {
+      --bg: #F4F1EC; --card: #FFFFFF; --border: #E2E0DC;
+      --text: #211D1A; --subtext: #5C5955; --orange: #C2410C;
+      --cream: #FFF3E8; --peach: #FFD8B8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg); color: var(--text); padding-bottom: 24px;
+    }
+    a { color: inherit; text-decoration: none; }
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--orange); padding: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .back-button {
+      width: 40px; height: 40px; padding: 0; background: none; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .back-button svg {
+      width: 22px; height: 22px; stroke: var(--cream); fill: none;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .header-title { color: var(--cream); font-size: 18px; font-weight: 700; }
+    .header-sub { color: var(--peach); font-size: 12px; margin-top: 2px; }
+    .center-box { padding: 60px 24px; text-align: center; color: var(--subtext); font-size: 14px; line-height: 1.45; }
+    .grid {
+      display: flex; flex-wrap: wrap; gap: 10px; padding: 12px;
+    }
+    .card {
+      width: calc(50% - 5px); background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .thumb {
+      height: 130px; background: #FBEAD9;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-ph svg {
+      width: 42px; height: 42px; stroke: var(--orange); fill: none; opacity: 0.45;
+      stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .card-info { padding: 10px; }
+    .card-cat {
+      font-size: 10px; font-weight: 700; color: var(--orange);
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .title {
+      font-size: 13px; font-weight: 600; margin: 4px 0;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .price { font-size: 13px; font-weight: 700; color: var(--orange); }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="back-button" type="button" onclick="history.back()" aria-label="Go back">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div>
+      <div class="header-title">Favorites</div>
+      <div class="header-sub">Saved services</div>
+    </div>
+  </div>
+
+  <div id="status" class="center-box">Loading…</div>
+  <div class="grid" id="grid" hidden></div>
+
+  <script src="/events/js/api.js"></script>
+  <script src="/events/js/auth.js"></script>
+  <script>
+    if (!ZEAuth.requireLogin("/favorites.html")) {
+      /* redirected */
+    } else {
+      (async () => {
+        const status = document.getElementById("status");
+        const grid = document.getElementById("grid");
+        function esc(str) {
+          return String(str || "")
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+        try {
+          const list = await ZE.api("/favorites");
+          if (!list.length) {
+            status.textContent = "No favorites yet. Tap the heart on a service to save it here.";
+            return;
+          }
+          status.hidden = true;
+          grid.hidden = false;
+          grid.innerHTML = list.map((item) => {
+            const photo = ZE.firstPhoto(item.photos);
+            const img = photo
+              ? `<img src="${esc(photo)}" alt="" loading="lazy" />`
+              : `<div class="thumb-ph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-4 4-2-2-5 5"/></svg></div>`;
+            return `
+              <a class="card" href="/events/service.html?id=${item.id}">
+                <div class="thumb">${img}</div>
+                <div class="card-info">
+                  <div class="card-cat">${esc(item.category || "Service")}</div>
+                  <div class="title">${esc(item.title || "Untitled")}</div>
+                  <div class="price">${ZE.formatPrice(item.price)}</div>
+                </div>
+              </a>`;
+          }).join("");
+        } catch {
+          status.textContent = "Could not load favorites.";
+        }
+      })();
+    }
+  </script>
+</body>
+</html>

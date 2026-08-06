@@ -1,0 +1,311 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ZedEvents - Settings</title>
+  <meta name="theme-color" content="#C2410C" />
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    :root {
+      --bg: #F4F1EC; --card: #FFFFFF; --border: #E2E0DC;
+      --text: #211D1A; --subtext: #5C5955; --black: #111111;
+      --orange: #C2410C; --cream: #FFF3E8; --price-red: #A3131C; --red-btn: #E01B27;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg); color: var(--text); padding-bottom: 24px;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--orange); padding: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .back-button {
+      width: 40px; height: 40px; padding: 0; background: none; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .back-button svg {
+      width: 22px; height: 22px; stroke: var(--cream); fill: none;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .header-title { color: var(--cream); font-size: 18px; font-weight: 700; }
+    .content { padding: 16px; max-width: 560px; margin: 0 auto; }
+    .profile {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; margin-bottom: 8px;
+    }
+    .profile-name { font-size: 17px; font-weight: 700; }
+    .profile-phone { font-size: 13px; color: var(--subtext); margin-top: 4px; }
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--subtext);
+      text-transform: uppercase; margin: 20px 0 8px;
+    }
+    .row {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px; display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px; cursor: pointer; width: 100%; text-align: left; color: inherit;
+      font: inherit;
+    }
+    .row-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .row-title svg {
+      width: 18px; height: 18px; flex-shrink: 0; stroke: currentColor; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .row-sub { font-size: 11px; color: var(--subtext); margin-top: 2px; }
+    .danger { color: var(--price-red); }
+    .logout-text { color: var(--red-btn); }
+    .switch { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0; background: var(--border);
+      border-radius: 26px; transition: 0.2s;
+    }
+    .slider::before {
+      content: ""; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px;
+      background: #fff; border-radius: 50%; transition: 0.2s;
+    }
+    input:checked + .slider { background: var(--orange); }
+    input:checked + .slider::before { transform: translateX(18px); }
+    .version-text { text-align: center; color: var(--subtext); font-size: 11px; margin-top: 24px; }
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200;
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg); width: 100%; max-width: 480px;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+    .modal-warning { font-size: 12px; color: var(--subtext); margin-bottom: 10px; line-height: 1.4; }
+    .modal-input {
+      width: 100%; background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; margin-bottom: 14px; font-size: 14px;
+      text-transform: uppercase;
+    }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-cancel-btn, .modal-ok-btn {
+      flex: 1; border-radius: 12px; padding: 13px; font-weight: 700; cursor: pointer; border: none;
+    }
+    .modal-cancel-btn { background: var(--card); border: 1px solid var(--border); color: var(--subtext); }
+    .modal-ok-btn { background: var(--price-red); color: #fff; }
+    .modal-ok-btn.orange { background: var(--orange); }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="back-button" type="button" onclick="history.back()" aria-label="Go back">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="header-title">Settings</div>
+  </div>
+
+  <div class="content">
+    <div class="profile" id="profileBox">
+      <div class="profile-name" id="name">Account</div>
+      <div class="profile-phone" id="phone"></div>
+    </div>
+
+    <div class="section-label">Quick links</div>
+    <button class="row" type="button" onclick="location.href='/events/my-shop.html'">
+      <div>
+        <div class="row-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          My Shop
+        </div>
+        <div class="row-sub">Manage your services</div>
+      </div>
+    </button>
+    <button class="row" type="button" onclick="location.href='/events/chats.html'">
+      <div>
+        <div class="row-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messages
+        </div>
+        <div class="row-sub">Chats with customers and vendors</div>
+      </div>
+    </button>
+    <button class="row" type="button" onclick="location.href='/events/favorites.html'">
+      <div>
+        <div class="row-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          Favorites
+        </div>
+      </div>
+    </button>
+    <button class="row" type="button" onclick="location.href='/events/register-shop.html'">
+      <div>
+        <div class="row-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          Register / update shop
+        </div>
+        <div class="row-sub">Become a vendor or update shop details</div>
+      </div>
+    </button>
+    <button class="row" type="button" id="adminRow" style="display:none;" onclick="location.href='/events/admin.html'">
+      <div>
+        <div class="row-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Admin
+        </div>
+        <div class="row-sub">Approve or reject pending services</div>
+      </div>
+    </button>
+
+    <div class="section-label">Notifications</div>
+    <div class="row" style="cursor:default;">
+      <div style="flex:1;margin-right:10px;">
+        <div class="row-title">Daily digest</div>
+        <div class="row-sub">Get updates about new services</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="digestToggle" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="section-label">Share</div>
+    <button class="row" type="button" id="shareRow">
+      <div>
+        <div class="row-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          Share ZedEvents
+        </div>
+        <div class="row-sub">Share the app link with friends</div>
+      </div>
+    </button>
+
+    <div class="section-label">Account</div>
+    <button class="row" type="button" id="deleteRow">
+      <div class="row-title danger">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Delete my account
+      </div>
+    </button>
+    <button class="row" type="button" id="logoutRow">
+      <div class="row-title logout-text">Log out</div>
+    </button>
+
+    <div class="version-text">ZedEvents</div>
+  </div>
+
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal-box">
+      <div class="modal-title" style="color:var(--red-btn);">Log out?</div>
+      <div class="modal-warning">You can log back in anytime with your phone number.</div>
+      <div class="modal-actions">
+        <button class="modal-cancel-btn" type="button" data-close="logoutModal">Cancel</button>
+        <button class="modal-ok-btn orange" type="button" id="logoutConfirm">Log out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+      <div class="modal-title" style="color:var(--price-red);">Delete your account?</div>
+      <div class="modal-warning">This permanently removes your account and hides your services. Type DELETE to confirm.</div>
+      <input class="modal-input" id="deleteInput" placeholder="Type DELETE" autocomplete="off" />
+      <div class="modal-actions">
+        <button class="modal-cancel-btn" type="button" data-close="deleteModal">Cancel</button>
+        <button class="modal-ok-btn" type="button" id="deleteConfirm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/events/js/api.js"></script>
+  <script src="/events/js/auth.js"></script>
+  <script src="/events/js/ui.js"></script>
+  <script>
+    if (!ZEAuth.requireLogin("/settings.html")) {
+      /* redirected */
+    } else {
+      const user = ZEAuth.getUser() || {};
+      document.getElementById("name").textContent = user.name || user.business_name || "Account";
+      document.getElementById("phone").textContent = user.phone || "";
+
+      (async () => {
+        try {
+          const me = await ZE.api("/auth/me");
+          ZEAuth.setSession(ZEAuth.getToken(), me);
+          if (me.is_admin) document.getElementById("adminRow").style.display = "";
+        } catch {
+          if (user.is_admin) document.getElementById("adminRow").style.display = "";
+        }
+      })();
+
+      function openModal(id) {
+        document.getElementById(id).classList.add("open");
+      }
+      function closeModal(id) {
+        document.getElementById(id).classList.remove("open");
+      }
+      document.querySelectorAll("[data-close]").forEach((btn) => {
+        btn.addEventListener("click", () => closeModal(btn.dataset.close));
+      });
+
+      document.getElementById("logoutRow").onclick = () => openModal("logoutModal");
+      document.getElementById("logoutConfirm").onclick = () => {
+        ZEAuth.clearSession();
+        location.href = "/events/";
+      };
+
+      document.getElementById("deleteRow").onclick = () => {
+        document.getElementById("deleteInput").value = "";
+        openModal("deleteModal");
+      };
+      document.getElementById("deleteConfirm").onclick = async () => {
+        if (document.getElementById("deleteInput").value.trim().toUpperCase() !== "DELETE") {
+          ZEUI.error('Type DELETE to confirm.');
+          return;
+        }
+        try {
+          await ZE.api("/auth/me", { method: "DELETE" });
+          ZEAuth.clearSession();
+          location.href = "/events/";
+        } catch (err) {
+          ZEUI.error(err.message || "Could not delete account.");
+        }
+      };
+
+      document.getElementById("shareRow").onclick = async () => {
+        const url = location.origin + "/";
+        const data = { title: "ZedEvents", text: "Find event services in Zambia", url };
+        try {
+          if (navigator.share) {
+            await navigator.share(data);
+          } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(url);
+            ZEUI.toast("Link copied.", "success");
+          } else {
+            ZEUI.toast(url, "info");
+          }
+        } catch {
+          /* user cancelled share */
+        }
+      };
+
+      const digestToggle = document.getElementById("digestToggle");
+      (async () => {
+        try {
+          const data = await ZE.api("/auth/digest-settings");
+          digestToggle.checked = data.digest_enabled !== false;
+        } catch { /* keep default */ }
+      })();
+      digestToggle.addEventListener("change", async () => {
+        try {
+          await ZE.api("/auth/digest-settings", {
+            method: "PUT",
+            body: JSON.stringify({ enabled: digestToggle.checked }),
+          });
+        } catch (err) {
+          digestToggle.checked = !digestToggle.checked;
+          ZEUI.error(err.message || "Could not update setting.");
+        }
+      });
+    }
+  </script>
+</body>
+</html>

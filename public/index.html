@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ZedHub</title>
+  <meta name="theme-color" content="#134a32" />
+  <meta name="description" content="ZedHub — Events and more in one installable app. ZedMarket stays separate." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="ZedHub" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -14,40 +20,48 @@
 
   <header class="top">
     <div class="brand">ZedHub</div>
-    <p class="tag">One door. Your apps inside.</p>
+    <p class="tag">One install. Your apps inside.</p>
   </header>
 
   <main class="hero">
-    <h1>Your Zambia apps,<br />one home.</h1>
+    <h1>Your apps,<br />one home.</h1>
     <p class="lead">
-      Start with Events. Market stays separate and untouched.
+      Install ZedHub on your phone. Events is live inside. Market stays on its own app — untouched.
+    </p>
+
+    <div class="install-row" id="installRow" hidden>
+      <button type="button" class="install-btn" id="installBtn">Install ZedHub app</button>
+      <p class="install-hint">Adds Hub + Events to your home screen.</p>
+    </div>
+    <p class="install-hint" id="iosHint" hidden>
+      On iPhone: Share → Add to Home Screen
     </p>
 
     <section class="modules" aria-label="Apps">
-      <a class="module live" href="#events" id="events-card">
-        <span class="mod-label">Connected soon</span>
+      <a class="module live" href="/events/">
+        <span class="mod-label">Live</span>
         <span class="mod-name">Events</span>
-        <span class="mod-desc">Browse and book services — linked to ZedEvents.</span>
+        <span class="mod-desc">Full ZedEvents app — browse, login, chat, vendor tools — connected to the live API.</span>
         <span class="mod-status" id="events-status">Checking…</span>
       </a>
 
       <div class="module locked" aria-disabled="true">
         <span class="mod-label">Not in Hub</span>
         <span class="mod-name">Market</span>
-        <span class="mod-desc">ZedMarket stays live on its own. Hub will never change it.</span>
+        <span class="mod-desc">ZedMarket is live separately. This Hub will never change that project.</span>
         <span class="mod-status off">Excluded on purpose</span>
       </div>
 
       <div class="module soon">
         <span class="mod-label">Later</span>
         <span class="mod-name">More apps</span>
-        <span class="mod-desc">Trading tools and other modules can join here later.</span>
+        <span class="mod-desc">More modules can join this same installed app later.</span>
         <span class="mod-status">Coming later</span>
       </div>
     </section>
 
     <p class="note">
-      This is a brand-new project folder. It does not edit your existing Market or Events code.
+      Tip: open Events from here, then use Install so the downloaded app includes Hub + Events.
     </p>
   </main>
 
