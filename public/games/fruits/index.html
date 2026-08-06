@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
-  <title>Fruits · Nexus</title>
+  <title>Fruits · Stages</title>
   <meta name="theme-color" content="#1a7a3a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Fruits" />
@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="fruits.css" />
   <script src="/no-ptr.js"></script>
 </head>
-<body class="theme-meadow">
+<body class="page-stages">
   <div class="sky" aria-hidden="true"></div>
 
   <header class="bar">
@@ -24,7 +24,7 @@
     <div class="lives-pill" id="livesPill" title="Lives">♥ <span id="livesVal">5</span></div>
   </header>
 
-  <section class="screen menu" id="menuScreen">
+  <main class="screen menu">
     <div class="stage-box">
       <div class="stage-head">
         <span>Stages</span>
@@ -32,61 +32,12 @@
       </div>
       <div class="map-grid" id="mapGrid"></div>
       <div class="stage-foot">
-        <button type="button" class="foot-btn" id="dailyBtn">Daily</button>
-        <button type="button" class="foot-btn" id="versusBtn">2P</button>
+        <a class="foot-btn" id="dailyBtn" href="play.html?mode=daily">Daily</a>
+        <a class="foot-btn" id="versusBtn" href="play.html?mode=versus">2P</a>
       </div>
     </div>
-  </section>
+  </main>
 
-  <section class="screen play" id="playScreen" hidden>
-    <div class="hud wood">
-      <div class="hud-cell">
-        <span class="hud-label">Moves</span>
-        <span class="hud-value" id="movesVal">20</span>
-      </div>
-      <div class="hud-mid">
-        <div class="level-chip" id="levelChip">Lv 1</div>
-        <div class="goal" id="goalBox">
-          <span class="goal-emoji" id="goalEmoji">🍓</span>
-          <span id="goalCount">0/10</span>
-        </div>
-        <div class="score-line">Score <strong id="scoreVal">0</strong></div>
-        <div class="turn-line" id="turnLine" hidden>P1 turn</div>
-      </div>
-      <div class="hud-cell stars" id="starsBox" aria-label="Stars">
-        <span class="star">★</span><span class="star">★</span><span class="star">★</span>
-      </div>
-    </div>
-
-    <div class="board-frame">
-      <div class="board" id="board" role="grid" aria-label="Fruit board"></div>
-      <div class="fx" id="fx" aria-hidden="true"></div>
-      <div class="fly-layer" id="flyLayer" aria-hidden="true"></div>
-    </div>
-
-    <div class="boosters" id="boosters">
-      <button type="button" class="boost" data-boost="hammer" id="boostHammer">🔨 <span>3</span></button>
-      <button type="button" class="boost" data-boost="shuffle" id="boostShuffle">🔀 <span>2</span></button>
-      <button type="button" class="boost" data-boost="moves" id="boostMoves">➕ <span>2</span></button>
-    </div>
-
-    <div class="hint-bar" id="hintBar">Match 3 or more</div>
-    <button type="button" class="btn ghost" id="quitBtn">Quit</button>
-  </section>
-
-  <section class="screen" id="resultScreen" hidden>
-    <div class="stage-box result-box">
-      <h2 id="resultTitle">Level clear!</h2>
-      <div class="result-stars" id="resultStars">★★★</div>
-      <p class="lead" id="resultScore">Score 0</p>
-      <p class="meta" id="resultExtra"></p>
-      <button type="button" class="btn primary" id="nextBtn">Next</button>
-      <button type="button" class="btn" id="continueLifeBtn" hidden>Continue (−1 ♥)</button>
-      <button type="button" class="btn ghost" id="retryBtn">Retry</button>
-      <button type="button" class="btn ghost" id="resultMapBtn">Stages</button>
-    </div>
-  </section>
-
-  <script src="fruits.js"></script>
+  <script src="stages.js"></script>
 </body>
 </html>

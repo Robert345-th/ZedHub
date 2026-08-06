@@ -138,6 +138,10 @@ body { overflow-y: auto; }
   cursor: pointer;
   font-family: inherit;
   box-shadow: 0 2px 0 #e0c9a0;
+  text-decoration: none;
+  color: inherit;
+  text-align: center;
+  display: block;
 }
 .map-node:active { transform: translateY(1px); box-shadow: none; }
 .map-node .n {
@@ -186,6 +190,9 @@ body { overflow-y: auto; }
   color: var(--ink);
   border: 2px solid #e0c9a0;
   cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: block;
 }
 .foot-btn:active { background: #f0e6d4; }
 
@@ -212,6 +219,15 @@ body { overflow-y: auto; }
 .btn.ghost {
   background: transparent;
   border-color: transparent;
+}
+a.btn {
+  text-align: center;
+  text-decoration: none;
+}
+.quit-link {
+  display: block;
+  margin: 10px auto 0;
+  max-width: 200px;
 }
 
 .result-box {

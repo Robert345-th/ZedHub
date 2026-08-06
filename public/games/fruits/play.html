@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <title>Fruits · Play</title>
+  <meta name="theme-color" content="#1a7a3a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Fruits" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/fruits.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="fruits.css" />
+  <script src="/no-ptr.js"></script>
+</head>
+<body class="page-play">
+  <div class="sky" aria-hidden="true"></div>
+
+  <header class="bar">
+    <a class="back" href="./" aria-label="Back to stages">‹</a>
+    <div class="title">Fruits</div>
+    <div class="lives-pill" id="livesPill" title="Lives">♥ <span id="livesVal">5</span></div>
+  </header>
+
+  <section class="screen play" id="playScreen">
+    <div class="hud wood">
+      <div class="hud-cell">
+        <span class="hud-label">Moves</span>
+        <span class="hud-value" id="movesVal">20</span>
+      </div>
+      <div class="hud-mid">
+        <div class="level-chip" id="levelChip">Lv 1</div>
+        <div class="goal" id="goalBox">
+          <span class="goal-emoji" id="goalEmoji">🍓</span>
+          <span id="goalCount">0/10</span>
+        </div>
+        <div class="score-line">Score <strong id="scoreVal">0</strong></div>
+        <div class="turn-line" id="turnLine" hidden>P1 turn</div>
+      </div>
+      <div class="hud-cell stars" id="starsBox" aria-label="Stars">
+        <span class="star">★</span><span class="star">★</span><span class="star">★</span>
+      </div>
+    </div>
+
+    <div class="board-frame">
+      <div class="board" id="board" role="grid" aria-label="Fruit board"></div>
+      <div class="fx" id="fx" aria-hidden="true"></div>
+      <div class="fly-layer" id="flyLayer" aria-hidden="true"></div>
+    </div>
+
+    <div class="boosters" id="boosters">
+      <button type="button" class="boost" data-boost="hammer" id="boostHammer">🔨 <span>3</span></button>
+      <button type="button" class="boost" data-boost="shuffle" id="boostShuffle">🔀 <span>2</span></button>
+      <button type="button" class="boost" data-boost="moves" id="boostMoves">➕ <span>2</span></button>
+    </div>
+
+    <div class="hint-bar" id="hintBar">Match 3 or more</div>
+    <a class="btn ghost quit-link" href="./">Quit</a>
+  </section>
+
+  <section class="screen" id="resultScreen" hidden>
+    <div class="stage-box result-box">
+      <h2 id="resultTitle">Level clear!</h2>
+      <div class="result-stars" id="resultStars">★★★</div>
+      <p class="lead" id="resultScore">Score 0</p>
+      <p class="meta" id="resultExtra"></p>
+      <button type="button" class="btn primary" id="nextBtn">Next</button>
+      <button type="button" class="btn" id="continueLifeBtn" hidden>Continue (−1 ♥)</button>
+      <button type="button" class="btn ghost" id="retryBtn">Retry</button>
+      <a class="btn ghost" href="./">Stages</a>
+    </div>
+  </section>
+
+  <script src="fruits.js"></script>
+</body>
+</html>

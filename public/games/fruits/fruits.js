@@ -12,9 +12,15 @@
   const LIFE_MS = 20 * 60 * 1000;
 
   if ((new URLSearchParams(location.search).get('mode') || '') === 'online') {
-    location.replace('/games/fruits/?mode=offline');
+    location.replace('/games/fruits/');
     return;
   }
+
+  const params = new URLSearchParams(location.search);
+  const startMode = ['campaign', 'daily', 'versus'].includes(params.get('mode'))
+    ? params.get('mode')
+    : 'campaign';
+  const startLevelNum = Math.min(100, Math.max(1, parseInt(params.get('level') || '1', 10) || 1));
 
   function shapeMask(level) {
     // 1 = playable, 0 = hole
@@ -66,13 +72,8 @@
   const LEVELS = buildLevels();
 
   const els = {
-    menu: document.getElementById('menuScreen'),
     play: document.getElementById('playScreen'),
     result: document.getElementById('resultScreen'),
-    mapGrid: document.getElementById('mapGrid'),
-    dailyBtn: document.getElementById('dailyBtn'),
-    versusBtn: document.getElementById('versusBtn'),
-    progressMeta: document.getElementById('progressMeta'),
     livesVal: document.getElementById('livesVal'),
     board: document.getElementById('board'),
     fx: document.getElementById('fx'),
@@ -93,16 +94,14 @@
     nextBtn: document.getElementById('nextBtn'),
     retryBtn: document.getElementById('retryBtn'),
     continueLifeBtn: document.getElementById('continueLifeBtn'),
-    resultMapBtn: document.getElementById('resultMapBtn'),
-    quitBtn: document.getElementById('quitBtn'),
     boostHammer: document.getElementById('boostHammer'),
     boostShuffle: document.getElementById('boostShuffle'),
     boostMoves: document.getElementById('boostMoves'),
   };
 
   let progress = loadProgress();
-  let levelIndex = 0;
-  let mode = 'campaign'; // campaign | daily | versus
+  let levelIndex = startLevelNum - 1;
+  let mode = startMode;
   let fruitPool = 6;
   let mask = Array(SIZE * SIZE).fill(1);
   let grid = [];
@@ -172,9 +171,42 @@
   }
 
   function show(screen) {
-    [els.menu, els.play, els.result].forEach((s) => {
+    [els.play, els.result].forEach((s) => {
       if (s) s.hidden = s !== screen;
     });
+  }
+
+  function goStages() {
+    location.href = './';
+  }
+
+  function goPlay(opts) {
+    const q = new URLSearchParams();
+    q.set('mode', opts.mode || 'campaign');
+    if (opts.level != null) q.set('level', String(opts.level));
+    location.href = 'play.html?' + q.toString();
+  }
+
+  function applyTheme(theme) {
+    document.body.className = 'page-play theme-' + (theme || 'meadow');
+    progress.theme = theme || 'meadow';
+    saveProgress();
+  }
+
+  function updateBoostUi() {
+    const b = progress.boosters || { hammer: 0, shuffle: 0, moves: 0 };
+    const set = (el, n, active) => {
+      if (!el) return;
+      el.querySelector('span').textContent = String(n || 0);
+      el.classList.toggle('active', !!active);
+      el.disabled = (n || 0) <= 0 && !active;
+      el.style.opacity = el.disabled ? '0.45' : '1';
+    };
+    set(els.boostHammer, b.hammer, boosterMode === 'hammer');
+    set(els.boostShuffle, b.shuffle, false);
+    set(els.boostMoves, b.moves, false);
+    const boosters = document.getElementById('boosters');
+    if (boosters) boosters.hidden = mode === 'versus';
   }
 
   function beep(freq, dur, type) {
@@ -213,69 +245,6 @@
   function soundFail() {
     beep(180, 0.18, 'sawtooth');
     haptic(40);
-  }
-
-  function applyTheme(theme) {
-    document.body.className = 'theme-' + (theme || 'meadow');
-    progress.theme = theme || 'meadow';
-    saveProgress();
-  }
-
-  function updateBoostUi() {
-    const b = progress.boosters || { hammer: 0, shuffle: 0, moves: 0 };
-    const set = (el, n, active) => {
-      if (!el) return;
-      el.querySelector('span').textContent = String(n || 0);
-      el.classList.toggle('active', !!active);
-      el.disabled = (n || 0) <= 0 && !active;
-      el.style.opacity = el.disabled ? '0.45' : '1';
-    };
-    set(els.boostHammer, b.hammer, boosterMode === 'hammer');
-    set(els.boostShuffle, b.shuffle, false);
-    set(els.boostMoves, b.moves, false);
-    const boosters = document.getElementById('boosters');
-    if (boosters) boosters.hidden = mode === 'versus';
-  }
-
-  function updateMenu() {
-    refreshLives();
-    const cleared = Object.keys(progress.stars || {}).length;
-    levelIndex = Math.min(Math.max(0, progress.level || 0), 99);
-    els.progressMeta.textContent = `${levelIndex + 1}/100 · ${cleared}★`;
-    applyTheme(progress.theme || 'meadow');
-    updateBoostUi();
-    renderMap();
-  }
-
-  function renderMap() {
-    const unlocked = Math.max(0, progress.level || 0);
-    els.mapGrid.innerHTML = '';
-    let currentBtn = null;
-    for (let i = 0; i < 100; i++) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'map-node';
-      const stars = progress.stars[i] || 0;
-      const lock = i > unlocked;
-      if (lock) btn.classList.add('locked');
-      if (stars > 0) btn.classList.add('cleared');
-      if (i === unlocked) {
-        btn.classList.add('current');
-        currentBtn = btn;
-      }
-      btn.innerHTML = `<span class="n">${i + 1}</span><span class="s">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>`;
-      if (!lock) {
-        btn.addEventListener('click', () => {
-          mode = 'campaign';
-          levelIndex = i;
-          startLevel();
-        });
-      }
-      els.mapGrid.appendChild(btn);
-    }
-    requestAnimationFrame(() => {
-      currentBtn?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    });
   }
 
   function randFruit() {
@@ -776,14 +745,14 @@
         saveProgress();
         els.resultTitle.textContent = levelIndex >= 99 ? 'All 100 cleared!' : 'Level clear!';
         els.resultExtra.textContent = stars === 3 ? 'Perfect! Boosters earned' : 'Boosters topped up';
-        els.nextBtn.textContent = levelIndex >= 99 ? 'Map' : 'Next level';
+        els.nextBtn.textContent = levelIndex >= 99 ? 'Stages' : 'Next level';
       } else {
         const key = level.dailyKey;
         progress.daily[key] = Math.max(progress.daily[key] || 0, score);
         saveProgress();
         els.resultTitle.textContent = 'Daily cleared!';
         els.resultExtra.textContent = 'Come back tomorrow for a new board';
-        els.nextBtn.textContent = 'Menu';
+        els.nextBtn.textContent = 'Stages';
       }
       const shown = Math.max(0, Math.min(3, stars));
       els.resultStars.textContent = '★'.repeat(shown) + '☆'.repeat(3 - shown);
@@ -794,9 +763,9 @@
         finish._spentLife = true;
       }
       els.resultTitle.textContent = 'Out of moves';
-      els.resultExtra.textContent = progress.lives > 0 ? 'Retry free, or continue (−1 ❤️ for +5 moves)' : 'Lives empty — wait to refill';
+      els.resultExtra.textContent = progress.lives > 0 ? 'Retry free, or continue (−1 ♥ for +5 moves)' : 'Lives empty — wait to refill';
       els.resultStars.textContent = '💔';
-      els.nextBtn.textContent = 'Map';
+      els.nextBtn.textContent = 'Stages';
       if (progress.lives > 0) els.continueLifeBtn.hidden = false;
       advanceOnNext = false;
     }
@@ -874,31 +843,11 @@
   }
 
   // —— UI wiring ——
-  els.dailyBtn.addEventListener('click', () => {
-    mode = 'daily';
-    startLevel();
-  });
-  els.versusBtn.addEventListener('click', () => {
-    mode = 'versus';
-    levelIndex = Math.min(40, progress.level || 20);
-    startLevel();
-  });
-  els.quitBtn.addEventListener('click', () => {
-    updateMenu();
-    show(els.menu);
-  });
-  els.resultMapBtn.addEventListener('click', () => {
-    updateMenu();
-    show(els.menu);
-  });
   els.retryBtn.addEventListener('click', () => {
     if ((mode === 'campaign' || mode === 'daily') && progress.lives <= 0) {
-      els.hintBar.textContent = 'No lives left';
-      updateMenu();
-      show(els.menu);
+      goStages();
       return;
     }
-    // Life already spent on fail — retry is free
     startLevel();
   });
   els.continueLifeBtn.addEventListener('click', () => {
@@ -915,18 +864,16 @@
       return;
     }
     if (mode === 'daily') {
-      updateMenu();
-      show(els.menu);
+      goStages();
       return;
     }
     if (advanceOnNext) {
-      levelIndex = Math.min(99, levelIndex + 1);
+      const next = Math.min(99, levelIndex + 1);
       advanceOnNext = false;
-      startLevel();
+      goPlay({ mode: 'campaign', level: next + 1 });
       return;
     }
-    updateMenu();
-    show(els.menu);
+    goStages();
   });
 
   els.boostHammer.addEventListener('click', () => useBooster('hammer'));
@@ -976,6 +923,12 @@
     { passive: true }
   );
 
-  updateMenu();
-  show(els.menu);
+  if (mode === 'campaign' && levelIndex > (progress.level || 0)) {
+    goStages();
+    return;
+  }
+
+  applyTheme(progress.theme || 'meadow');
+  refreshLives();
+  startLevel();
 })();
