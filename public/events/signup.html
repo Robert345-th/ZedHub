@@ -57,7 +57,7 @@
 <body>
 <div class="content">
   <div class="title">Create Account</div>
-  <div class="subtitle" id="stepSubtitle">Step 1 of 3 — Your details</div>
+  <div class="subtitle" id="stepSubtitle">Step 1 of 3 - Your details</div>
 
   <div class="step-row">
     <div class="step-dot active" id="dot1"></div>
@@ -151,9 +151,9 @@
       dot.classList.toggle("done", step > n);
     });
     stepSubtitle.textContent = {
-      1: "Step 1 of 3 — Your details",
-      2: "Step 2 of 3 — Password",
-      3: "Step 3 of 3 — Location & age",
+      1: "Step 1 of 3 - Your details",
+      2: "Step 2 of 3 - Password",
+      3: "Step 3 of 3 - Location & age",
     }[step];
     clearError();
   }
@@ -162,7 +162,7 @@
     showPassword = !showPassword;
     const box = document.getElementById("showPasswordBox");
     box.classList.toggle("checked", showPassword);
-    box.textContent = showPassword ? "?" : "";
+    box.textContent = showPassword ? "\u2713" : "";
     document.getElementById("passwordInput").type = showPassword ? "text" : "password";
     document.getElementById("confirmPasswordInput").type = showPassword ? "text" : "password";
   });
@@ -171,7 +171,7 @@
     ageConfirmed = !ageConfirmed;
     const box = document.getElementById("ageConfirmBox");
     box.classList.toggle("checked", ageConfirmed);
-    box.textContent = ageConfirmed ? "?" : "";
+    box.textContent = ageConfirmed ? "\u2713" : "";
     signupBtn.disabled = !ageConfirmed;
   });
 
@@ -181,7 +181,7 @@
       return;
     }
     gettingLocation = true;
-    locButton.textContent = "Getting location…";
+    locButton.textContent = "Getting location...";
     clearError();
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -228,7 +228,7 @@
       return;
     }
     if (password.length < 8 || password.length > 15) {
-      showError("Password must be 8–15 characters.");
+      showError("Password must be 8-15 characters.");
       return;
     }
     if (password !== confirmPassword) {
@@ -255,7 +255,7 @@
     if (locationLabel) localStorage.setItem("ze_user_location_label", locationLabel);
 
     signupBtn.disabled = true;
-    signupBtn.textContent = "Signing up…";
+    signupBtn.textContent = "Signing up...";
     try {
       await ZE.api("/auth/signup", {
         method: "POST",

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Shop · Events</title>
+  <title>Shop - Events</title>
   <meta name="theme-color" content="#C2410C" />
   <link rel="manifest" href="/manifest.json" />
   <style>
@@ -80,29 +80,29 @@
 </head>
 <body>
   <div class="topbar">
-    <button class="back-button" type="button" onclick="history.back()" aria-label="Go back">‹</button>
+    <button class="back-button" type="button" onclick="history.back()" aria-label="Go back">&lsaquo;</button>
     <div>
       <div class="header-title">Shop</div>
       <div class="header-sub">What they do</div>
     </div>
   </div>
 
-  <div id="status" class="center-box">Loading…</div>
+  <div id="status" class="center-box">Loading...</div>
   <div class="content" id="content" hidden>
     <div class="profile-card">
       <div class="profile-head">
         <div class="avatar" id="avatar">S</div>
         <div>
-          <div class="profile-name" id="name">—</div>
+          <div class="profile-name" id="name">-</div>
           <div class="profile-type">Shop page</div>
         </div>
       </div>
       <p class="bio" id="bio"></p>
     </div>
 
-    <div class="section-label">What they do · photos</div>
+    <div class="section-label">What they do - photos</div>
     <div class="photo-grid" id="photoGrid"></div>
-    <div id="photoEmpty" class="empty-text" hidden>No gallery yet (needs 4–10 photos).</div>
+    <div id="photoEmpty" class="empty-text" hidden>No gallery yet (needs 4-10 photos).</div>
 
     <div class="section-label">Reviews</div>
     <div id="reviews"></div>
@@ -197,7 +197,7 @@
       } else {
         box.innerHTML = reviews.map((r) => `
           <div class="review">
-            <div class="review-stars">${"?".repeat(r.rating || 0)}${"?".repeat(5 - (r.rating || 0))}</div>
+            <div class="review-stars">${"\u2605".repeat(r.rating || 0)}${"\u2606".repeat(5 - (r.rating || 0))}</div>
             <div class="review-text">${esc(r.comment || "No comment.")}</div>
             ${r.reviewer_name ? `<div class="review-meta">${esc(r.reviewer_name)}</div>` : ""}
           </div>`).join("");

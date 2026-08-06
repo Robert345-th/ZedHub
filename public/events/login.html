@@ -106,7 +106,7 @@
   document.getElementById("showPasswordRow").addEventListener("click", () => {
     showPassword = !showPassword;
     checkboxBox.classList.toggle("checked", showPassword);
-    checkboxBox.textContent = showPassword ? "?" : "";
+    checkboxBox.textContent = showPassword ? "\u2713" : "";
     passwordInput.type = showPassword ? "text" : "password";
   });
 
@@ -123,7 +123,7 @@
       return;
     }
     loginBtn.disabled = true;
-    loginBtn.textContent = "Logging inù";
+    loginBtn.textContent = "Logging in...";
     try {
       const data = await ZE.api("/auth/login", {
         method: "POST",

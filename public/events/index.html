@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ZedEvents</title>
   <meta name="theme-color" content="#C2410C" />
-  <meta name="description" content="Find event services in Zambia ? catering, DJs, tents, d?cor and more." />
+  <meta name="description" content="Find event services in Zambia - catering, DJs, tents, decor and more." />
   <link rel="manifest" href="/events/app-manifest.json" />
   <link rel="apple-touch-icon" href="/icons/zedevents.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -271,15 +271,15 @@
     <div class="sort-row" id="sortRow" aria-label="Sort">
       <button type="button" class="sort-chip active" data-sort="featured">Featured</button>
       <button type="button" class="sort-chip" data-sort="newest">Newest</button>
-      <button type="button" class="sort-chip" data-sort="price-asc">Price ?</button>
-      <button type="button" class="sort-chip" data-sort="price-desc">Price ?</button>
-      <button type="button" class="sort-chip" data-sort="az">A?Z</button>
+      <button type="button" class="sort-chip" data-sort="price-asc">Price: Low</button>
+      <button type="button" class="sort-chip" data-sort="price-desc">Price: High</button>
+      <button type="button" class="sort-chip" data-sort="az">A-Z</button>
     </div>
   </div>
 
   <div class="remind-banner" id="remindBanner" hidden></div>
   <div class="status-strip" id="statusStrip" hidden></div>
-  <div id="status" class="status">Loading?</div>
+  <div id="status" class="status">Loading...</div>
   <div class="grid" id="grid" hidden></div>
 
   <script src="/events/js/api.js"></script>
@@ -404,7 +404,7 @@
           <div class="full-shade"></div>
           <div class="body" style="color:${textColor}">
             <h3>${escapeHtml(item.shop || item.name || "Status")}</h3>
-            <div class="meta">${escapeHtml(item.name || "")} · ${hours}h left</div>
+            <div class="meta">${escapeHtml(item.name || "")} - ${hours}h left</div>
             ${item.text ? `<p>${escapeHtml(item.text)}</p>` : ""}
           </div>
           <div class="actions">
@@ -572,7 +572,7 @@
 
     async function loadServices(force) {
       status.hidden = false;
-        status.textContent = "Loading?";
+        status.textContent = "Loading...";
       grid.hidden = true;
       try {
         if (activeCategory && activeCategory !== "__nearby__") {

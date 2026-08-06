@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>My Shop · Events</title>
+  <title>My Shop - Events</title>
   <meta name="theme-color" content="#C2410C" />
   <link rel="manifest" href="/manifest.json" />
   <style>
@@ -75,8 +75,8 @@
     <div class="banner" id="banner"></div>
     <div class="card">
       <h2>Photo gallery</h2>
-      <p>Your shop page needs <strong>4–10 photos</strong> of what you do.</p>
-      <div class="meta" id="photoMeta">Checking…</div>
+      <p>Your shop page needs <strong>4-10 photos</strong> of what you do.</p>
+      <div class="meta" id="photoMeta">Checking...</div>
       <div class="gallery" id="gallery"></div>
       <a class="primary" href="/events/shop-photos.html">Add / edit photos</a>
       <a class="ghost" id="viewPublic" href="#">View public shop page</a>
@@ -98,7 +98,7 @@
         `/events/vendor.html?id=${encodeURIComponent(user.id)}`;
 
       if (!user.is_vendor && !user.business_name) {
-        banner.textContent = "Tip: register your shop name, then add 4–10 photos.";
+        banner.textContent = "Tip: register your shop name, then add 4-10 photos.";
         banner.classList.add("show");
       }
 
@@ -111,12 +111,12 @@
           const photos = Array.isArray(data.photos) ? data.photos : [];
           const n = photos.length;
           if (n < 4) {
-            meta.textContent = `${n}/10 photos · add at least 4`;
+            meta.textContent = `${n}/10 photos - add at least 4`;
             meta.classList.add("bad");
-            banner.textContent = "Your public shop page needs 4–10 photos of what you do.";
+            banner.textContent = "Your public shop page needs 4-10 photos of what you do.";
             banner.classList.add("show");
           } else {
-            meta.textContent = `${n}/10 photos · ready`;
+            meta.textContent = `${n}/10 photos - ready`;
             meta.classList.remove("bad");
           }
           gallery.innerHTML = photos.slice(0, 8).map((url) =>

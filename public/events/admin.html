@@ -178,7 +178,7 @@
     }
 
     function formatPhone(phone) {
-      if (!phone) return "—";
+      if (!phone) return "-";
       const digits = String(phone).replace(/\D/g, "");
       let local = digits.startsWith("260") ? digits.slice(3) : digits;
       if (local.startsWith("0")) local = local.slice(1);
@@ -281,7 +281,7 @@
             return `
               <div class="card">
                 <div class="card-title">${esc(item.title)}</div>
-                <div class="card-sub">${esc(vendor)} · ${esc(item.category || "Uncategorised")}</div>
+                <div class="card-sub">${esc(vendor)} - ${esc(item.category || "Uncategorised")}</div>
                 <div class="card-price">${ZE.formatPrice(item.price)}</div>
                 <div class="card-detail">${esc(item.description || "No description.")}</div>
                 <div class="card-sub" style="margin-top:8px;">Posted ${esc(formatDate(item.date_posted))}</div>
@@ -306,7 +306,7 @@
             <div class="card shop-app-row">
               <div class="shop-app-row-main">
                 <div class="card-name">${esc(s.business_name || s.name)}</div>
-                <div class="card-sub">${esc(s.name)} · ${esc(formatPhone(s.phone))}</div>
+                <div class="card-sub">${esc(s.name)} - ${esc(formatPhone(s.phone))}</div>
               </div>
               <button type="button" class="view-btn" data-view-shop="${s.id}">View</button>
             </div>`).join("") : `<div class="empty-text">No pending shop applications.</div>`
@@ -327,7 +327,7 @@
             filtered.length ? filtered.map((u) => `
               <div class="card">
                 <div class="card-name">${esc(u.name)}</div>
-                <div class="card-sub">${esc(formatPhone(u.phone))}${u.is_vendor ? " · Vendor" : ""}</div>
+                <div class="card-sub">${esc(formatPhone(u.phone))}${u.is_vendor ? " - Vendor" : ""}</div>
                 <button class="${u.is_suspended ? "approve-btn" : "reject-btn"}" type="button" style="margin-top:10px;width:100%;" data-toggle-suspend="${u.id}" data-suspended="${u.is_suspended}">
                   ${u.is_suspended ? "Unsuspend" : "Suspend"}
                 </button>
@@ -348,7 +348,7 @@
               <div class="card-name">${esc(r.title)}</div>
               <div class="card-sub">Reported by ${esc(r.reporter_name || "Unknown")}</div>
               <div class="card-detail">Reason: ${esc(r.reason)}</div>
-              <button type="button" class="view-link" data-view-service="${r.service_id}">View service ?</button>
+              <button type="button" class="view-link" data-view-service="${r.service_id}">View service</button>
               <div class="card-actions">
                 <button class="approve-btn" type="button" data-dismiss-report="${r.id}">Dismiss</button>
                 <button class="reject-btn" type="button" data-remove-service="${r.id}" data-service-id="${r.service_id}">Remove Service</button>
@@ -407,7 +407,7 @@
       const item = shopApps.find((s) => String(s.id) === String(id));
       if (!item) return;
       viewShopTargetId = item.id;
-      document.getElementById("shopAppModalSubtitle").textContent = `${item.name} · ${formatPhone(item.phone)}`;
+      document.getElementById("shopAppModalSubtitle").textContent = `${item.name} - ${formatPhone(item.phone)}`;
       document.getElementById("shopAppModalBody").innerHTML = buildShopDetail(item);
       document.getElementById("shopAppModal").classList.add("open");
     }

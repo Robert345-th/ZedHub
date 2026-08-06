@@ -77,7 +77,7 @@
       return;
     }
     verifyBtn.disabled = true;
-    verifyBtn.textContent = "Verifying…";
+    verifyBtn.textContent = "Verifying...";
     try {
       const data = await ZE.api("/auth/verify-otp", {
         method: "POST",
