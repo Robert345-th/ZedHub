@@ -69,7 +69,12 @@
 
   show(start);
 
+  // Installing / opening Nexus downloads all apps into cache.
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(function () {});
+    navigator.serviceWorker.register('/sw.js').then(function (reg) {
+      if (reg && reg.installing) {
+        // SW install precaches Events, Ludo, Fruits, icons, etc.
+      }
+    }).catch(function () {});
   }
 })();

@@ -1,7 +1,8 @@
 {
+  "id": "/",
   "name": "Nexus",
   "short_name": "Nexus",
-  "description": "Your apps in one place — Events, Market, Games, and more.",
+  "description": "Install once — Events, Ludo, Fruits and more are downloaded with Nexus.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -39,7 +40,25 @@
       "name": "Events",
       "short_name": "Events",
       "url": "/events/",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/zedevents.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Ludo",
+      "short_name": "Ludo",
+      "url": "/games/ludo/?mode=offline",
+      "icons": [{ "src": "/icons/ludo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Fruits",
+      "short_name": "Fruits",
+      "url": "/games/fruits/?mode=offline",
+      "icons": [{ "src": "/icons/fruits.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Market",
+      "short_name": "Market",
+      "url": "https://zedmarket.app",
+      "icons": [{ "src": "/icons/zedmarket.png", "sizes": "192x192" }]
     }
   ]
 }

@@ -1,24 +1,68 @@
-const CACHE = "nexus-v7";
+const CACHE = "nexus-v8";
+
+// Everything users need offline after installing Nexus once.
 const PRECACHE = [
   "/",
   "/index.html",
   "/home.css",
+  "/home.js",
   "/manifest.json",
+  "/install-app.js",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/zedmarket.png",
   "/icons/zedevents.png",
   "/icons/ludo.png",
   "/icons/fruits.png",
+  // Events
   "/events/",
   "/events/index.html",
+  "/events/app-manifest.json",
+  "/events/css/site.css",
+  "/events/css/extra.css",
+  "/events/js/api.js",
+  "/events/js/auth.js",
+  "/events/js/ui.js",
+  "/events/js/bottom-nav.js",
+  "/events/js/location.js",
+  "/events/login.html",
+  "/events/signup.html",
+  "/events/account.html",
+  "/events/favorites.html",
+  "/events/chats.html",
+  // Ludo
   "/games/ludo/",
+  "/games/ludo/index.html",
+  "/games/ludo/ludo.css",
+  "/games/ludo/ludo.js",
+  "/games/ludo/engine.js",
+  "/games/ludo/board.js",
+  "/games/ludo/manifest.json",
+  // Fruits
   "/games/fruits/",
+  "/games/fruits/index.html",
+  "/games/fruits/fruits.css",
+  "/games/fruits/fruits.js",
+  "/games/fruits/manifest.json",
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE)
+      .then(async (cache) => {
+        // Cache one-by-one so one missing file doesn't fail the whole install
+        await Promise.all(
+          PRECACHE.map(async (url) => {
+            try {
+              await cache.add(url);
+            } catch (_) {
+              /* ignore missing optional assets */
+            }
+          })
+        );
+      })
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -39,13 +83,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Prefer fresh HTML/CSS/JS so Nexus updates show up without a hard clear.
   const isPageAsset =
     req.mode === "navigate" ||
     url.pathname === "/" ||
     url.pathname.endsWith(".html") ||
     url.pathname.endsWith(".css") ||
-    url.pathname.endsWith(".js");
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".json");
 
   if (isPageAsset) {
     event.respondWith(

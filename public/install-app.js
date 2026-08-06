@@ -15,10 +15,10 @@
   }
 
   function storageKey(id) {
-    return 'nexus_app_installed_' + id;
+    return 'nexus_home_added_' + id;
   }
 
-  function wasInstalled(id) {
+  function wasAdded(id) {
     try {
       return localStorage.getItem(storageKey(id)) === '1';
     } catch (_) {
@@ -26,35 +26,15 @@
     }
   }
 
-  function markInstalled(id) {
+  function markAdded(id) {
     try {
       localStorage.setItem(storageKey(id), '1');
     } catch (_) {}
   }
 
-  function ensureServiceWorker() {
-    if (!('serviceWorker' in navigator)) return Promise.resolve();
-    return navigator.serviceWorker.register('/sw.js').catch(function () {});
-  }
-
-  /** Open this app URL in the real browser so Chrome can show Install. */
-  function openInBrowser() {
-    const url = location.href.split('#')[0];
-    if (isAndroid()) {
-      // Force open in Chrome (not inside Nexus PWA)
-      const hostPath = location.host + location.pathname + location.search;
-      location.href =
-        'intent://' +
-        hostPath +
-        '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' +
-        encodeURIComponent(url) +
-        ';end';
-      return;
-    }
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
-
   /**
+   * Apps are already downloaded with Nexus.
+   * This button only helps add the current app icon to the phone home screen.
    * opts: { btn, name, id }
    */
   function wireAppInstall(opts) {
@@ -64,110 +44,75 @@
     const name = opts.name || 'App';
     const id = opts.id || name.toLowerCase().replace(/\s+/g, '-');
     let deferred = null;
-    let readyWaiters = [];
 
-    function setInstalledUi() {
-      btn.textContent = 'Installed';
+    function setAddedUi() {
+      btn.textContent = 'On Home';
       btn.disabled = true;
     }
 
-    function setDownloadUi() {
-      btn.textContent = 'Download';
+    function setReadyUi() {
+      btn.textContent = 'Add to Home';
       btn.disabled = false;
     }
 
-    function notifyPromptReady() {
-      readyWaiters.splice(0).forEach((fn) => fn(deferred));
-    }
+    if (wasAdded(id)) setAddedUi();
+    else setReadyUi();
 
-    function waitForPrompt(ms) {
-      if (deferred) return Promise.resolve(deferred);
-      return new Promise((resolve) => {
-        const t = setTimeout(() => {
-          readyWaiters = readyWaiters.filter((fn) => fn !== onReady);
-          resolve(null);
-        }, ms);
-        function onReady(p) {
-          clearTimeout(t);
-          resolve(p);
-        }
-        readyWaiters.push(onReady);
-      });
-    }
-
-    if (wasInstalled(id)) setInstalledUi();
-    else setDownloadUi();
-
-    ensureServiceWorker();
-
+    // If browser offers a native install/shortcut for this page, use it directly.
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferred = e;
-      if (!wasInstalled(id)) setDownloadUi();
-      notifyPromptReady();
+      if (!wasAdded(id)) setReadyUi();
     });
 
     window.addEventListener('appinstalled', () => {
       deferred = null;
-      markInstalled(id);
-      setInstalledUi();
+      markAdded(id);
+      setAddedUi();
     });
 
-    async function tryDirectInstall() {
-      // Prefer native prompt
-      let promptEvent = deferred || (await waitForPrompt(1500));
-      if (promptEvent) {
-        promptEvent.prompt();
-        const choice = await promptEvent.userChoice;
+    btn.addEventListener('click', async () => {
+      if (wasAdded(id)) return;
+
+      // Direct native add/install when browser supports it
+      if (deferred) {
+        deferred.prompt();
+        const choice = await deferred.userChoice;
         deferred = null;
         if (choice && choice.outcome === 'accepted') {
-          markInstalled(id);
-          setInstalledUi();
+          markAdded(id);
+          setAddedUi();
         }
-        return true;
-      }
-      return false;
-    }
-
-    btn.addEventListener('click', async () => {
-      if (wasInstalled(id) || btn.disabled) return;
-
-      btn.disabled = true;
-      btn.textContent = 'Installing…';
-
-      const ok = await tryDirectInstall();
-      if (ok) return;
-
-      // Inside Nexus (or no prompt yet): jump to browser for real Install UI
-      if (isStandalone()) {
-        btn.textContent = 'Download';
-        btn.disabled = false;
-        openInBrowser();
         return;
       }
 
       if (isIos()) {
-        btn.textContent = 'Download';
-        btn.disabled = false;
-        // iOS has no direct install API — must use Share sheet
-        alert('On iPhone: tap Share → Add to Home Screen → Add');
+        const ok = confirm(
+          name +
+            ' is already in Nexus.\n\nAdd its icon to Home Screen:\n1) Tap Share\n2) Add to Home Screen\n3) Add\n\nTap OK when done.'
+        );
+        if (ok) {
+          markAdded(id);
+          setAddedUi();
+        }
         return;
       }
 
-      // Browser but prompt still missing — one more SW wait then browser hint
-      await ensureServiceWorker();
-      const again = await tryDirectInstall();
-      if (again) return;
+      if (isAndroid()) {
+        const ok = confirm(
+          name +
+            ' is already downloaded with Nexus.\n\nAdd icon to Home:\n1) Tap the browser menu ⋮\n2) Add to Home screen / Install\n3) Add\n\nTap OK when done.'
+        );
+        if (ok) {
+          markAdded(id);
+          setAddedUi();
+        }
+        return;
+      }
 
-      btn.textContent = 'Download';
-      btn.disabled = false;
-      alert('Install is not ready yet. Stay on this page 2 seconds, then tap Download again.');
+      alert('Use your browser menu → Add to Home screen to put ' + name + ' on your home screen.');
     });
-
-    if (new URLSearchParams(location.search).get('install') === '1' && !wasInstalled(id)) {
-      setTimeout(() => btn.click(), 600);
-    }
   }
 
-  global.NexusInstall = { wireAppInstall, wasInstalled, markInstalled, isIos };
+  global.NexusInstall = { wireAppInstall, wasAdded, markAdded, isIos, isStandalone };
 })(window);
