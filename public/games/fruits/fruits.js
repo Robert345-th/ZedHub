@@ -76,6 +76,7 @@
   let busy = false;
   let selected = null;
   let combo = 0;
+  let advanceOnNext = false;
 
   function show(screen) {
     [els.menu, els.play, els.result].forEach((s) => {
@@ -429,6 +430,7 @@
 
   async function finish(won) {
     busy = true;
+    advanceOnNext = false;
     const level = LEVELS[levelIndex];
     const stars = starsFromScore(level, score);
     const p = loadProgress();
@@ -438,15 +440,17 @@
       p.stars[levelIndex] = Math.max(p.stars[levelIndex] || 0, stars);
       p.level = Math.max(p.level || 0, Math.min(99, levelIndex + 1));
       saveProgress(p);
+      advanceOnNext = levelIndex < 99;
       els.resultTitle.textContent = levelIndex >= 99 ? 'You finished all 100!' : 'Level clear!';
       els.resultExtra.textContent =
         stars === 3 ? 'Perfect three stars!' : `Unlocked level ${Math.min(100, levelIndex + 2)}`;
       els.nextBtn.textContent = levelIndex >= 99 ? 'Play again' : 'Next level';
-      if (levelIndex < 99) levelIndex++;
+      els.retryBtn.hidden = false;
     } else {
       els.resultTitle.textContent = 'Out of moves';
       els.resultExtra.textContent = 'Levels get harder — try a cleaner combo path.';
-      els.nextBtn.textContent = 'Retry';
+      els.nextBtn.textContent = 'Retry this level';
+      els.retryBtn.hidden = true; // only one retry control when failed
     }
 
     els.resultStars.textContent = '★'.repeat(Math.max(1, stars)) + '☆'.repeat(Math.max(0, 3 - stars));
@@ -459,21 +463,30 @@
     const level = LEVELS[levelIndex];
     fruitPool = level.fruitCount;
     createGridNoMatches();
-    // resolve any rare leftover cascades silently
     moves = level.moves;
     score = 0;
     collected = 0;
     selected = null;
     combo = 0;
     busy = false;
+    advanceOnNext = false;
     els.hintBar.textContent = `Lv ${levelIndex + 1}: collect ${level.goalNeed} ${FRUITS[level.goalType].emoji} in ${level.moves} moves`;
     renderBoard();
     show(els.play);
   }
 
   els.playBtn.addEventListener('click', startLevel);
-  els.retryBtn.addEventListener('click', startLevel);
-  els.nextBtn.addEventListener('click', startLevel);
+  els.retryBtn.addEventListener('click', () => {
+    advanceOnNext = false;
+    startLevel(); // same level
+  });
+  els.nextBtn.addEventListener('click', () => {
+    if (advanceOnNext) {
+      levelIndex = Math.min(99, levelIndex + 1);
+      advanceOnNext = false;
+    }
+    startLevel();
+  });
 
   let touchStart = null;
   els.board.addEventListener(
