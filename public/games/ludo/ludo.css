@@ -19,6 +19,8 @@ body {
   color: var(--ink);
   font-family: "DM Sans", system-ui, sans-serif;
   padding-bottom: 28px;
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 .bar {

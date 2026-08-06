@@ -15,6 +15,7 @@
 html, body {
   height: 100%;
   overflow-x: hidden;
+  overscroll-behavior: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   font-family: "DM Sans", system-ui, sans-serif;
