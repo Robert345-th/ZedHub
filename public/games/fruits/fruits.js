@@ -188,9 +188,13 @@
   }
 
   function applyTheme(theme) {
-    document.body.className = 'page-play theme-' + (theme || 'meadow');
-    progress.theme = theme || 'meadow';
+    const t = theme || 'meadow';
+    document.body.className = 'page-play theme-' + t;
+    progress.theme = t;
     saveProgress();
+    document.querySelectorAll('.theme-chip').forEach((c) => {
+      c.classList.toggle('active', c.dataset.theme === t);
+    });
   }
 
   function updateBoostUi() {
@@ -879,6 +883,10 @@
   els.boostHammer.addEventListener('click', () => useBooster('hammer'));
   els.boostShuffle.addEventListener('click', () => useBooster('shuffle'));
   els.boostMoves.addEventListener('click', () => useBooster('moves'));
+
+  document.querySelectorAll('.theme-chip').forEach((chip) => {
+    chip.addEventListener('click', () => applyTheme(chip.dataset.theme));
+  });
 
   // swipe
   let touchStart = null;
