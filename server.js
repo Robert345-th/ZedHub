@@ -18,14 +18,13 @@ app.get('/api/health', (req, res) => {
   res.json({
     ok: true,
     app: 'ZedHub',
-    defaultApp: 'events',
+    home: 'app-list',
     eventsApi: ZEDEVENTS_API,
     eventsUi: '/events/',
     market: 'excluded',
   });
 });
 
-/** Read-only connectivity check to live ZedEvents API. */
 app.get('/api/events/status', async (req, res) => {
   try {
     const response = await fetch(ZEDEVENTS_API, { timeout: 10000 });
@@ -45,12 +44,6 @@ app.get('/api/events/status', async (req, res) => {
 });
 
 const publicDir = path.join(__dirname, 'public');
-
-// Opening the site / installed app lands in the real Events app
-app.get('/', (req, res) => {
-  res.redirect(302, '/events/');
-});
-
 app.use(express.static(publicDir));
 
 app.get('/events', (req, res) => {
@@ -62,12 +55,12 @@ app.get('*', (req, res, next) => {
   if (req.path.startsWith('/events/')) {
     return res.sendFile(path.join(publicDir, 'events', 'index.html'));
   }
-  res.sendFile(path.join(publicDir, 'apps.html'));
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
 app.listen(PORT, () => {
   console.log(`ZedHub running on http://localhost:${PORT}`);
-  console.log(`Default app: Events → http://localhost:${PORT}/events/`);
+  console.log(`Home = app list. Events opens from the list only.`);
   console.log(`Events API: ${ZEDEVENTS_API}`);
   console.log('ZedMarket: excluded (not touched)');
 });
