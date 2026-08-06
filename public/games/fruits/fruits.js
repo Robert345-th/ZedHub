@@ -198,6 +198,30 @@
     paintStars(starsFromScore(level, score));
   }
 
+  function neighborIndexes(i) {
+    const r = Math.floor(i / SIZE);
+    const c = i % SIZE;
+    const out = [];
+    if (r > 0) out.push((r - 1) * SIZE + c);
+    if (r < SIZE - 1) out.push((r + 1) * SIZE + c);
+    if (c > 0) out.push(r * SIZE + (c - 1));
+    if (c < SIZE - 1) out.push(r * SIZE + (c + 1));
+    return out;
+  }
+
+  function paintSelection() {
+    const nodes = els.board.querySelectorAll('.cell');
+    nodes.forEach((el) => {
+      el.classList.remove('selected', 'neighbor', 'pressed');
+    });
+    if (selected == null) return;
+    const sel = nodes[selected];
+    if (sel) sel.classList.add('selected');
+    neighborIndexes(selected).forEach((ni) => {
+      if (grid[ni]) nodes[ni]?.classList.add('neighbor');
+    });
+  }
+
   function renderBoard(opts) {
     const level = LEVELS[levelIndex];
     const fall = opts?.fall || new Set();
@@ -217,12 +241,25 @@
         if (item.special) div.classList.add('special');
         if (fall.has(i)) div.classList.add('fall');
         if (popping.has(i)) div.classList.add('pop');
-        if (selected === i) div.classList.add('selected');
         if (swapping && (swapping.a === i || swapping.b === i)) div.classList.add('swap');
       }
-      div.addEventListener('click', () => onCellTap(i));
+
+      div.addEventListener('pointerdown', (e) => {
+        if (busy || !grid[i]) return;
+        e.preventDefault();
+        div.classList.add('pressed');
+      });
+      div.addEventListener('pointerup', () => div.classList.remove('pressed'));
+      div.addEventListener('pointercancel', () => div.classList.remove('pressed'));
+      div.addEventListener('pointerleave', () => div.classList.remove('pressed'));
+      div.addEventListener('click', (e) => {
+        e.preventDefault();
+        onCellTap(i);
+      });
+
       els.board.appendChild(div);
     }
+    paintSelection();
     updateHud(level);
   }
 
@@ -335,17 +372,20 @@
 
     if (selected == null) {
       selected = i;
-      renderBoard();
+      paintSelection();
+      els.hintBar.textContent = 'Selected — tap a glowing neighbor to swap';
       return;
     }
     if (selected === i) {
       selected = null;
-      renderBoard();
+      paintSelection();
+      els.hintBar.textContent = 'Tap a fruit to pick it up';
       return;
     }
     if (!neighbors(selected, i)) {
       selected = i;
-      renderBoard();
+      paintSelection();
+      els.hintBar.textContent = 'Selected — tap a glowing neighbor to swap';
       return;
     }
 
@@ -353,10 +393,11 @@
     const b = i;
     selected = null;
     busy = true;
+    paintSelection();
 
     swap(a, b);
     renderBoard({ swap: { a, b } });
-    await sleep(160);
+    await sleep(180);
 
     if (!findMatches().size) {
       swap(a, b);
@@ -382,6 +423,7 @@
       await finish(false);
       return;
     }
+    els.hintBar.textContent = 'Tap a fruit to pick it up';
     busy = false;
   }
 
