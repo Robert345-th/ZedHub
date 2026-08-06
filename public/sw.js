@@ -1,4 +1,4 @@
-const CACHE = "zedhub-v3";
+const CACHE = "zedhub-v4";
 const PRECACHE = [
   "/",
   "/index.html",
@@ -6,6 +6,7 @@ const PRECACHE = [
   "/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/icons/zedmarket.png",
   "/events/",
   "/events/index.html",
 ];
@@ -30,6 +31,29 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(req.url);
   if (url.pathname.startsWith("/api/") || url.hostname.includes("zedevents-production")) {
+    return;
+  }
+
+  // Prefer fresh HTML/CSS/JS so Hub updates show up without a hard clear.
+  const isPageAsset =
+    req.mode === "navigate" ||
+    url.pathname === "/" ||
+    url.pathname.endsWith(".html") ||
+    url.pathname.endsWith(".css") ||
+    url.pathname.endsWith(".js");
+
+  if (isPageAsset) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
     return;
   }
 
