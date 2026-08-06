@@ -145,35 +145,6 @@ body {
   color: var(--leaf-deep);
 }
 
-.subcats {
-  max-width: 480px;
-  margin: 10px auto 0;
-  padding: 0 16px;
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.subcats[hidden] {
-  display: none;
-}
-
-.cat.sub {
-  font-size: 0.82rem;
-  padding: 8px 14px;
-}
-
-.intro {
-  max-width: 480px;
-  margin: 14px auto 0;
-  padding: 0 20px;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.4;
-  min-height: 2.6em;
-}
-
 .grid {
   max-width: 480px;
   margin: 18px auto 0;

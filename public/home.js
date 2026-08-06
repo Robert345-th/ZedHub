@@ -1,18 +1,10 @@
 (function () {
-  const INFO = {
-    events: 'Find and book event services — catering, DJs, tents, décor and more.',
-    market: 'Buy and sell on ZedMarket. Opens the live Market app.',
-    games: 'Fruits match-3 campaign — 100 levels, boosters, offline play.',
-  };
-
   const grid = document.getElementById('appGrid');
-  const intro = document.getElementById('introDesc');
   const topButtons = Array.from(document.querySelectorAll('.cats > .cat'));
 
-  function fill(tplId, text) {
+  function fill(tplId) {
     const tpl = document.getElementById(tplId);
     if (!grid || !tpl) return;
-    if (intro) intro.textContent = text || '';
     grid.innerHTML = '';
     grid.appendChild(tpl.content.cloneNode(true));
   }
@@ -21,7 +13,7 @@
     topButtons.forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.cat === cat);
     });
-    fill('tpl-' + cat, INFO[cat]);
+    fill('tpl-' + cat);
     try {
       localStorage.setItem('nexus_cat', cat);
     } catch (_) {}
