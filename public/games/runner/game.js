@@ -22,7 +22,7 @@ const GROUND_Y = 0.32;
 const HERO_H = 1.72;
 
 function makeToonGradient() {
-  const data = new Uint8Array([70, 70, 70, 255, 150, 150, 150, 255, 230, 230, 230, 255, 255, 255, 255, 255]);
+  const data = new Uint8Array([55, 55, 55, 255, 120, 120, 120, 255, 190, 190, 190, 255, 255, 255, 255, 255]);
   const tex = new THREE.DataTexture(data, 4, 1, THREE.RGBAFormat);
   tex.magFilter = THREE.NearestFilter;
   tex.minFilter = THREE.NearestFilter;
@@ -33,54 +33,171 @@ const toonGrad = makeToonGradient();
 function toon(color, opts = {}) {
   return new THREE.MeshToonMaterial({ color, gradientMap: toonGrad, ...opts });
 }
+function toonMap(map, color = 0xffffff, opts = {}) {
+  return new THREE.MeshToonMaterial({ map, color, gradientMap: toonGrad, ...opts });
+}
 
-function windowTex(w = 64, h = 96, wall = '#5a7a9a', lit = '#ffe9a0') {
+function canvasTex(draw, w = 128, h = 128) {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
-  const g = c.getContext('2d');
-  g.fillStyle = wall;
-  g.fillRect(0, 0, w, h);
-  const cols = 3;
-  const rows = 5;
-  const mw = w / (cols + 1);
-  const mh = h / (rows + 1);
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      g.fillStyle = Math.random() > 0.35 ? lit : '#1a2433';
-      g.fillRect(mw * 0.35 + x * mw, mh * 0.35 + y * mh, mw * 0.55, mh * 0.5);
-    }
-  }
+  draw(c.getContext('2d'), w, h);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 4;
+  tex.needsUpdate = true;
   return tex;
 }
 
+function windowTex(w = 128, h = 192, wall = '#5a7a9a', lit = '#ffe9a0') {
+  return canvasTex((g, W, H) => {
+    g.fillStyle = wall;
+    g.fillRect(0, 0, W, H);
+    // subtle plaster noise
+    for (let i = 0; i < 900; i++) {
+      g.fillStyle = `rgba(255,255,255,${Math.random() * 0.05})`;
+      g.fillRect(Math.random() * W, Math.random() * H, 2, 2);
+    }
+    const cols = 4;
+    const rows = 6;
+    const mw = W / (cols + 0.6);
+    const mh = H / (rows + 0.8);
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const on = Math.random() > 0.32;
+        g.fillStyle = '#1a2433';
+        g.fillRect(mw * 0.28 + x * mw, mh * 0.35 + y * mh, mw * 0.55, mh * 0.48);
+        g.fillStyle = on ? lit : '#243044';
+        g.fillRect(mw * 0.32 + x * mw, mh * 0.4 + y * mh, mw * 0.47, mh * 0.38);
+        if (on) {
+          g.fillStyle = 'rgba(255,255,220,0.35)';
+          g.fillRect(mw * 0.32 + x * mw, mh * 0.4 + y * mh, mw * 0.47, mh * 0.12);
+        }
+      }
+    }
+  }, w, h);
+}
+
 function asphaltTex() {
-  const c = document.createElement('canvas');
-  c.width = 128;
-  c.height = 256;
-  const g = c.getContext('2d');
-  g.fillStyle = '#4a4f58';
-  g.fillRect(0, 0, 128, 256);
-  for (let i = 0; i < 400; i++) {
-    g.fillStyle = `rgba(0,0,0,${Math.random() * 0.12})`;
-    g.fillRect(Math.random() * 128, Math.random() * 256, 2, 2);
-  }
-  g.strokeStyle = '#f5d76e';
-  g.lineWidth = 4;
-  g.setLineDash([18, 16]);
-  g.beginPath();
-  g.moveTo(64, 0);
-  g.lineTo(64, 256);
-  g.stroke();
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
+  const tex = canvasTex((g, W, H) => {
+    g.fillStyle = '#3f4550';
+    g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 1200; i++) {
+      const n = Math.random();
+      g.fillStyle = n > 0.5 ? `rgba(255,255,255,${n * 0.04})` : `rgba(0,0,0,${n * 0.14})`;
+      g.fillRect(Math.random() * W, Math.random() * H, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    }
+    // lane edges
+    g.strokeStyle = '#e8ecf2';
+    g.lineWidth = 5;
+    g.beginPath();
+    g.moveTo(10, 0);
+    g.lineTo(10, H);
+    g.moveTo(W - 10, 0);
+    g.lineTo(W - 10, H);
+    g.stroke();
+    // dashed center
+    g.strokeStyle = '#f5d76e';
+    g.lineWidth = 5;
+    g.setLineDash([22, 18]);
+    g.beginPath();
+    g.moveTo(W / 2, 0);
+    g.lineTo(W / 2, H);
+    g.stroke();
+  }, 128, 256);
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(1, TRACK_LEN / 12);
+  tex.repeat.set(1, TRACK_LEN / 14);
   return tex;
+}
+
+function grassTex() {
+  const tex = canvasTex((g, W, H) => {
+    g.fillStyle = '#4fb24a';
+    g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 2000; i++) {
+      g.fillStyle = Math.random() > 0.5 ? '#63c45a' : '#3d9a42';
+      g.fillRect(Math.random() * W, Math.random() * H, 2, 3 + Math.random() * 4);
+    }
+  }, 128, 128);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(18, TRACK_LEN / 8);
+  return tex;
+}
+
+/** Cartoon fabric / skin maps for the runner (not a flat gray dummy). */
+function hoodieTex() {
+  return canvasTex((g, W, H) => {
+    g.fillStyle = '#ff6a3d';
+    g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 500; i++) {
+      g.fillStyle = `rgba(255,255,255,${Math.random() * 0.06})`;
+      g.fillRect(Math.random() * W, Math.random() * H, 2, 2);
+    }
+    g.fillStyle = '#e0451a';
+    g.fillRect(0, H * 0.72, W, H * 0.28);
+    g.fillStyle = '#fff4e8';
+    g.font = 'bold 42px sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('NX', W * 0.55, H * 0.42);
+    g.strokeStyle = 'rgba(255,255,255,0.25)';
+    g.lineWidth = 3;
+    g.strokeRect(W * 0.18, H * 0.18, W * 0.64, H * 0.48);
+  }, 128, 128);
+}
+function skinTex() {
+  return canvasTex((g, W, H) => {
+    const grd = g.createRadialGradient(W * 0.4, H * 0.35, 8, W * 0.5, H * 0.5, W * 0.7);
+    grd.addColorStop(0, '#ffd7b8');
+    grd.addColorStop(1, '#f0a888');
+    g.fillStyle = grd;
+    g.fillRect(0, 0, W, H);
+    g.fillStyle = 'rgba(232, 120, 100, 0.18)';
+    g.beginPath();
+    g.ellipse(W * 0.32, H * 0.55, 14, 10, 0, 0, Math.PI * 2);
+    g.ellipse(W * 0.68, H * 0.55, 14, 10, 0, 0, Math.PI * 2);
+    g.fill();
+  }, 64, 64);
+}
+function pantsTex() {
+  return canvasTex((g, W, H) => {
+    g.fillStyle = '#2a3650';
+    g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 300; i++) {
+      g.fillStyle = `rgba(255,255,255,${Math.random() * 0.04})`;
+      g.fillRect(Math.random() * W, Math.random() * H, 1, 3);
+    }
+    g.fillStyle = '#1a2238';
+    g.fillRect(W * 0.45, 0, W * 0.1, H);
+  }, 64, 64);
+}
+function shoeTex() {
+  return canvasTex((g, W, H) => {
+    g.fillStyle = '#f7f7f7';
+    g.fillRect(0, 0, W, H);
+    g.fillStyle = '#ff6a3d';
+    g.fillRect(0, H * 0.55, W, H * 0.2);
+    g.fillStyle = '#1a0f0a';
+    g.fillRect(0, H * 0.82, W, H * 0.18);
+  }, 64, 32);
+}
+function hairTex() {
+  return canvasTex((g, W, H) => {
+    g.fillStyle = '#2a1810';
+    g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 200; i++) {
+      g.strokeStyle = `rgba(80,40,20,${0.15 + Math.random() * 0.25})`;
+      g.beginPath();
+      g.moveTo(Math.random() * W, Math.random() * H);
+      g.lineTo(Math.random() * W, Math.random() * H);
+      g.stroke();
+    }
+  }, 64, 64);
+}
+
+function damp(a, b, lambda, dt) {
+  return THREE.MathUtils.damp(a, b, lambda, dt);
 }
 
 let best = 0;
@@ -95,35 +212,43 @@ let entities = [];
 let cityChunks = [];
 let characterReady = false;
 let bobT = 0;
+// Visual-only blend weights (does not change jump/slide gameplay flags)
+const animBlend = { slide: 0, jump: 0, runAmp: 1 };
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-renderer.setClearColor(0x6ec4ff);
+renderer.setClearColor(0x79c8ff);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 stage.insertBefore(renderer.domElement, hintEl);
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x8fd0ff, 35, 95);
-scene.background = new THREE.Color(0x6ec4ff);
+scene.fog = new THREE.Fog(0x79c8ff, 42, 105);
+scene.background = new THREE.Color(0x79c8ff);
 
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 180);
 camera.position.set(0, 5.1, 10.2);
 camera.lookAt(0, 1.5, -12);
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.75));
-const sun = new THREE.DirectionalLight(0xfff0d0, 1.35);
-sun.position.set(8, 22, 10);
+scene.add(new THREE.AmbientLight(0xfff5ea, 0.55));
+const sun = new THREE.DirectionalLight(0xfff1d6, 1.55);
+sun.position.set(6, 24, 12);
 sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
-sun.shadow.camera.near = 2;
-sun.shadow.camera.far = 60;
-sun.shadow.camera.left = -18;
-sun.shadow.camera.right = 18;
-sun.shadow.camera.top = 18;
-sun.shadow.camera.bottom = -10;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.00025;
+sun.shadow.normalBias = 0.035;
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 70;
+sun.shadow.camera.left = -16;
+sun.shadow.camera.right = 16;
+sun.shadow.camera.top = 22;
+sun.shadow.camera.bottom = -8;
 scene.add(sun);
-scene.add(new THREE.HemisphereLight(0x9ad8ff, 0x6a9a50, 0.55));
+scene.add(new THREE.HemisphereLight(0xa8d9ff, 0x6aaa4a, 0.7));
+const fill = new THREE.DirectionalLight(0xb8d4ff, 0.35);
+fill.position.set(-10, 8, -4);
+scene.add(fill);
 
 const sunBall = new THREE.Mesh(
   new THREE.SphereGeometry(3.4, 20, 20),
@@ -154,18 +279,13 @@ const clouds = [
 ];
 
 // —— World ——
-const grass = new THREE.Mesh(new THREE.PlaneGeometry(48, TRACK_LEN), toon(0x63c45a));
+const grass = new THREE.Mesh(new THREE.PlaneGeometry(48, TRACK_LEN), toonMap(grassTex()));
 grass.rotation.x = -Math.PI / 2;
 grass.position.set(0, -0.02, -TRACK_LEN / 2 + 12);
 grass.receiveShadow = true;
 scene.add(grass);
 
-const trackMat = new THREE.MeshToonMaterial({
-  map: asphaltTex(),
-  gradientMap: toonGrad,
-  color: 0xffffff,
-});
-const track = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.28, TRACK_LEN), trackMat);
+const track = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.28, TRACK_LEN), toonMap(asphaltTex()));
 track.position.set(0, 0.12, -TRACK_LEN / 2 + 12);
 track.receiveShadow = true;
 scene.add(track);
@@ -175,6 +295,7 @@ const curbMat = toon(0xd9dde6);
   const curb = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.42, TRACK_LEN), curbMat);
   curb.position.set(x, 0.2, -TRACK_LEN / 2 + 12);
   curb.receiveShadow = true;
+  curb.castShadow = true;
   scene.add(curb);
 });
 
@@ -184,12 +305,15 @@ function makeLaneRails(x) {
   [-0.22, 0.22].forEach((ox) => {
     const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, TRACK_LEN), steel);
     rail.position.set(ox, 0.3, -TRACK_LEN / 2 + 12);
+    rail.castShadow = true;
+    rail.receiveShadow = true;
     g.add(rail);
   });
   const wood = toon(0xa86b3c);
   for (let z = 0; z < TRACK_LEN; z += 1.35) {
     const tie = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.22), wood);
     tie.position.set(0, 0.24, -z + 12);
+    tie.receiveShadow = true;
     g.add(tie);
   }
   g.position.x = x;
@@ -204,11 +328,9 @@ function makeBuilding(side, i) {
   const d = 2.2 + Math.random() * 2.8;
   const walls = ['#ff8fab', '#7dd3fc', '#fde68a', '#c4b5fd', '#86efac', '#fdba74', '#f9a8d4'];
   const wallHex = walls[(i + (side > 0 ? 2 : 0)) % walls.length];
-  const tex = windowTex(64, 96, wallHex, Math.random() > 0.5 ? '#ffe9a0' : '#b8e0ff');
-  const body = new THREE.Mesh(
-    new THREE.BoxGeometry(w, h, d),
-    new THREE.MeshToonMaterial({ map: tex, gradientMap: toonGrad, color: 0xffffff })
-  );
+  const tex = windowTex(128, 192, wallHex, Math.random() > 0.5 ? '#ffe9a0' : '#b8e0ff');
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), toonMap(tex));
   body.position.y = h / 2;
   body.castShadow = true;
   body.receiveShadow = true;
@@ -216,16 +338,21 @@ function makeBuilding(side, i) {
 
   const roof = new THREE.Mesh(new THREE.BoxGeometry(w * 1.08, 0.28, d * 1.08), toon(0xfff7ed));
   roof.position.y = h + 0.12;
+  roof.castShadow = true;
+  roof.receiveShadow = true;
   g.add(roof);
 
   if (Math.random() > 0.55) {
     const sign = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.55, 0.12), toon(0xff6a3d));
     sign.position.set(0, h * 0.55, d / 2 + 0.08);
+    sign.castShadow = true;
     g.add(sign);
   }
 
   const awning = new THREE.Mesh(new THREE.BoxGeometry(w * 0.9, 0.12, 0.7), toon(0xffffff));
   awning.position.set(0, 2.1, d / 2 + 0.25);
+  awning.castShadow = true;
+  awning.receiveShadow = true;
   g.add(awning);
 
   g.position.set(side * (8.2 + Math.random() * 2.2), 0, -i * 7.2 - Math.random() * 1.5);
@@ -256,61 +383,66 @@ const player = {
 };
 scene.add(player.root);
 
-function addMesh(parent, geo, color, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0) {
-  const m = new THREE.Mesh(geo, toon(color));
+function addMesh(parent, geo, matOrColor, x, y, z, sx = 1, sy = 1, sz = 1, rx = 0) {
+  const mat = typeof matOrColor === 'number' ? toon(matOrColor) : matOrColor;
+  const m = new THREE.Mesh(geo, mat);
   m.position.set(x, y, z);
   m.scale.set(sx, sy, sz);
   m.rotation.x = rx;
   m.castShadow = true;
+  m.receiveShadow = true;
   parent.add(m);
   return m;
 }
 
 function buildHero() {
   const root = new THREE.Group();
-  const skin = 0xffc9a3;
-  const hoodie = 0xff6a3d;
-  const hoodieDark = 0xe0451a;
-  const pants = 0x2d3a55;
-  const shoe = 0xf5f5f5;
-  const hair = 0x2a1810;
+  const matHoodie = toonMap(hoodieTex());
+  const matHoodieDark = toon(0xe0451a);
+  const matSkin = toonMap(skinTex());
+  const matPants = toonMap(pantsTex());
+  const matShoe = toonMap(shoeTex());
+  const matHair = toonMap(hairTex());
+  const matWhite = toon(0xffffff);
+  const matInk = toon(0x1a0f0a);
+  const matCheek = toon(0xe07070);
 
   const hips = new THREE.Group();
-  hips.position.y = 0.92;
+  hips.position.y = 0.95;
   root.add(hips);
 
   const torso = new THREE.Group();
   hips.add(torso);
-  addMesh(torso, new THREE.CapsuleGeometry(0.28, 0.42, 6, 12), hoodie, 0, 0.28, 0);
-  addMesh(torso, new THREE.BoxGeometry(0.62, 0.18, 0.52), hoodieDark, 0, 0.02, 0); // hem
-  addMesh(torso, new THREE.BoxGeometry(0.22, 0.28, 0.08), 0xffe8d6, 0, 0.42, 0.26); // pocket
-  // NX badge
-  addMesh(torso, new THREE.BoxGeometry(0.18, 0.14, 0.04), 0xffffff, 0.16, 0.38, 0.27);
+  addMesh(torso, new THREE.CapsuleGeometry(0.29, 0.44, 8, 14), matHoodie, 0, 0.28, 0);
+  addMesh(torso, new THREE.BoxGeometry(0.64, 0.16, 0.54), matHoodieDark, 0, 0.02, 0);
+  addMesh(torso, new THREE.BoxGeometry(0.24, 0.3, 0.08), toon(0xffe8d6), 0, 0.42, 0.27);
+  addMesh(torso, new THREE.BoxGeometry(0.2, 0.15, 0.05), matWhite, 0.17, 0.38, 0.28);
+  // hood
+  addMesh(torso, new THREE.SphereGeometry(0.22, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), matHoodie, 0, 0.62, -0.12, 1.05, 0.85, 1);
 
   const head = new THREE.Group();
-  head.position.y = 0.72;
+  head.position.y = 0.74;
   torso.add(head);
-  addMesh(head, new THREE.SphereGeometry(0.26, 16, 16), skin, 0, 0.08, 0);
-  addMesh(head, new THREE.SphereGeometry(0.28, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hair, 0, 0.14, -0.02, 1, 1, 1.05);
-  addMesh(head, new THREE.SphereGeometry(0.09, 8, 8), hair, -0.08, 0.3, -0.02);
-  addMesh(head, new THREE.SphereGeometry(0.07, 8, 8), hair, 0.1, 0.28, 0.02);
-  // eyes
-  addMesh(head, new THREE.SphereGeometry(0.055, 10, 10), 0xffffff, -0.08, 0.1, 0.2);
-  addMesh(head, new THREE.SphereGeometry(0.055, 10, 10), 0xffffff, 0.08, 0.1, 0.2);
-  addMesh(head, new THREE.SphereGeometry(0.028, 8, 8), 0x1a0f0a, -0.08, 0.1, 0.245);
-  addMesh(head, new THREE.SphereGeometry(0.028, 8, 8), 0x1a0f0a, 0.08, 0.1, 0.245);
-  addMesh(head, new THREE.CapsuleGeometry(0.02, 0.06, 3, 6), 0xe07070, 0, 0.02, 0.24, 1, 1, 1, Math.PI / 2);
+  addMesh(head, new THREE.SphereGeometry(0.27, 18, 18), matSkin, 0, 0.08, 0);
+  addMesh(head, new THREE.SphereGeometry(0.29, 14, 12, 0, Math.PI * 2, 0, Math.PI * 0.58), matHair, 0, 0.15, -0.03, 1, 1, 1.06);
+  addMesh(head, new THREE.SphereGeometry(0.1, 10, 10), matHair, -0.09, 0.32, -0.02);
+  addMesh(head, new THREE.SphereGeometry(0.08, 10, 10), matHair, 0.11, 0.3, 0.02);
+  addMesh(head, new THREE.SphereGeometry(0.058, 12, 12), matWhite, -0.085, 0.1, 0.21);
+  addMesh(head, new THREE.SphereGeometry(0.058, 12, 12), matWhite, 0.085, 0.1, 0.21);
+  addMesh(head, new THREE.SphereGeometry(0.03, 10, 10), matInk, -0.085, 0.1, 0.255);
+  addMesh(head, new THREE.SphereGeometry(0.03, 10, 10), matInk, 0.085, 0.1, 0.255);
+  addMesh(head, new THREE.CapsuleGeometry(0.02, 0.07, 4, 8), matCheek, 0, 0.02, 0.25, 1, 1, 1, Math.PI / 2);
 
   function makeArm(sign) {
     const arm = new THREE.Group();
-    arm.position.set(sign * 0.34, 0.48, 0);
+    arm.position.set(sign * 0.36, 0.5, 0);
     torso.add(arm);
-    addMesh(arm, new THREE.CapsuleGeometry(0.09, 0.28, 4, 8), hoodie, 0, -0.18, 0);
+    addMesh(arm, new THREE.CapsuleGeometry(0.095, 0.3, 6, 10), matHoodie, 0, -0.2, 0);
     const forearm = new THREE.Group();
-    forearm.position.y = -0.38;
+    forearm.position.y = -0.4;
     arm.add(forearm);
-    addMesh(forearm, new THREE.CapsuleGeometry(0.075, 0.24, 4, 8), skin, 0, -0.14, 0);
-    addMesh(forearm, new THREE.SphereGeometry(0.09, 8, 8), skin, 0, -0.32, 0);
+    addMesh(forearm, new THREE.CapsuleGeometry(0.08, 0.26, 6, 10), matSkin, 0, -0.15, 0);
+    addMesh(forearm, new THREE.SphereGeometry(0.095, 10, 10), matSkin, 0, -0.34, 0);
     return { arm, forearm };
   }
   const leftArm = makeArm(-1);
@@ -318,21 +450,21 @@ function buildHero() {
 
   function makeLeg(sign) {
     const leg = new THREE.Group();
-    leg.position.set(sign * 0.14, 0, 0);
+    leg.position.set(sign * 0.15, 0, 0);
     hips.add(leg);
-    addMesh(leg, new THREE.CapsuleGeometry(0.11, 0.28, 4, 8), pants, 0, -0.28, 0);
+    addMesh(leg, new THREE.CapsuleGeometry(0.115, 0.3, 6, 10), matPants, 0, -0.3, 0);
     const shin = new THREE.Group();
-    shin.position.y = -0.52;
+    shin.position.y = -0.55;
     leg.add(shin);
-    addMesh(shin, new THREE.CapsuleGeometry(0.09, 0.28, 4, 8), pants, 0, -0.16, 0);
-    addMesh(shin, new THREE.BoxGeometry(0.2, 0.12, 0.32), shoe, 0, -0.38, 0.04);
-    addMesh(shin, new THREE.BoxGeometry(0.2, 0.05, 0.1), 0xff6a3d, 0, -0.32, 0.14);
+    addMesh(shin, new THREE.CapsuleGeometry(0.095, 0.28, 6, 10), matPants, 0, -0.16, 0);
+    // Slight lift so soles clear the asphalt (visual only)
+    addMesh(shin, new THREE.BoxGeometry(0.22, 0.12, 0.34), matShoe, 0, -0.36, 0.05);
+    addMesh(shin, new THREE.BoxGeometry(0.22, 0.05, 0.1), toon(0xff6a3d), 0, -0.3, 0.16);
     return { leg, shin };
   }
   const leftLeg = makeLeg(-1);
   const rightLeg = makeLeg(1);
 
-  // Face camera-forward is +Z in local; we run toward -Z so rotate PI
   root.rotation.y = Math.PI;
 
   return {
@@ -354,31 +486,47 @@ function buildHero() {
 function animateHero(dt) {
   const p = player.parts;
   if (!p) return;
-  bobT += dt * (player.jumping ? 0 : speed * 0.55);
 
-  const run = !player.jumping && !player.sliding;
-  const swing = run ? Math.sin(bobT * 2.2) : 0;
-  const bob = run ? Math.abs(Math.sin(bobT * 2.2)) * 0.05 : 0;
+  // Smooth visual blends — gameplay flags stay abrupt; poses ease
+  animBlend.slide = damp(animBlend.slide, player.sliding ? 1 : 0, 14, dt);
+  animBlend.jump = damp(animBlend.jump, player.jumping ? 1 : 0, 11, dt);
+  const grounded = 1 - Math.max(animBlend.slide, animBlend.jump);
+  animBlend.runAmp = damp(animBlend.runAmp, grounded, 10, dt);
 
-  p.hips.position.y = 0.92 + bob + (player.sliding ? -0.35 : 0);
-  p.hips.rotation.x = player.sliding ? 1.15 : player.jumping ? -0.15 : 0.08;
-  p.torso.rotation.x = player.sliding ? 0.2 : 0.06;
-  p.torso.rotation.z = run ? swing * 0.04 : 0;
-  p.head.rotation.x = player.sliding ? -0.35 : player.jumping ? 0.1 : -0.05;
+  const pace = player.jumping ? 0 : speed * 0.55;
+  bobT += dt * pace;
 
-  const armAmp = player.jumping ? 0.4 : player.sliding ? 0.15 : 0.85;
-  p.leftArm.rotation.x = swing * armAmp + (player.jumping ? -0.8 : 0);
-  p.rightArm.rotation.x = -swing * armAmp + (player.jumping ? -0.8 : 0);
-  p.leftArm.rotation.z = 0.25;
-  p.rightArm.rotation.z = -0.25;
-  p.leftFore.rotation.x = run ? -0.6 - swing * 0.3 : -0.4;
-  p.rightFore.rotation.x = run ? -0.6 + swing * 0.3 : -0.4;
+  const swing = Math.sin(bobT * 2.15) * animBlend.runAmp;
+  const bob = Math.abs(Math.sin(bobT * 2.15)) * 0.045 * animBlend.runAmp;
+  const s = animBlend.slide;
+  const j = animBlend.jump;
 
-  const legAmp = player.jumping ? 0.35 : player.sliding ? 0.1 : 0.95;
-  p.leftLeg.rotation.x = -swing * legAmp + (player.jumping ? -0.5 : player.sliding ? 0.4 : 0);
-  p.rightLeg.rotation.x = swing * legAmp + (player.jumping ? 0.35 : player.sliding ? 0.4 : 0);
-  p.leftShin.rotation.x = run ? Math.max(0, -swing) * 0.7 : player.sliding ? 0.5 : 0.2;
-  p.rightShin.rotation.x = run ? Math.max(0, swing) * 0.7 : player.sliding ? 0.5 : 0.2;
+  const hipsY = 0.95 + bob - 0.32 * s + 0.04 * j;
+  const hipsRx = 0.06 * animBlend.runAmp + 1.05 * s - 0.12 * j;
+  const torsoRx = 0.05 * animBlend.runAmp + 0.18 * s + 0.04 * j;
+  const torsoRz = swing * 0.045;
+  const headRx = -0.04 * animBlend.runAmp - 0.32 * s + 0.08 * j;
+
+  p.hips.position.y = damp(p.hips.position.y, hipsY, 18, dt);
+  p.hips.rotation.x = damp(p.hips.rotation.x, hipsRx, 16, dt);
+  p.torso.rotation.x = damp(p.torso.rotation.x, torsoRx, 16, dt);
+  p.torso.rotation.z = damp(p.torso.rotation.z, torsoRz, 14, dt);
+  p.head.rotation.x = damp(p.head.rotation.x, headRx, 14, dt);
+
+  const armAmp = 0.9 * animBlend.runAmp + 0.35 * j + 0.12 * s;
+  const armJump = -0.75 * j;
+  p.leftArm.rotation.x = damp(p.leftArm.rotation.x, swing * armAmp + armJump, 16, dt);
+  p.rightArm.rotation.x = damp(p.rightArm.rotation.x, -swing * armAmp + armJump, 16, dt);
+  p.leftArm.rotation.z = damp(p.leftArm.rotation.z, 0.22 + 0.15 * s, 12, dt);
+  p.rightArm.rotation.z = damp(p.rightArm.rotation.z, -0.22 - 0.15 * s, 12, dt);
+  p.leftFore.rotation.x = damp(p.leftFore.rotation.x, -0.55 * animBlend.runAmp - swing * 0.28 * animBlend.runAmp - 0.25 * j - 0.15 * s, 14, dt);
+  p.rightFore.rotation.x = damp(p.rightFore.rotation.x, -0.55 * animBlend.runAmp + swing * 0.28 * animBlend.runAmp - 0.25 * j - 0.15 * s, 14, dt);
+
+  const legAmp = 0.92 * animBlend.runAmp + 0.3 * j;
+  p.leftLeg.rotation.x = damp(p.leftLeg.rotation.x, -swing * legAmp - 0.45 * j + 0.35 * s, 16, dt);
+  p.rightLeg.rotation.x = damp(p.rightLeg.rotation.x, swing * legAmp + 0.3 * j + 0.35 * s, 16, dt);
+  p.leftShin.rotation.x = damp(p.leftShin.rotation.x, Math.max(0, -swing) * 0.65 * animBlend.runAmp + 0.45 * s + 0.15 * j, 14, dt);
+  p.rightShin.rotation.x = damp(p.rightShin.rotation.x, Math.max(0, swing) * 0.65 * animBlend.runAmp + 0.45 * s + 0.15 * j, 14, dt);
 }
 
 function syncPlayerPose() {
@@ -592,6 +740,9 @@ function reset() {
   player.slideT = 0;
   player.alive = true;
   bobT = 0;
+  animBlend.slide = 0;
+  animBlend.jump = 0;
+  animBlend.runAmp = 1;
   syncPlayerPose();
   score = 0;
   coins = 0;
