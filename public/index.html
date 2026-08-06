@@ -20,6 +20,9 @@
 
   <header class="top">
     <div class="brand">Nexus</div>
+    <button type="button" class="download-btn" id="downloadBtn" aria-label="Download Nexus">
+      Download
+    </button>
   </header>
 
   <nav class="cats" aria-label="Categories">
@@ -68,6 +71,16 @@
       <span class="label">Fruits</span>
     </a>
   </template>
+
+  <div class="install-sheet" id="installSheet" hidden>
+    <div class="install-card" role="dialog" aria-labelledby="installTitle">
+      <button type="button" class="install-close" id="installClose" aria-label="Close">×</button>
+      <h2 id="installTitle">Add Nexus to Home Screen</h2>
+      <p id="installBody">Install Nexus like an app so you can open it anytime.</p>
+      <ol class="install-steps" id="installSteps" hidden></ol>
+      <button type="button" class="install-action" id="installAction">Download</button>
+    </div>
+  </div>
 
   <script src="/home.js"></script>
 </body>
