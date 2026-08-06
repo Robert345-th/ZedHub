@@ -9,21 +9,23 @@
     { id: 5, emoji: '🫐', name: 'berry' },
   ];
 
-  /** 100 levels — starts easy, gets harder */
+  /** 100 levels — starts tough, gets brutal */
   function buildLevels() {
     const levels = [];
     for (let i = 0; i < 100; i++) {
       const t = i / 99; // 0 → 1
       const goalType = i % FRUITS.length;
-      const goalNeed = Math.round(10 + t * 38 + (i % 5)); // ~10 → ~50
-      const moves = Math.max(8, Math.round(26 - t * 16 - (i % 3))); // ~26 → ~8
-      const base = 600 + i * 55;
+      // Higher goals, fewer moves — tight ratio
+      const goalNeed = Math.round(16 + t * 44 + (i % 7)); // ~16 → ~65
+      const moves = Math.max(7, Math.round(18 - t * 10 - (i % 4))); // ~18 → ~7
+      const fruitCount = i < 5 ? 5 : 6; // almost always full chaos
+      const base = 900 + i * 70;
       levels.push({
         moves,
         goalType,
         goalNeed,
-        fruitCount: i < 15 ? 4 : i < 40 ? 5 : 6, // more fruit types later = harder
-        starScores: [base, Math.round(base * 1.9), Math.round(base * 3.1)],
+        fruitCount,
+        starScores: [base, Math.round(base * 2.2), Math.round(base * 3.6)],
       });
     }
     return levels;
