@@ -31,9 +31,9 @@
 
   const LEVELS = buildLevels();
 
-  // Fruits is Online-only
-  if ((new URLSearchParams(location.search).get('mode') || '') === 'offline') {
-    location.replace('/games/fruits/?mode=online');
+  // Fruits is Offline-only
+  if ((new URLSearchParams(location.search).get('mode') || '') === 'online') {
+    location.replace('/games/fruits/?mode=offline');
     return;
   }
 
@@ -63,9 +63,9 @@
     retryBtn: document.getElementById('retryBtn'),
   };
 
-  els.modePill.textContent = 'ONLINE';
+  els.modePill.textContent = 'OFFLINE';
   els.menuLead.textContent =
-    '100 online levels — smooth matches, combos & power fruits. Each level gets harder.';
+    '100 offline levels — smooth matches, combos & power fruits. Each level gets harder.';
 
   let levelIndex = 0;
   let fruitPool = 6;
@@ -85,7 +85,7 @@
 
   function loadProgress() {
     try {
-      const raw = localStorage.getItem('zedfruits_online');
+      const raw = localStorage.getItem('zedfruits_offline');
       return raw ? JSON.parse(raw) : { level: 0, stars: {} };
     } catch (_) {
       return { level: 0, stars: {} };
@@ -94,7 +94,7 @@
 
   function saveProgress(data) {
     try {
-      localStorage.setItem('zedfruits_online', JSON.stringify(data));
+      localStorage.setItem('zedfruits_offline', JSON.stringify(data));
     } catch (_) {}
   }
 
