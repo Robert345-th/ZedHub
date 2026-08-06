@@ -1,11 +1,11 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ZedEvents</title>
   <meta name="theme-color" content="#C2410C" />
-  <meta name="description" content="Find event services in Zambia â€” catering, DJs, tents, dÃ©cor and more." />
+  <meta name="description" content="Find event services in Zambia — catering, DJs, tents, décor and more." />
   <link rel="manifest" href="/events/app-manifest.json" />
   <link rel="apple-touch-icon" href="/icons/zedevents.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -27,8 +27,7 @@
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
-      padding-bottom: 72px;
-    }
+      padding-bottom: 72px; overscroll-behavior: none;}
     a { color: inherit; text-decoration: none; }
     button, input { font: inherit; }
 
@@ -181,7 +180,7 @@
     </div>
   </div>
 
-  <div id="status" class="status">Loading servicesâ€¦</div>
+  <div id="status" class="status">Loading services…</div>
   <div class="grid" id="grid" hidden></div>
 
   <script src="/events/js/api.js"></script>
@@ -339,7 +338,7 @@
 
     async function loadServices() {
       status.hidden = false;
-      status.textContent = "Loading servicesâ€¦";
+      status.textContent = "Loading services…";
       grid.hidden = true;
       try {
         const path = activeCategory && activeCategory !== "__nearby__"

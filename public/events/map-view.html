@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -15,12 +15,11 @@
       --cream: #FFF3E8; --price-red: #A3131C;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
+    html, body { height: 100%; overscroll-behavior: none;}
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
       background: var(--bg); color: var(--text);
-      display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden;
-    }
+      display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; overscroll-behavior: none;}
     .topbar {
       background: var(--orange); padding: 16px;
       display: flex; align-items: center; gap: 12px; flex-shrink: 0;
@@ -70,7 +69,7 @@
     </div>
   </div>
   <div class="no-location-text" id="noLocationText" style="display:none;">
-    Enable location to filter by distance — showing all mapped services for now.
+    Enable location to filter by distance � showing all mapped services for now.
   </div>
 
   <div id="map"></div>

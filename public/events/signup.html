@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -14,7 +14,7 @@
     --price-red: #A3131C; --btn-disabled: #E8B4A0;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); }
+  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none;}
   .content { min-height: 100vh; padding: 24px; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; }
   .title { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
   .subtitle { font-size: 14px; color: var(--subtext); margin-bottom: 24px; }
@@ -54,7 +54,7 @@
 <body>
 <div class="content">
   <div class="title">Create Account</div>
-  <div class="subtitle" id="stepSubtitle">Step 1 of 3 â€” Your details</div>
+  <div class="subtitle" id="stepSubtitle">Step 1 of 3 — Your details</div>
 
   <div class="step-row">
     <div class="step-dot active" id="dot1"></div>
@@ -70,7 +70,7 @@
 
     <div class="label">Phone Number</div>
     <div class="phone-row">
-      <div class="phone-prefix"><span>ðŸ‡¿ðŸ‡² +260</span></div>
+      <div class="phone-prefix"><span>???? +260</span></div>
       <input class="phone-input" id="phoneInput" placeholder="Phone number" maxlength="10" inputmode="tel" autocomplete="tel" />
     </div>
     <div class="phone-hint">Airtel and Zamtel only</div>
@@ -148,9 +148,9 @@
       dot.classList.toggle("done", step > n);
     });
     stepSubtitle.textContent = {
-      1: "Step 1 of 3 â€” Your details",
-      2: "Step 2 of 3 â€” Password",
-      3: "Step 3 of 3 â€” Location & age",
+      1: "Step 1 of 3 — Your details",
+      2: "Step 2 of 3 — Password",
+      3: "Step 3 of 3 — Location & age",
     }[step];
     clearError();
   }
@@ -159,7 +159,7 @@
     showPassword = !showPassword;
     const box = document.getElementById("showPasswordBox");
     box.classList.toggle("checked", showPassword);
-    box.textContent = showPassword ? "âœ“" : "";
+    box.textContent = showPassword ? "?" : "";
     document.getElementById("passwordInput").type = showPassword ? "text" : "password";
     document.getElementById("confirmPasswordInput").type = showPassword ? "text" : "password";
   });
@@ -168,7 +168,7 @@
     ageConfirmed = !ageConfirmed;
     const box = document.getElementById("ageConfirmBox");
     box.classList.toggle("checked", ageConfirmed);
-    box.textContent = ageConfirmed ? "âœ“" : "";
+    box.textContent = ageConfirmed ? "?" : "";
     signupBtn.disabled = !ageConfirmed;
   });
 
@@ -178,7 +178,7 @@
       return;
     }
     gettingLocation = true;
-    locButton.textContent = "Getting locationâ€¦";
+    locButton.textContent = "Getting location…";
     clearError();
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -225,7 +225,7 @@
       return;
     }
     if (password.length < 8 || password.length > 15) {
-      showError("Password must be 8â€“15 characters.");
+      showError("Password must be 8–15 characters.");
       return;
     }
     if (password !== confirmPassword) {
@@ -252,7 +252,7 @@
     if (locationLabel) localStorage.setItem("ze_user_location_label", locationLabel);
 
     signupBtn.disabled = true;
-    signupBtn.textContent = "Signing upâ€¦";
+    signupBtn.textContent = "Signing up…";
     try {
       await ZE.api("/auth/signup", {
         method: "POST",

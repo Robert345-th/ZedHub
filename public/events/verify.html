@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -12,7 +12,7 @@
     --text: #211D1A; --subtext: #5C5955; --orange: #C2410C; --price-red: #A3131C;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); }
+  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none;}
   .content { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 24px; max-width: 480px; margin: 0 auto; }
   .title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
   .subtitle { font-size: 13px; color: var(--subtext); margin-bottom: 28px; }
@@ -74,7 +74,7 @@
       return;
     }
     verifyBtn.disabled = true;
-    verifyBtn.textContent = "Verifying…";
+    verifyBtn.textContent = "Verifying�";
     try {
       const data = await ZE.api("/auth/verify-otp", {
         method: "POST",

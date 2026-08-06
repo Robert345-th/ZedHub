@@ -1,4 +1,4 @@
-const CACHE = "nexus-v14";
+const CACHE = "nexus-v15";
 
 // Everything users need offline after installing Nexus once.
 const PRECACHE = [

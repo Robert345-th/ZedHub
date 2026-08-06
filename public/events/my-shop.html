@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -16,8 +16,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg); color: var(--text); padding-bottom: 72px;
-    }
+      background: var(--bg); color: var(--text); padding-bottom: 72px; overscroll-behavior: none;}
     a { color: inherit; text-decoration: none; }
     button { font: inherit; }
     .topbar {
@@ -82,7 +81,7 @@
   </div>
 
   <div class="banner" id="banner"></div>
-  <div id="status" class="center-box">Loadingâ€¦</div>
+  <div id="status" class="center-box">Loading…</div>
   <div class="list" id="list" hidden></div>
 
   <script src="/events/js/api.js"></script>
@@ -101,7 +100,7 @@
         user.business_name || user.name || "Your services";
 
       if (new URLSearchParams(location.search).get("posted") === "1") {
-        banner.textContent = "Saved â€” waiting for approval. It wonâ€™t show on Home until approved.";
+        banner.textContent = "Saved — waiting for approval. It won’t show on Home until approved.";
         banner.classList.add("show");
       }
 
@@ -147,7 +146,7 @@
                     <span class="status-badge ${cls}">${label}</span>
                   </div>
                 </a>
-                <button class="del-btn" type="button" data-del="${item.id}" aria-label="Delete">Ã—</button>
+                <button class="del-btn" type="button" data-del="${item.id}" aria-label="Delete">×</button>
               </div>`;
           }).join("");
 

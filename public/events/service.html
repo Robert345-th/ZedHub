@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -15,8 +15,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg); color: var(--text); padding-bottom: 24px;
-    }
+      background: var(--bg); color: var(--text); padding-bottom: 24px; overscroll-behavior: none;}
     a { color: inherit; text-decoration: none; }
     button { font: inherit; cursor: pointer; }
     .topbar {
@@ -105,7 +104,7 @@
     <a class="auth-btn" href="/events/login.html" id="authLink">Login</a>
   </div>
 
-  <div id="status" class="center-box">Loadingâ€¦</div>
+  <div id="status" class="center-box">Loading…</div>
   <div class="content" id="detail" hidden>
     <div class="media-main" id="mediaMain">
       <div class="thumb-ph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-4 4-2-2-5 5"/></svg></div>
@@ -113,9 +112,9 @@
     <div class="media-thumbs" id="mediaThumbs" hidden></div>
     <div class="panel">
       <div class="card-cat" id="category">Service</div>
-      <h1 class="title" id="title">â€”</h1>
-      <div class="vendor" id="vendor">â€”</div>
-      <div class="price" id="price">â€”</div>
+      <h1 class="title" id="title">—</h1>
+      <div class="vendor" id="vendor">—</div>
+      <div class="price" id="price">—</div>
       <div class="location" id="locationRow" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <span id="location"></span>

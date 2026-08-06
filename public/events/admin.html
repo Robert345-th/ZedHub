@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -16,8 +16,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg); color: var(--text); padding-bottom: 24px;
-    }
+      background: var(--bg); color: var(--text); padding-bottom: 24px; overscroll-behavior: none;}
     .topbar {
       position: sticky; top: 0; z-index: 50;
       background: var(--orange); padding: 16px;
@@ -176,7 +175,7 @@
     }
 
     function formatPhone(phone) {
-      if (!phone) return "â€”";
+      if (!phone) return "—";
       const digits = String(phone).replace(/\D/g, "");
       let local = digits.startsWith("260") ? digits.slice(3) : digits;
       if (local.startsWith("0")) local = local.slice(1);
@@ -279,7 +278,7 @@
             return `
               <div class="card">
                 <div class="card-title">${esc(item.title)}</div>
-                <div class="card-sub">${esc(vendor)} Â· ${esc(item.category || "Uncategorised")}</div>
+                <div class="card-sub">${esc(vendor)} · ${esc(item.category || "Uncategorised")}</div>
                 <div class="card-price">${ZE.formatPrice(item.price)}</div>
                 <div class="card-detail">${esc(item.description || "No description.")}</div>
                 <div class="card-sub" style="margin-top:8px;">Posted ${esc(formatDate(item.date_posted))}</div>
@@ -304,7 +303,7 @@
             <div class="card shop-app-row">
               <div class="shop-app-row-main">
                 <div class="card-name">${esc(s.business_name || s.name)}</div>
-                <div class="card-sub">${esc(s.name)} Â· ${esc(formatPhone(s.phone))}</div>
+                <div class="card-sub">${esc(s.name)} · ${esc(formatPhone(s.phone))}</div>
               </div>
               <button type="button" class="view-btn" data-view-shop="${s.id}">View</button>
             </div>`).join("") : `<div class="empty-text">No pending shop applications.</div>`
@@ -325,7 +324,7 @@
             filtered.length ? filtered.map((u) => `
               <div class="card">
                 <div class="card-name">${esc(u.name)}</div>
-                <div class="card-sub">${esc(formatPhone(u.phone))}${u.is_vendor ? " Â· Vendor" : ""}</div>
+                <div class="card-sub">${esc(formatPhone(u.phone))}${u.is_vendor ? " · Vendor" : ""}</div>
                 <button class="${u.is_suspended ? "approve-btn" : "reject-btn"}" type="button" style="margin-top:10px;width:100%;" data-toggle-suspend="${u.id}" data-suspended="${u.is_suspended}">
                   ${u.is_suspended ? "Unsuspend" : "Suspend"}
                 </button>
@@ -346,7 +345,7 @@
               <div class="card-name">${esc(r.title)}</div>
               <div class="card-sub">Reported by ${esc(r.reporter_name || "Unknown")}</div>
               <div class="card-detail">Reason: ${esc(r.reason)}</div>
-              <button type="button" class="view-link" data-view-service="${r.service_id}">View service â†’</button>
+              <button type="button" class="view-link" data-view-service="${r.service_id}">View service ?</button>
               <div class="card-actions">
                 <button class="approve-btn" type="button" data-dismiss-report="${r.id}">Dismiss</button>
                 <button class="reject-btn" type="button" data-remove-service="${r.id}" data-service-id="${r.service_id}">Remove Service</button>
@@ -392,7 +391,7 @@
         content.innerHTML = `
           <div class="list">
             <div class="input-label">Title</div>
-            <input class="broadcast-title-input" id="broadcastTitleInput" value="ðŸ“¢ ZedEvents" />
+            <input class="broadcast-title-input" id="broadcastTitleInput" value="?? ZedEvents" />
             <div class="input-label">Message</div>
             <textarea class="broadcast-input" id="broadcastMessageInput" placeholder="Message to all users..."></textarea>
             <button class="approve-btn" type="button" id="sendBroadcastBtn" style="width:100%;margin-top:8px;">Send Broadcast</button>
@@ -405,7 +404,7 @@
       const item = shopApps.find((s) => String(s.id) === String(id));
       if (!item) return;
       viewShopTargetId = item.id;
-      document.getElementById("shopAppModalSubtitle").textContent = `${item.name} Â· ${formatPhone(item.phone)}`;
+      document.getElementById("shopAppModalSubtitle").textContent = `${item.name} · ${formatPhone(item.phone)}`;
       document.getElementById("shopAppModalBody").innerHTML = buildShopDetail(item);
       document.getElementById("shopAppModal").classList.add("open");
     }

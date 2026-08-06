@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -15,8 +15,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg); color: var(--text); padding-bottom: 24px;
-    }
+      background: var(--bg); color: var(--text); padding-bottom: 24px; overscroll-behavior: none;}
     button { font: inherit; cursor: pointer; }
     .topbar {
       position: sticky; top: 0; z-index: 50;
@@ -78,13 +77,13 @@
     </div>
   </div>
 
-  <div id="status" class="center-box">Loading…</div>
+  <div id="status" class="center-box">Loading�</div>
   <div class="content" id="content" hidden>
     <div class="profile-card">
       <div class="profile-head">
         <div class="avatar" id="avatar">V</div>
         <div>
-          <div class="profile-name" id="name">—</div>
+          <div class="profile-name" id="name">�</div>
           <div class="profile-type">Event vendor</div>
         </div>
       </div>
@@ -147,7 +146,7 @@
         } else {
           box.innerHTML = reviews.map((r) => `
             <div class="review">
-              <div class="review-stars">${"★".repeat(r.rating || 0)}${"☆".repeat(5 - (r.rating || 0))}</div>
+              <div class="review-stars">${"?".repeat(r.rating || 0)}${"?".repeat(5 - (r.rating || 0))}</div>
               <div class="review-text">${esc(r.comment || "No comment.")}</div>
               ${r.reviewer_name ? `<div class="review-meta">${esc(r.reviewer_name)}</div>` : ""}
             </div>`).join("");

@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -15,8 +15,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg); color: var(--text); padding-bottom: 32px;
-    }
+      background: var(--bg); color: var(--text); padding-bottom: 32px; overscroll-behavior: none;}
     button, input, select, textarea { font: inherit; }
     .topbar {
       position: sticky; top: 0; z-index: 50;
@@ -94,7 +93,7 @@
     </div>
   </div>
 
-  <div class="center-box" id="status">Loadingâ€¦</div>
+  <div class="center-box" id="status">Loading…</div>
   <div class="content" id="content" hidden>
     <form class="form-card" id="form">
       <div class="form-title">Edit service</div>
@@ -123,7 +122,7 @@
       </div>
 
       <div class="field">
-        <label for="price">Price (K) â€” optional</label>
+        <label for="price">Price (K) — optional</label>
         <input id="price" type="number" min="0" step="1" placeholder="Leave blank to ask for quote" />
       </div>
 
@@ -176,7 +175,7 @@
         preview.innerHTML = photoUrls.map((url, i) => `
           <div class="photo-thumb-wrap">
             <img src="${url}" alt="" />
-            <button type="button" class="remove-btn" data-i="${i}" aria-label="Remove">Ã—</button>
+            <button type="button" class="remove-btn" data-i="${i}" aria-label="Remove">×</button>
           </div>
         `).join("");
         preview.querySelectorAll("[data-i]").forEach((btn) => {
@@ -222,7 +221,7 @@
       document.getElementById("locBtn").onclick = () => {
         const btn = document.getElementById("locBtn");
         btn.disabled = true;
-        btn.textContent = "Getting locationâ€¦";
+        btn.textContent = "Getting location…";
         ZELocation.getDeviceCoords()
           .then((coords) => {
             document.getElementById("latitude").value = coords.lat;
@@ -233,7 +232,7 @@
           .catch(() => showError("Could not get location. Type your area instead."))
           .finally(() => {
             btn.disabled = false;
-            if (btn.textContent === "Getting locationâ€¦") btn.textContent = "Use my current location";
+            if (btn.textContent === "Getting location…") btn.textContent = "Use my current location";
           });
       };
 
@@ -263,7 +262,7 @@
         error.classList.remove("show");
         const btn = document.getElementById("submitBtn");
         btn.disabled = true;
-        btn.textContent = "Savingâ€¦";
+        btn.textContent = "Saving…";
         try {
           const priceVal = document.getElementById("price").value;
           const latVal = document.getElementById("latitude").value;

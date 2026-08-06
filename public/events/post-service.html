@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -15,8 +15,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg); color: var(--text); padding-bottom: 32px;
-    }
+      background: var(--bg); color: var(--text); padding-bottom: 32px; overscroll-behavior: none;}
     button, input, select, textarea { font: inherit; }
     .topbar {
       position: sticky; top: 0; z-index: 50;
@@ -91,7 +90,7 @@
   <div class="content">
     <form class="form-card" id="form">
       <div class="form-title">New service</div>
-      <div class="form-sub">Catering, DJ, dÃ©cor, tents, photography, and more.</div>
+      <div class="form-sub">Catering, DJ, décor, tents, photography, and more.</div>
       <div class="error" id="error"></div>
 
       <div class="field">
@@ -112,11 +111,11 @@
 
       <div class="field">
         <label for="description">Description</label>
-        <textarea id="description" placeholder="What's included, packages, areas you coverâ€¦"></textarea>
+        <textarea id="description" placeholder="What's included, packages, areas you cover…"></textarea>
       </div>
 
       <div class="field">
-        <label for="price">Price (K) â€” optional</label>
+        <label for="price">Price (K) — optional</label>
         <input id="price" type="number" min="0" step="1" placeholder="Leave blank to ask for quote" />
       </div>
 
@@ -180,7 +179,7 @@
       document.getElementById("locBtn").addEventListener("click", () => {
         const btn = document.getElementById("locBtn");
         btn.disabled = true;
-        btn.textContent = "Getting locationâ€¦";
+        btn.textContent = "Getting location…";
         ZELocation.getDeviceCoords()
           .then((coords) => {
             document.getElementById("latitude").value = coords.lat;
@@ -203,7 +202,7 @@
         error.classList.remove("show");
         const btn = document.getElementById("submitBtn");
         btn.disabled = true;
-        btn.textContent = "Submittingâ€¦";
+        btn.textContent = "Submitting…";
         try {
           const photoUrls = [];
           for (const file of selectedFiles) {

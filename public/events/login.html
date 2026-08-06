@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -13,7 +13,7 @@
     --orange: #C2410C; --cream: #FFF3E8; --price-red: #A3131C;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); }
+  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); overscroll-behavior: none;}
   .content { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 24px; max-width: 480px; margin: 0 auto; }
   .title { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
   .subtitle { font-size: 14px; color: var(--subtext); margin-bottom: 32px; }
@@ -47,7 +47,7 @@
 
   <div class="label">Phone Number</div>
   <div class="phone-row">
-    <div class="phone-prefix"><span>🇿🇲 +260</span></div>
+    <div class="phone-prefix"><span>???? +260</span></div>
     <input class="phone-input" id="phone" placeholder="Phone number" maxlength="10" inputmode="tel" />
   </div>
 
@@ -97,7 +97,7 @@
   document.getElementById("showPasswordRow").addEventListener("click", () => {
     showPassword = !showPassword;
     checkboxBox.classList.toggle("checked", showPassword);
-    checkboxBox.textContent = showPassword ? "✓" : "";
+    checkboxBox.textContent = showPassword ? "?" : "";
     passwordInput.type = showPassword ? "text" : "password";
   });
 
@@ -114,7 +114,7 @@
       return;
     }
     loginBtn.disabled = true;
-    loginBtn.textContent = "Logging in…";
+    loginBtn.textContent = "Logging in�";
     try {
       const data = await ZE.api("/auth/login", {
         method: "POST",
