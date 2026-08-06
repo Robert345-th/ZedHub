@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <title>ZedFruits · ZedHub</title>
+  <meta name="theme-color" content="#1a7a3a" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="fruits.css" />
+</head>
+<body>
+  <div class="sky" aria-hidden="true"></div>
+
+  <header class="bar">
+    <a class="back" href="/">‹ Hub</a>
+    <div class="brand">ZedFruits</div>
+    <div class="mode-pill" id="modePill">OFFLINE</div>
+  </header>
+
+  <section class="screen" id="menuScreen">
+    <div class="hero-fruit" aria-hidden="true">🍓🍋🍇🍉🍊🫐</div>
+    <h1>Match fruits.<br />Beat the level.</h1>
+    <p class="lead" id="menuLead">Swipe or tap two neighbors to match 3+. Combos unlock power fruits.</p>
+    <button type="button" class="btn primary" id="playBtn">Play</button>
+    <p class="meta" id="progressMeta"></p>
+  </section>
+
+  <section class="screen play" id="playScreen" hidden>
+    <div class="hud wood">
+      <div class="hud-cell">
+        <span class="hud-label">Moves</span>
+        <span class="hud-value" id="movesVal">20</span>
+      </div>
+      <div class="hud-mid">
+            <div class="level-chip" id="levelChip">Lv <span id="levelVal">1</span></div>
+        <div class="goal" id="goalBox">
+          <span class="goal-emoji" id="goalEmoji">🍓</span>
+          <span id="goalCount">0/10</span>
+        </div>
+        <div class="score-line">Score <strong id="scoreVal">0</strong></div>
+      </div>
+      <div class="hud-cell stars" id="starsBox" aria-label="Stars">
+        <span class="star on">★</span><span class="star">★</span><span class="star">★</span>
+      </div>
+    </div>
+
+    <div class="board-frame">
+      <div class="board" id="board" role="grid" aria-label="Fruit board"></div>
+      <div class="fx" id="fx" aria-hidden="true"></div>
+    </div>
+
+    <div class="hint-bar" id="hintBar">Match 3 or more in a line</div>
+  </section>
+
+  <section class="screen" id="resultScreen" hidden>
+    <h2 id="resultTitle">Level clear!</h2>
+    <div class="result-stars" id="resultStars">★★★</div>
+    <p class="lead" id="resultScore">Score 0</p>
+    <p class="meta" id="resultExtra"></p>
+    <button type="button" class="btn primary" id="nextBtn">Next level</button>
+    <button type="button" class="btn ghost" id="retryBtn">Retry</button>
+    <a class="btn ghost link" href="/">Back to Hub</a>
+  </section>
+
+  <script src="fruits.js"></script>
+</body>
+</html>

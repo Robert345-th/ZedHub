@@ -79,6 +79,10 @@ app.get('/games/ludo', (req, res) => {
   res.redirect('/games/ludo/');
 });
 
+app.get('/games/fruits', (req, res) => {
+  res.redirect('/games/fruits/');
+});
+
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io')) return next();
   if (req.path.startsWith('/events/')) {
