@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Nexus",
   "short_name": "Nexus",
-  "description": "Install once — Events, Market, and Fruits.",
+  "description": "Install once — Events, Market, Fruits, and Words.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
@@ -47,6 +47,12 @@
       "short_name": "Fruits",
       "url": "/games/fruits/?mode=offline",
       "icons": [{ "src": "/icons/fruits.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Words",
+      "short_name": "Words",
+      "url": "/games/words/",
+      "icons": [{ "src": "/icons/words.png", "sizes": "192x192" }]
     }
   ]
 }

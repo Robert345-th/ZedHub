@@ -1,4 +1,4 @@
-const CACHE = "nexus-v39";
+const CACHE = "nexus-v40";
 
 // Everything users need offline after installing Nexus once.
 const PRECACHE = [
@@ -14,6 +14,7 @@ const PRECACHE = [
   "/icons/zedmarket.png",
   "/icons/zedevents.png",
   "/icons/fruits.png",
+  "/icons/words.png",
   // Events
   "/events/",
   "/events/index.html",
@@ -30,12 +31,18 @@ const PRECACHE = [
   "/events/account.html",
   "/events/favorites.html",
   "/events/chats.html",
-  // Fruits (only game)
+  // Fruits
   "/games/fruits/",
   "/games/fruits/index.html",
   "/games/fruits/fruits.css",
   "/games/fruits/fruits.js",
   "/games/fruits/manifest.json",
+  // Words
+  "/games/words/",
+  "/games/words/index.html",
+  "/games/words/game.css",
+  "/games/words/game.js",
+  "/games/words/manifest.json",
 ];
 
 self.addEventListener("install", (event) => {

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <title>Words · Nexus</title>
+  <meta name="theme-color" content="#e85d2a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/words.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="game.css" />
+  <script src="/no-ptr.js"></script>
+</head>
+<body>
+  <div class="bg" id="bg" aria-hidden="true"></div>
+
+  <!-- THEME HUB -->
+  <section class="screen" id="hubScreen">
+    <header class="topbar">
+      <a class="back" href="/">‹</a>
+      <button type="button" class="hero-pill" id="explorePill">Explore many themes</button>
+      <div class="coins" id="hubCoins" title="Coins">🪙 <strong>0</strong></div>
+    </header>
+
+    <div class="diff-row" id="diffRow" role="tablist" aria-label="Difficulty">
+      <button type="button" class="diff" data-diff="easy">Easy</button>
+      <button type="button" class="diff active" data-diff="medium">Medium</button>
+      <button type="button" class="diff" data-diff="hard">Hard</button>
+      <button type="button" class="diff" data-diff="pro">Pro</button>
+    </div>
+
+    <div class="theme-grid" id="themeGrid"></div>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen play" id="playScreen" hidden>
+    <header class="topbar play-top">
+      <button type="button" class="back" id="backHub" aria-label="Back">‹</button>
+      <button type="button" class="hero-pill play-pill" id="modePill">Train your brain</button>
+      <div class="coins" id="playCoins">🪙 <strong>0</strong></div>
+    </header>
+
+    <div class="theme-banner" id="themeBanner">Space</div>
+    <div class="word-bank" id="wordBank"></div>
+
+    <div class="board-wrap">
+      <div class="board" id="board" aria-label="Word search grid"></div>
+      <div class="praise" id="praise" hidden>Amazing</div>
+    </div>
+
+    <div class="tools">
+      <button type="button" class="tool" id="btnShuffle" title="New puzzle" aria-label="New puzzle">↻</button>
+      <button type="button" class="tool" id="btnHint" title="Hint" aria-label="Hint">✨</button>
+      <button type="button" class="tool" id="btnReveal" title="Reveal a letter" aria-label="Reveal">🔍</button>
+      <button type="button" class="tool" id="btnHome" title="Themes" aria-label="Themes">★</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" hidden></div>
+  <div class="modal" id="unlockModal" hidden>
+    <div class="sheet">
+      <h2 id="unlockTitle">Unlock theme</h2>
+      <p id="unlockLead">Spend coins to unlock this theme.</p>
+      <button type="button" class="cta" id="unlockYes">Unlock</button>
+      <button type="button" class="ghost" id="unlockNo">Not now</button>
+    </div>
+  </div>
+  <div class="modal" id="winModal" hidden>
+    <div class="sheet win">
+      <p class="kicker">Puzzle clear</p>
+      <h2>Well done!</h2>
+      <p id="winLead">+20 coins</p>
+      <button type="button" class="cta" id="winNext">Next puzzle</button>
+      <button type="button" class="ghost" id="winHub">Themes</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
