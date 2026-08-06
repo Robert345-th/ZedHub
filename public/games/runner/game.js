@@ -388,6 +388,8 @@ const player = {
   mixer: null,
   actions: {},
   current: null,
+  baseModelY: 0,
+  vizX: 0,
 };
 scene.add(player.root);
 
@@ -404,30 +406,39 @@ function stripHipRootMotion(clip) {
 }
 
 function styleSkinnedRunner(root) {
-  const neonMap = canvasTex((g, W, H) => {
-    const grd = g.createLinearGradient(0, 0, 0, H);
-    grd.addColorStop(0, '#22d3ee');
-    grd.addColorStop(0.45, '#7c3aed');
-    grd.addColorStop(1, '#ff2d95');
-    g.fillStyle = grd;
-    g.fillRect(0, 0, W, H);
-    g.fillStyle = 'rgba(255,255,255,0.12)';
-    g.fillRect(0, H * 0.35, W, H * 0.08);
-  }, 64, 128);
-
+  // Tint only — do not replace Mixamo UVs with a fake map (that warps/distorts the mesh)
   root.traverse((c) => {
     if (!c.isMesh) return;
+    c.visible = true;
     c.castShadow = true;
     c.receiveShadow = true;
+    const prev = c.material;
+    const skinning = !!c.isSkinnedMesh;
     c.material = new THREE.MeshToonMaterial({
-      map: neonMap,
-      color: 0xffffff,
+      color: new THREE.Color(0xc4b5fd),
       gradientMap: toonGrad,
       emissive: new THREE.Color(0x2e1065),
-      emissiveIntensity: 0.25,
-      skinning: !!c.isSkinnedMesh,
+      emissiveIntensity: 0.2,
+      skinning,
+      morphTargets: !!(prev && prev.morphTargets),
+      morphNormals: !!(prev && prev.morphNormals),
     });
+    // Keep original albedo if Mixamo shipped a texture
+    if (prev && prev.map) {
+      c.material.map = prev.map;
+      c.material.color.set(0xffffff);
+      c.material.needsUpdate = true;
+    }
   });
+}
+
+function findHipsBone(model) {
+  let hips = null;
+  model.traverse((o) => {
+    if (!o.isBone || hips) return;
+    if (/hips/i.test(o.name)) hips = o;
+  });
+  return hips;
 }
 
 function lowestFootWorldY(model) {
@@ -444,25 +455,65 @@ function lowestFootWorldY(model) {
   return lowest;
 }
 
-function alignSkinnedFeet(model, mixer, runAction) {
-  const samples = runAction ? 16 : 1;
-  const duration = runAction ? Math.max(0.01, runAction.getClip().duration || 1) : 0;
-  let lowest = Infinity;
+/**
+ * Center one Mixamo character on X/Z and plant feet on local y=0
+ * (parent root then sits on GROUND_Y). Avoids bad box offsets / floating.
+ */
+function fitSkinnedCharacter(model, mixer, runAction) {
+  model.position.set(0, 0, 0);
+  model.rotation.set(0, Math.PI, 0);
+  model.scale.setScalar(CHAR_SCALE);
+  model.updateMatrixWorld(true);
+
   if (runAction) {
     runAction.reset().play();
     runAction.setEffectiveWeight(1);
   }
+
+  const duration = runAction ? Math.max(0.01, runAction.getClip().duration || 1) : 0;
+  const samples = runAction ? 16 : 1;
+  let lowest = Infinity;
+  const hipSum = new THREE.Vector3();
+  let hipN = 0;
+  const hips = findHipsBone(model);
+  const tmp = new THREE.Vector3();
+
   for (let i = 0; i < samples; i++) {
     if (mixer && runAction) mixer.setTime((i / samples) * duration);
+    model.updateMatrixWorld(true);
     const y = lowestFootWorldY(model);
     if (Number.isFinite(y)) lowest = Math.min(lowest, y);
+    if (hips) {
+      hips.getWorldPosition(tmp);
+      hipSum.add(tmp);
+      hipN += 1;
+    }
   }
   if (mixer) mixer.setTime(0);
+  model.updateMatrixWorld(true);
+
   if (!Number.isFinite(lowest) || lowest === Infinity) {
-    model.updateMatrixWorld(true);
+    // Last resort: bind-pose AABB (less accurate for skinned meshes)
     lowest = new THREE.Box3().setFromObject(model).min.y;
   }
-  model.position.y += -lowest + FOOT_CLEARANCE;
+
+  // Center on hips XZ so the runner sits in-lane (not offset sideways)
+  if (hipN > 0) {
+    hipSum.multiplyScalar(1 / hipN);
+    model.position.x -= hipSum.x;
+    model.position.z -= hipSum.z;
+  } else {
+    const box = new THREE.Box3().setFromObject(model);
+    model.position.x -= (box.min.x + box.max.x) * 0.5;
+    model.position.z -= (box.min.z + box.max.z) * 0.5;
+  }
+
+  // Re-measure feet after XZ recenter (world Y unchanged if only XZ moved)
+  model.updateMatrixWorld(true);
+  let lowest2 = lowestFootWorldY(model);
+  if (!Number.isFinite(lowest2) || lowest2 === Infinity) lowest2 = lowest;
+  model.position.y += -lowest2 + FOOT_CLEARANCE;
+  player.baseModelY = model.position.y;
 }
 
 function playAnim(name, fade = 0.18) {
@@ -584,10 +635,23 @@ function animateHero(dt) {
     }
 
     player.mixer.update(dt);
+
+    // Smooth visual lane follow (collision still uses player.x from the game loop)
+    player.vizX = damp(player.vizX, player.x, 16, dt);
     const s = animBlend.slide;
     const lean = animBlend.lean;
-    player.root.rotation.z = damp(player.root.rotation.z, lean * 0.55, 12, dt);
-    player.root.rotation.x = damp(player.root.rotation.x, 0.85 * s, 12, dt);
+    const crouch = 0.18 * s;
+    player.root.position.set(player.vizX, GROUND_Y + player.y - crouch * 0.35, 0);
+    player.root.rotation.set(0, 0, 0);
+
+    // Mild lean/crouch on the model — never pitch the root (that floats the feet)
+    if (player.model) {
+      const baseY = player.baseModelY || 0;
+      player.model.position.y = damp(player.model.position.y, baseY - crouch * 0.15, 14, dt);
+      player.model.rotation.x = damp(player.model.rotation.x, 0.35 * s, 12, dt);
+      player.model.rotation.z = damp(player.model.rotation.z, lean * 0.35, 12, dt);
+    }
+    player.hitH = player.sliding ? 0.7 : HERO_H;
     return;
   }
 
@@ -634,6 +698,11 @@ function animateHero(dt) {
 }
 
 function syncPlayerPose() {
+  // Skinned runner pose/smoothing is applied in animateHero — don't snap-overwrite it
+  if (player.skinned) {
+    player.hitH = player.sliding ? 0.7 : HERO_H;
+    return;
+  }
   const baseY = GROUND_Y + player.y;
   const slideLift = 0.05 * animBlend.slide;
   player.root.position.set(player.x, baseY + slideLift, 0);
@@ -656,17 +725,11 @@ async function mountMixamoHero() {
   const loader = new FBXLoader();
   const runObj = await loader.loadAsync('./models/run.fbx');
 
-  // Single character only — hide any extra meshes if present
-  let meshCount = 0;
+  // Keep every mesh on this single Mixamo character (body parts are separate meshes)
   runObj.traverse((c) => {
-    if (!c.isMesh && !c.isSkinnedMesh) return;
-    meshCount += 1;
-    if (meshCount > 1) c.visible = false;
+    if (c.isMesh) c.visible = true;
   });
 
-  runObj.scale.setScalar(CHAR_SCALE);
-  runObj.rotation.y = Math.PI;
-  runObj.position.set(0, 0, 0);
   styleSkinnedRunner(runObj);
 
   player.root.clear();
@@ -678,6 +741,7 @@ async function mountMixamoHero() {
   player.mixer = new THREE.AnimationMixer(runObj);
   player.actions = {};
   player.current = null;
+  player.vizX = LANE_X[1];
 
   if (runObj.animations && runObj.animations.length) {
     const clip = stripHipRootMotion(runObj.animations[0].clone());
@@ -712,7 +776,7 @@ async function mountMixamoHero() {
     } catch (_) {}
   }
 
-  alignSkinnedFeet(runObj, player.mixer, player.actions.run);
+  fitSkinnedCharacter(runObj, player.mixer, player.actions.run);
   playAnim('run', 0);
 }
 
@@ -920,6 +984,7 @@ function reset() {
   clearEntities();
   player.lane = 1;
   player.x = LANE_X[1];
+  player.vizX = LANE_X[1];
   player.y = 0;
   player.jumpV = 0;
   player.jumping = false;

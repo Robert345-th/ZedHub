@@ -1,4 +1,4 @@
-const CACHE = "nexus-v37";
+const CACHE = "nexus-v38";
 
 // Everything users need offline after installing Nexus once.
 const PRECACHE = [
