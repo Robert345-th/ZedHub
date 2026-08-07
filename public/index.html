@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/home.css?v=55" />
+  <link rel="stylesheet" href="/home.css?v=56" />
   <script src="/no-ptr.js"></script>
   <style>
     /* Hide home until email session is proven (stops flash of Games on stale installs) */
@@ -47,34 +47,30 @@
         }
       }
 
-      function clearSession() {
-        try {
-          localStorage.removeItem("ze_token");
-          localStorage.removeItem("ze_user");
-        } catch (e) {}
+      function unlockHome() {
+        document.documentElement.classList.remove("nexus-locked");
+        var boot = document.getElementById("authBoot");
+        if (boot) boot.hidden = true;
       }
 
       function goRegister() {
-        clearSession();
-        location.replace("/register.html?v=55");
+        location.replace("/register.html?v=56");
       }
 
-      // Wipe old service-worker caches once so phones stop serving pre-auth home
-      var MIGRATE = "nexus_force_auth_v55";
-      var already = false;
-      try { already = localStorage.getItem(MIGRATE) === "1"; } catch (e) {}
-
-      function afterCacheWipe() {
-        try { localStorage.setItem(MIGRATE, "1"); } catch (e) {}
-        if (!hasEmailSession()) goRegister();
-        else {
-          document.documentElement.classList.remove("nexus-locked");
-          var boot = document.getElementById("authBoot");
-          if (boot) boot.hidden = true;
-        }
+      function finishGate() {
+        try { localStorage.setItem("nexus_force_auth_v56", "1"); } catch (e) {}
+        if (hasEmailSession()) unlockHome();
+        else goRegister();
       }
 
-      if (!already && "serviceWorker" in navigator) {
+      // Never block on service-worker cleanup — that was freezing "Opening sign up…"
+      finishGate();
+
+      // Best-effort cache wipe in the background (once)
+      var wiped = false;
+      try { wiped = localStorage.getItem("nexus_sw_wipe_v56") === "1"; } catch (e) {}
+      if (!wiped && "serviceWorker" in navigator) {
+        try { localStorage.setItem("nexus_sw_wipe_v56", "1"); } catch (e) {}
         Promise.all([
           navigator.serviceWorker.getRegistrations().then(function (regs) {
             return Promise.all(regs.map(function (r) { return r.unregister(); }));
@@ -82,9 +78,7 @@
           caches.keys().then(function (keys) {
             return Promise.all(keys.map(function (k) { return caches.delete(k); }));
           }),
-        ]).then(afterCacheWipe).catch(afterCacheWipe);
-      } else {
-        afterCacheWipe();
+        ]).catch(function () {});
       }
     })();
   </script>
@@ -94,7 +88,7 @@
     <div>
       <p style="font-weight:700;font-size:1.2rem;margin-bottom:8px;">Nexus</p>
       <p style="opacity:0.8;font-size:0.95rem;">Opening sign up…</p>
-      <a href="/register.html?v=55">Create account</a>
+      <a href="/register.html?v=56">Create account</a>
     </div>
   </div>
 
@@ -150,7 +144,7 @@
     </a>
   </template>
 
-  <script src="/games/wallet.js?v=55"></script>
-  <script src="/home.js?v=55"></script>
+  <script src="/games/wallet.js?v=56"></script>
+  <script src="/home.js?v=56"></script>
 </body>
 </html>

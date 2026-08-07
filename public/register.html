@@ -143,8 +143,10 @@
           method: "POST",
           body: JSON.stringify({ name, email, password, confirmPassword, country, date_of_birth }),
         });
-        ZEAuth.setSession(data.token, data.user);
-        location.replace("/");
+        const user = data.user || {};
+        if (!user.email) user.email = email;
+        ZEAuth.setSession(data.token, user);
+        location.replace("/?registered=1");
       } catch (err) {
         showError(err.message || "Could not create account.");
         submitBtn.disabled = false;
