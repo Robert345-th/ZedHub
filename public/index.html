@@ -13,29 +13,91 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/home.css" />
+  <link rel="stylesheet" href="/home.css?v=55" />
   <script src="/no-ptr.js"></script>
+  <style>
+    /* Hide home until email session is proven (stops flash of Games on stale installs) */
+    html.nexus-locked body > *:not(#authBoot) { visibility: hidden !important; }
+    #authBoot {
+      position: fixed; inset: 0; z-index: 99999;
+      display: grid; place-items: center;
+      background: #3b1208; color: #fff8f3;
+      font-family: "DM Sans", system-ui, sans-serif;
+      text-align: center; padding: 24px;
+    }
+    #authBoot[hidden] { display: none !important; }
+    #authBoot a {
+      display: inline-block; margin-top: 18px; padding: 14px 22px;
+      background: #ea580c; color: #fff; font-weight: 700;
+      text-decoration: none; border-radius: 14px;
+    }
+  </style>
   <script>
-    // Auth gate runs before home.js (also works if an old cached home.js has no gate)
     (function () {
-      try {
-        var token = localStorage.getItem("ze_token");
-        var raw = localStorage.getItem("ze_user");
-        var user = raw ? JSON.parse(raw) : null;
-        if (!token || !user || !user.email) {
-          if (token && (!user || !user.email)) {
-            localStorage.removeItem("ze_token");
-            localStorage.removeItem("ze_user");
-          }
-          location.replace("/register.html");
+      document.documentElement.classList.add("nexus-locked");
+
+      function hasEmailSession() {
+        try {
+          var token = localStorage.getItem("ze_token");
+          var raw = localStorage.getItem("ze_user");
+          var user = raw ? JSON.parse(raw) : null;
+          return !!(token && user && user.email);
+        } catch (e) {
+          return false;
         }
-      } catch (e) {
-        location.replace("/register.html");
+      }
+
+      function clearSession() {
+        try {
+          localStorage.removeItem("ze_token");
+          localStorage.removeItem("ze_user");
+        } catch (e) {}
+      }
+
+      function goRegister() {
+        clearSession();
+        location.replace("/register.html?v=55");
+      }
+
+      // Wipe old service-worker caches once so phones stop serving pre-auth home
+      var MIGRATE = "nexus_force_auth_v55";
+      var already = false;
+      try { already = localStorage.getItem(MIGRATE) === "1"; } catch (e) {}
+
+      function afterCacheWipe() {
+        try { localStorage.setItem(MIGRATE, "1"); } catch (e) {}
+        if (!hasEmailSession()) goRegister();
+        else {
+          document.documentElement.classList.remove("nexus-locked");
+          var boot = document.getElementById("authBoot");
+          if (boot) boot.hidden = true;
+        }
+      }
+
+      if (!already && "serviceWorker" in navigator) {
+        Promise.all([
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            return Promise.all(regs.map(function (r) { return r.unregister(); }));
+          }),
+          caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          }),
+        ]).then(afterCacheWipe).catch(afterCacheWipe);
+      } else {
+        afterCacheWipe();
       }
     })();
   </script>
 </head>
 <body>
+  <div id="authBoot">
+    <div>
+      <p style="font-weight:700;font-size:1.2rem;margin-bottom:8px;">Nexus</p>
+      <p style="opacity:0.8;font-size:0.95rem;">Opening sign up…</p>
+      <a href="/register.html?v=55">Create account</a>
+    </div>
+  </div>
+
   <div class="wallpaper" aria-hidden="true"></div>
 
   <div class="splash" id="splash" aria-hidden="false">
@@ -88,7 +150,7 @@
     </a>
   </template>
 
-  <script src="/games/wallet.js"></script>
-  <script src="/home.js"></script>
+  <script src="/games/wallet.js?v=55"></script>
+  <script src="/home.js?v=55"></script>
 </body>
 </html>
