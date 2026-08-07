@@ -1,11 +1,22 @@
 (function () {
-  // Gate: anyone entering Nexus must have an account (email session shared with Events)
-  try {
-    if (!localStorage.getItem('ze_token')) {
-      location.replace('/register.html');
-      return;
+  // Gate: Nexus requires an email account (old phone-only sessions must re-register)
+  function needsRegister() {
+    try {
+      const token = localStorage.getItem('ze_token');
+      if (!token) return true;
+      const raw = localStorage.getItem('ze_user');
+      const user = raw ? JSON.parse(raw) : null;
+      return !user || !user.email;
+    } catch (_) {
+      return true;
     }
-  } catch (_) {
+  }
+
+  if (needsRegister()) {
+    try {
+      localStorage.removeItem('ze_token');
+      localStorage.removeItem('ze_user');
+    } catch (_) {}
     location.replace('/register.html');
     return;
   }

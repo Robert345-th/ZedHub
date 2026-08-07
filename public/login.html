@@ -34,7 +34,11 @@
   <script src="/events/js/api.js"></script>
   <script src="/events/js/auth.js"></script>
   <script>
-    if (ZEAuth.isLoggedIn()) location.replace("/");
+    if (ZEAuth.isLoggedIn()) {
+      const user = ZEAuth.getUser();
+      if (user && user.email) location.replace("/");
+      else ZEAuth.clearSession();
+    }
 
     const banner = document.getElementById("banner");
     const submitBtn = document.getElementById("submitBtn");

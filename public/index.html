@@ -15,6 +15,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/home.css" />
   <script src="/no-ptr.js"></script>
+  <script>
+    // Auth gate runs before home.js (also works if an old cached home.js has no gate)
+    (function () {
+      try {
+        var token = localStorage.getItem("ze_token");
+        var raw = localStorage.getItem("ze_user");
+        var user = raw ? JSON.parse(raw) : null;
+        if (!token || !user || !user.email) {
+          if (token && (!user || !user.email)) {
+            localStorage.removeItem("ze_token");
+            localStorage.removeItem("ze_user");
+          }
+          location.replace("/register.html");
+        }
+      } catch (e) {
+        location.replace("/register.html");
+      }
+    })();
+  </script>
 </head>
 <body>
   <div class="wallpaper" aria-hidden="true"></div>
