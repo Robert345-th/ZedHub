@@ -102,10 +102,65 @@ body {
   max-width: 480px;
   margin: 0 auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
+
+.top-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.account-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+}
+
+.account-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.account-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-login {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fdba74;
+  text-decoration: none;
+}
+
+.account-login[hidden] { display: none !important; }
+
+.logout-btn {
+  border: 1px solid rgba(255, 248, 243, 0.28);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.logout-btn[hidden] { display: none !important; }
 
 .home-coins {
   font-size: 0.85rem;

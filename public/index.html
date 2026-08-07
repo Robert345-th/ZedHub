@@ -13,10 +13,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/home.css?v=57" />
+  <link rel="stylesheet" href="/home.css?v=58" />
   <script src="/no-ptr.js"></script>
   <style>
-    /* Hide home until email session is proven */
     html.nexus-locked body > *:not(#authBoot) { visibility: hidden !important; }
     #authBoot {
       position: fixed; inset: 0; z-index: 99999;
@@ -25,7 +24,6 @@
       font-family: "DM Sans", system-ui, sans-serif;
       text-align: center; padding: 24px;
     }
-    /* Critical: head script runs before #authBoot exists — hide via CSS when unlocked */
     html:not(.nexus-locked) #authBoot { display: none !important; }
     #authBoot a {
       display: inline-block; margin-top: 18px; padding: 14px 22px;
@@ -47,11 +45,10 @@
       }
 
       if (hasEmailSession()) {
-        // Already logged in — show home (do not redirect to register)
         document.documentElement.classList.remove("nexus-locked");
       } else {
         document.documentElement.classList.add("nexus-locked");
-        location.replace("/login.html?v=57");
+        location.replace("/login.html?v=58");
       }
     })();
   </script>
@@ -61,8 +58,8 @@
     <div>
       <p style="font-weight:700;font-size:1.2rem;margin-bottom:8px;">Nexus</p>
       <p style="opacity:0.8;font-size:0.95rem;">Loading…</p>
-      <a href="/login.html?v=57">Log in</a>
-      <p style="margin-top:14px;"><a href="/register.html?v=57" style="background:transparent;border:1px solid rgba(255,248,243,0.35);">Create account</a></p>
+      <a href="/login.html?v=58">Log in</a>
+      <p style="margin-top:14px;"><a href="/register.html?v=58" style="background:transparent;border:1px solid rgba(255,248,243,0.35);">Create account</a></p>
     </div>
   </div>
 
@@ -83,7 +80,16 @@
       <img class="brand-logo" src="/icons/icon-192.png" alt="" width="40" height="40" />
       <div class="brand">Nexus</div>
     </div>
-    <div class="home-coins" id="homeCoins" hidden>🪙 <strong>0</strong></div>
+    <div class="top-right">
+      <div class="home-coins" id="homeCoins" hidden>🪙 <strong>0</strong></div>
+      <div class="account-bar" id="accountBar">
+        <div class="account-meta">
+          <span class="account-name" id="accountName">Guest</span>
+          <a class="account-login" id="accountLogin" href="/login.html?v=58" hidden>Log in</a>
+        </div>
+        <button type="button" class="logout-btn" id="logoutBtn">Log out</button>
+      </div>
+    </div>
   </header>
 
   <nav class="cats" aria-label="Categories">
@@ -118,7 +124,8 @@
     </a>
   </template>
 
-  <script src="/games/wallet.js?v=57"></script>
-  <script src="/home.js?v=57"></script>
+  <script src="/events/js/auth.js"></script>
+  <script src="/games/wallet.js?v=58"></script>
+  <script src="/home.js?v=58"></script>
 </body>
 </html>

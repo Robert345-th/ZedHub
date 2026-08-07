@@ -1,5 +1,5 @@
 (function () {
-  // Gate: Nexus requires an email account (old phone-only sessions must re-register)
+  // Gate: Nexus requires an email account
   function needsRegister() {
     try {
       const token = localStorage.getItem('ze_token');
@@ -13,9 +13,35 @@
   }
 
   if (needsRegister()) {
-    location.replace('/login.html?v=57');
+    location.replace('/login.html?v=58');
     return;
   }
+
+  // Top bar: name + logout
+  (function setupAccountBar() {
+    const nameEl = document.getElementById('accountName');
+    const loginEl = document.getElementById('accountLogin');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const user = (window.ZEAuth && ZEAuth.getUser()) || null;
+
+    if (nameEl) {
+      nameEl.textContent = (user && (user.name || user.email)) || 'Guest';
+    }
+    if (loginEl) loginEl.hidden = true;
+    if (logoutBtn) {
+      logoutBtn.hidden = false;
+      logoutBtn.addEventListener('click', () => {
+        if (window.ZEAuth) ZEAuth.clearSession();
+        else {
+          try {
+            localStorage.removeItem('ze_token');
+            localStorage.removeItem('ze_user');
+          } catch (_) {}
+        }
+        location.replace('/login.html?v=58');
+      });
+    }
+  })();
 
   const grid = document.getElementById('appGrid');
   const topButtons = Array.from(document.querySelectorAll('.cats > .cat'));
@@ -60,7 +86,6 @@
 
   show(start);
 
-  // Savanna splash only when entering the app (once per session), not on every home visit
   (function runSplash() {
     const splash = document.getElementById('splash');
     const nexus = document.getElementById('splashNexus');
@@ -81,7 +106,6 @@
       sessionStorage.setItem('nexus_savanna_splash', '1');
     } catch (_) {}
 
-    // Skip NX phase — OS already shows the app icon; go straight to Savanna
     if (nexus) nexus.hidden = true;
     savanna.hidden = false;
 
@@ -92,7 +116,6 @@
     }, 2000);
   })();
 
-  // Bottom Install button — Chrome always shows its own confirm sheet (required).
   const downloadBar = document.getElementById('downloadBar');
   const downloadBtn = document.getElementById('downloadBtn');
   const downloadHint = document.getElementById('downloadHint');
