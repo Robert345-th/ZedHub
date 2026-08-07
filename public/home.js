@@ -13,11 +13,7 @@
   }
 
   if (needsRegister()) {
-    try {
-      localStorage.removeItem('ze_token');
-      localStorage.removeItem('ze_user');
-    } catch (_) {}
-    location.replace('/register.html');
+    location.replace('/login.html?v=57');
     return;
   }
 

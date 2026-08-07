@@ -98,6 +98,12 @@
       banner.textContent = msg;
     }
 
+    function showInfo(msg) {
+      banner.hidden = false;
+      banner.className = "banner error";
+      banner.innerHTML = msg;
+    }
+
     function isValidDateOfBirth(dob) {
       if (!dob) return false;
       const birth = new Date(dob + "T00:00:00");
@@ -144,11 +150,19 @@
           body: JSON.stringify({ name, email, password, confirmPassword, country, date_of_birth }),
         });
         const user = data.user || {};
-        if (!user.email) user.email = email;
+        if (!user.email) user.email = email.toLowerCase();
         ZEAuth.setSession(data.token, user);
-        location.replace("/?registered=1");
+        location.replace("/");
       } catch (err) {
-        showError(err.message || "Could not create account.");
+        const msg = err.message || "Could not create account.";
+        if (/already registered/i.test(msg)) {
+          showInfo(
+            msg +
+              ' <a href="/login.html?v=57" style="color:#fdba74;font-weight:700;">Log in instead</a>'
+          );
+        } else {
+          showError(msg);
+        }
         submitBtn.disabled = false;
         submitBtn.textContent = "Create account";
       }

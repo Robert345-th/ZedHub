@@ -17,7 +17,7 @@
   <main class="auth-card">
     <img class="logo" src="/icons/icon-192.png" alt="" width="56" height="56" />
     <h1>Welcome back</h1>
-    <p class="sub">Log in with the email you used for Nexus.</p>
+    <p class="sub">Log in with the email you used for Nexus. If you already created an account, use that email here.</p>
 
     <div class="banner" id="banner" hidden></div>
 
@@ -28,53 +28,63 @@
     <input class="input" id="password" type="password" autocomplete="current-password" placeholder="Your password" />
 
     <button type="button" class="btn" id="submitBtn">Log in</button>
-    <a class="link" href="/register.html">New here? Create an account</a>
+    <a class="link" href="/register.html?v=57">New here? Create an account</a>
   </main>
 
   <script src="/events/js/api.js"></script>
   <script src="/events/js/auth.js"></script>
   <script>
-    if (ZEAuth.isLoggedIn()) {
-      const user = ZEAuth.getUser();
-      if (user && user.email) location.replace("/");
-      else ZEAuth.clearSession();
-    }
-
-    const banner = document.getElementById("banner");
-    const submitBtn = document.getElementById("submitBtn");
-    const params = new URLSearchParams(location.search);
-    const next = params.get("next") || "/";
-
-    function showError(msg) {
-      banner.hidden = false;
-      banner.className = "banner error";
-      banner.textContent = msg;
-    }
-
-    submitBtn.addEventListener("click", async () => {
-      banner.hidden = true;
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      if (!email || !password) {
-        showError("Please enter your email and password.");
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Logging in…";
+    (function () {
       try {
-        const data = await ZE.api("/auth/login-email", {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        });
-        ZEAuth.setSession(data.token, data.user);
-        location.replace(next.startsWith("/") && !next.startsWith("//") ? next : "/");
-      } catch (err) {
-        showError(err.message || "Could not log in.");
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Log in";
+        const user = ZEAuth.getUser();
+        if (ZEAuth.isLoggedIn() && user && user.email) {
+          location.replace("/");
+          return;
+        }
+      } catch (_) {}
+
+      const banner = document.getElementById("banner");
+      const submitBtn = document.getElementById("submitBtn");
+      const params = new URLSearchParams(location.search);
+      let next = params.get("next") || "/";
+      if (!next.startsWith("/") || next.startsWith("//")) next = "/";
+
+      function showError(msg) {
+        banner.hidden = false;
+        banner.className = "banner error";
+        banner.textContent = msg;
       }
-    });
+
+      submitBtn.addEventListener("click", async () => {
+        banner.hidden = true;
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        if (!email || !password) {
+          showError("Please enter your email and password.");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Logging in…";
+        try {
+          const data = await ZE.api("/auth/login-email", {
+            method: "POST",
+            body: JSON.stringify({ email, password }),
+          });
+          if (!data || !data.token) {
+            throw new Error("Login failed. Please try again.");
+          }
+          const user = data.user || {};
+          if (!user.email) user.email = email.toLowerCase();
+          ZEAuth.setSession(data.token, user);
+          location.replace(next);
+        } catch (err) {
+          showError(err.message || "Could not log in.");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Log in";
+        }
+      });
+    })();
   </script>
 </body>
 </html>

@@ -13,10 +13,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/home.css?v=56" />
+  <link rel="stylesheet" href="/home.css?v=57" />
   <script src="/no-ptr.js"></script>
   <style>
-    /* Hide home until email session is proven (stops flash of Games on stale installs) */
+    /* Hide home until email session is proven */
     html.nexus-locked body > *:not(#authBoot) { visibility: hidden !important; }
     #authBoot {
       position: fixed; inset: 0; z-index: 99999;
@@ -25,7 +25,8 @@
       font-family: "DM Sans", system-ui, sans-serif;
       text-align: center; padding: 24px;
     }
-    #authBoot[hidden] { display: none !important; }
+    /* Critical: head script runs before #authBoot exists — hide via CSS when unlocked */
+    html:not(.nexus-locked) #authBoot { display: none !important; }
     #authBoot a {
       display: inline-block; margin-top: 18px; padding: 14px 22px;
       background: #ea580c; color: #fff; font-weight: 700;
@@ -34,8 +35,6 @@
   </style>
   <script>
     (function () {
-      document.documentElement.classList.add("nexus-locked");
-
       function hasEmailSession() {
         try {
           var token = localStorage.getItem("ze_token");
@@ -47,38 +46,12 @@
         }
       }
 
-      function unlockHome() {
+      if (hasEmailSession()) {
+        // Already logged in — show home (do not redirect to register)
         document.documentElement.classList.remove("nexus-locked");
-        var boot = document.getElementById("authBoot");
-        if (boot) boot.hidden = true;
-      }
-
-      function goRegister() {
-        location.replace("/register.html?v=56");
-      }
-
-      function finishGate() {
-        try { localStorage.setItem("nexus_force_auth_v56", "1"); } catch (e) {}
-        if (hasEmailSession()) unlockHome();
-        else goRegister();
-      }
-
-      // Never block on service-worker cleanup — that was freezing "Opening sign up…"
-      finishGate();
-
-      // Best-effort cache wipe in the background (once)
-      var wiped = false;
-      try { wiped = localStorage.getItem("nexus_sw_wipe_v56") === "1"; } catch (e) {}
-      if (!wiped && "serviceWorker" in navigator) {
-        try { localStorage.setItem("nexus_sw_wipe_v56", "1"); } catch (e) {}
-        Promise.all([
-          navigator.serviceWorker.getRegistrations().then(function (regs) {
-            return Promise.all(regs.map(function (r) { return r.unregister(); }));
-          }),
-          caches.keys().then(function (keys) {
-            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-          }),
-        ]).catch(function () {});
+      } else {
+        document.documentElement.classList.add("nexus-locked");
+        location.replace("/login.html?v=57");
       }
     })();
   </script>
@@ -87,8 +60,9 @@
   <div id="authBoot">
     <div>
       <p style="font-weight:700;font-size:1.2rem;margin-bottom:8px;">Nexus</p>
-      <p style="opacity:0.8;font-size:0.95rem;">Opening sign up…</p>
-      <a href="/register.html?v=56">Create account</a>
+      <p style="opacity:0.8;font-size:0.95rem;">Loading…</p>
+      <a href="/login.html?v=57">Log in</a>
+      <p style="margin-top:14px;"><a href="/register.html?v=57" style="background:transparent;border:1px solid rgba(255,248,243,0.35);">Create account</a></p>
     </div>
   </div>
 
@@ -144,7 +118,7 @@
     </a>
   </template>
 
-  <script src="/games/wallet.js?v=56"></script>
-  <script src="/home.js?v=56"></script>
+  <script src="/games/wallet.js?v=57"></script>
+  <script src="/home.js?v=57"></script>
 </body>
 </html>

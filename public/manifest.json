@@ -3,7 +3,7 @@
   "name": "Nexus",
   "short_name": "Nexus",
   "description": "Install once — Events, Fruits, and Words.",
-  "start_url": "/register.html?source=pwa",
+  "start_url": "/login.html?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
