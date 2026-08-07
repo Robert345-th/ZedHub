@@ -1,4 +1,15 @@
 (function () {
+  // Gate: anyone entering Nexus must have an account (email session shared with Events)
+  try {
+    if (!localStorage.getItem('ze_token')) {
+      location.replace('/register.html');
+      return;
+    }
+  } catch (_) {
+    location.replace('/register.html');
+    return;
+  }
+
   const grid = document.getElementById('appGrid');
   const topButtons = Array.from(document.querySelectorAll('.cats > .cat'));
 

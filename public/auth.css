@@ -1,0 +1,112 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  min-height: 100%;
+  font-family: "DM Sans", system-ui, sans-serif;
+  color: #fff8f3;
+}
+
+.wallpaper {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 90% 60% at 15% 10%, rgba(251, 146, 60, 0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 50% at 90% 80%, rgba(234, 88, 12, 0.28) 0%, transparent 50%),
+    linear-gradient(165deg, #3b1208 0%, #7c2d12 45%, #9a3412 100%);
+}
+
+.auth-card {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 48px 24px 40px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-family: "Syne", sans-serif;
+  font-size: 1.85rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.sub {
+  color: rgba(255, 248, 243, 0.72);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  margin-bottom: 28px;
+}
+
+.label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 248, 243, 0.65);
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid rgba(255, 248, 243, 0.22);
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff8f3;
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-size: 1rem;
+  margin-bottom: 16px;
+  outline: none;
+}
+
+.input::placeholder { color: rgba(255, 248, 243, 0.4); }
+.input:focus { border-color: #ea580c; }
+
+.btn {
+  width: 100%;
+  margin-top: 8px;
+  border: none;
+  border-radius: 14px;
+  padding: 15px;
+  background: #ea580c;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.link {
+  display: block;
+  text-align: center;
+  margin-top: 22px;
+  color: #fdba74;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.banner {
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.banner.error {
+  background: rgba(163, 19, 28, 0.35);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+}

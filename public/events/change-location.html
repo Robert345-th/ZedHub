@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Request location change — ZedEvents</title>
+<meta name="theme-color" content="#C2410C" />
+<style>
+  :root {
+    --bg: #F4F1EC; --card: #FFFFFF; --border: #E2E0DC;
+    --text: #211D1A; --subtext: #5C5955; --orange: #C2410C; --cream: #FFF3E8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); }
+  .topbar { background: var(--orange); padding: 16px; display: flex; align-items: center; gap: 12px; }
+  .back-button { width: 40px; height: 40px; border: none; background: rgba(255,255,255,0.18); border-radius: 20px; color: #fff; font-size: 18px; cursor: pointer; }
+  .header-title { color: var(--cream); font-size: 18px; font-weight: 700; }
+  .content { padding: 20px; max-width: 560px; margin: 0 auto; }
+  .title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .sub { font-size: 14px; color: var(--subtext); margin-bottom: 20px; line-height: 1.45; }
+  .label { font-size: 12px; font-weight: 600; color: var(--subtext); margin-bottom: 6px; text-transform: uppercase; }
+  .field-input, .field-select, .field-area {
+    width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; margin-bottom: 16px; font-size: 14px; color: var(--text);
+  }
+  .field-area { min-height: 96px; resize: vertical; }
+  .locked { background: #EEEBE6; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 16px; }
+  .submit-btn { width: 100%; background: var(--orange); border: none; border-radius: 12px; padding: 15px; color: #fff; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .submit-btn:disabled { opacity: 0.7; }
+  .banner { display: none; border-radius: 10px; padding: 11px 14px; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+  .banner.error { display: block; background: #FBE7E8; color: #B42318; border: 1px solid #F0C1C4; }
+  .banner.success { display: block; background: #E7F5EA; color: #1E7A38; border: 1px solid #BFE6C9; }
+  .banner.info { display: block; background: #FFF3E8; color: #9A3412; border: 1px solid #F0C9A8; }
+</style>
+<script src="/no-ptr.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <button class="back-button" type="button" onclick="history.back()">←</button>
+    <div class="header-title">Change location</div>
+  </div>
+  <div class="content">
+    <div class="title">Request a country change</div>
+    <div class="sub">You cannot switch country anytime you want. If you moved, submit a request — an admin must approve it.</div>
+    <div class="banner" id="banner"></div>
+
+    <div class="label">Current location</div>
+    <div class="locked" id="currentLoc">Loading…</div>
+
+    <div id="formWrap">
+      <div class="label">New country</div>
+      <select class="field-select" id="country"></select>
+      <div class="label">New city</div>
+      <input class="field-input" id="city" placeholder="City you moved to" />
+      <div class="label">Why did you move?</div>
+      <textarea class="field-area" id="reason" placeholder="Short explanation for review"></textarea>
+      <button class="submit-btn" type="button" id="submitBtn">Submit for approval</button>
+    </div>
+  </div>
+
+  <script src="/events/js/api.js"></script>
+  <script src="/events/js/auth.js"></script>
+  <script src="/events/js/countries.js"></script>
+  <script>
+    if (!ZEAuth.requireLogin("/events/change-location.html")) {
+      /* redirected */
+    } else {
+      const banner = document.getElementById("banner");
+      const formWrap = document.getElementById("formWrap");
+      document.getElementById("country").innerHTML = NexusCountries.optionsHtml();
+
+      function show(type, msg) {
+        banner.className = "banner " + type;
+        banner.textContent = msg;
+      }
+
+      async function load() {
+        try {
+          const data = await ZE.api("/auth/location-change");
+          const c = NexusCountries.resolveCountry(data.country);
+          document.getElementById("currentLoc").textContent = [
+            c ? c.name : data.country,
+            data.city,
+          ].filter(Boolean).join(" · ") || "Not set";
+
+          if (data.location_change_status === "pending") {
+            const pc = NexusCountries.resolveCountry(data.pending_country);
+            show(
+              "info",
+              `Waiting for approval: ${pc ? pc.name : data.pending_country}${data.pending_city ? ", " + data.pending_city : ""}.`
+            );
+            formWrap.hidden = true;
+          }
+        } catch (err) {
+          show("error", err.message || "Could not load status.");
+        }
+      }
+
+      document.getElementById("submitBtn").addEventListener("click", async () => {
+        const country = document.getElementById("country").value;
+        const city = document.getElementById("city").value.trim();
+        const reason = document.getElementById("reason").value.trim();
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = true;
+        try {
+          const data = await ZE.api("/auth/request-location-change", {
+            method: "POST",
+            body: JSON.stringify({ country, city, reason }),
+          });
+          show("success", data.message || "Request submitted.");
+          formWrap.hidden = true;
+        } catch (err) {
+          show("error", err.message || "Could not submit.");
+          btn.disabled = false;
+        }
+      });
+
+      load();
+    }
+  </script>
+</body>
+</html>

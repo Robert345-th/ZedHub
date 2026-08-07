@@ -165,7 +165,7 @@
   <script>
     const app = document.getElementById("app");
     let tab = "services";
-    let services = [], shopApps = [], users = [], reports = [], userReports = [];
+    let services = [], shopApps = [], locationChanges = [], users = [], reports = [], userReports = [];
     let userSearchText = "";
     let viewShopTargetId = null;
     let rejectTargetId = null;
@@ -232,15 +232,17 @@
     }
 
     async function loadAll() {
-      const [svc, shops, usrs, reps, uReps] = await Promise.all([
+      const [svc, shops, locs, usrs, reps, uReps] = await Promise.all([
         ZE.api("/admin/services/pending").catch(() => []),
         ZE.api("/admin/vendor-applications/pending").catch(() => []),
+        ZE.api("/admin/location-changes/pending").catch(() => []),
         ZE.api("/admin/users").catch(() => []),
         ZE.api("/admin/reports/pending").catch(() => []),
         ZE.api("/user-reports/pending").catch(() => []),
       ]);
       services = svc;
       shopApps = shops;
+      locationChanges = locs;
       users = usrs;
       reports = reps;
       userReports = uReps;
@@ -251,6 +253,7 @@
       const tabs = [
         { key: "services", label: `Services (${services.length})` },
         { key: "shopApps", label: `Shop Apps (${shopApps.length})` },
+        { key: "locations", label: `Moves (${locationChanges.length})` },
         { key: "users", label: `Users (${users.length})` },
         { key: "reports", label: `Service Reports (${reports.length})` },
         { key: "userReports", label: `User Reports (${userReports.length})` },
@@ -313,6 +316,44 @@
         }</div>`;
         content.querySelectorAll("[data-view-shop]").forEach((el) => {
           el.onclick = () => openShopDetail(el.dataset.viewShop);
+        });
+
+      } else if (tab === "locations") {
+        content.innerHTML = `<div class="list">${
+          locationChanges.length ? locationChanges.map((u) => `
+            <div class="card">
+              <div class="card-name">${esc(u.name)}</div>
+              <div class="card-sub">${esc(u.email || formatPhone(u.phone))}</div>
+              <div class="card-detail" style="margin-top:8px;">
+                From: ${esc([u.city, u.country].filter(Boolean).join(", ") || "?")}<br/>
+                To: ${esc([u.pending_city, u.pending_country].filter(Boolean).join(", ") || "?")}<br/>
+                Reason: ${esc(u.location_change_reason || "?")}
+              </div>
+              <div class="card-actions">
+                <button class="approve-btn" type="button" data-approve-loc="${u.id}">Approve</button>
+                <button class="reject-btn" type="button" data-reject-loc="${u.id}">Reject</button>
+              </div>
+            </div>`).join("") : `<div class="empty-text">No location change requests.</div>`
+        }</div>`;
+        content.querySelectorAll("[data-approve-loc]").forEach((el) => {
+          el.onclick = async () => {
+            try {
+              await ZE.api(`/admin/location-changes/${el.dataset.approveLoc}/approve`, { method: "PUT" });
+              await loadAll();
+            } catch (err) {
+              alert(err.message || "Could not approve.");
+            }
+          };
+        });
+        content.querySelectorAll("[data-reject-loc]").forEach((el) => {
+          el.onclick = async () => {
+            try {
+              await ZE.api(`/admin/location-changes/${el.dataset.rejectLoc}/reject`, { method: "PUT", body: "{}" });
+              await loadAll();
+            } catch (err) {
+              alert(err.message || "Could not reject.");
+            }
+          };
         });
 
       } else if (tab === "users") {

@@ -200,7 +200,16 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
           Register / update shop
         </div>
-        <div class="row-sub">Become a vendor or update shop details</div>
+        <div class="row-sub">Add shop details and a phone for your country</div>
+      </div>
+    </button>
+    <button class="row" type="button" onclick="location.href='/events/change-location.html'">
+      <div>
+        <div class="row-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Request location change
+        </div>
+        <div class="row-sub">Country is locked — move requests need approval</div>
       </div>
     </button>
     <button class="row" type="button" id="adminRow" style="display:none;" onclick="location.href='/events/admin.html'">
@@ -253,7 +262,7 @@
   <div class="modal-overlay" id="logoutModal">
     <div class="modal-box">
       <div class="modal-title" style="color:var(--red-btn);">Log out?</div>
-      <div class="modal-warning">You can log back in anytime with your phone number.</div>
+      <div class="modal-warning">You can log back in anytime with your email.</div>
       <div class="modal-actions">
         <button class="modal-cancel-btn" type="button" data-close="logoutModal">Cancel</button>
         <button class="modal-ok-btn orange" type="button" id="logoutConfirm">Log out</button>
@@ -331,7 +340,7 @@
 
       document.getElementById("shareRow").onclick = async () => {
         const url = location.origin + "/";
-        const data = { title: "ZedEvents", text: "Find event services in Zambia", url };
+        const data = { title: "ZedEvents", text: "Find event services near you", url };
         try {
           if (navigator.share) {
             await navigator.share(data);

@@ -53,7 +53,7 @@
     if (price == null || price === "") return "Ask for price";
     const n = Number(price);
     if (Number.isNaN(n)) return String(price);
-    return `K${n.toLocaleString()}`;
+    return n.toLocaleString();
   }
 
   const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/kstg72vx/image/upload";

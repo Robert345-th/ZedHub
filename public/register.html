@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Join Nexus</title>
+  <meta name="theme-color" content="#c2410c" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/auth.css" />
+  <style>
+    .dob-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .dob-select {
+      flex: 1; min-width: 0;
+      border: 1px solid rgba(255, 248, 243, 0.22);
+      background: rgba(0, 0, 0, 0.28);
+      color: #fff8f3;
+      border-radius: 12px;
+      padding: 13px 10px;
+      font-size: 0.95rem;
+    }
+    .dob-select.dob-year { flex: 1.25; }
+    .dob-select option { color: #211d1a; }
+    .select-input {
+      width: 100%;
+      border: 1px solid rgba(255, 248, 243, 0.22);
+      background: rgba(0, 0, 0, 0.28);
+      color: #fff8f3;
+      border-radius: 12px;
+      padding: 13px 14px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+    .select-input option { color: #211d1a; }
+    .hint { font-size: 0.8rem; color: rgba(255,248,243,0.55); margin: -8px 0 16px; line-height: 1.35; }
+  </style>
+  <script src="/no-ptr.js"></script>
+</head>
+<body>
+  <div class="wallpaper" aria-hidden="true"></div>
+  <main class="auth-card">
+    <img class="logo" src="/icons/icon-192.png" alt="" width="56" height="56" />
+    <h1>Join Nexus</h1>
+    <p class="sub">One account for Events &amp; Games — anywhere. Country is locked after signup (move requests need approval).</p>
+
+    <div class="banner" id="banner" hidden></div>
+
+    <label class="label" for="name">Full name</label>
+    <input class="input" id="name" autocomplete="name" placeholder="Your name" />
+
+    <label class="label" for="email">Email</label>
+    <input class="input" id="email" type="email" autocomplete="email" placeholder="you@example.com" />
+
+    <label class="label" for="country">Country</label>
+    <select class="select-input" id="country"></select>
+    <p class="hint">Your shop phone must match this country later. You cannot change country freely.</p>
+
+    <label class="label">Date of birth</label>
+    <div id="dobPickerWrap"></div>
+    <p class="hint">You must be 18 or older.</p>
+
+    <label class="label" for="password">Password</label>
+    <input class="input" id="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" />
+
+    <label class="label" for="confirm">Confirm password</label>
+    <input class="input" id="confirm" type="password" autocomplete="new-password" placeholder="Re-enter password" />
+
+    <button type="button" class="btn" id="submitBtn">Create account</button>
+    <a class="link" href="/login.html">Already have an account? Log in</a>
+  </main>
+
+  <script src="/events/js/api.js"></script>
+  <script src="/events/js/auth.js"></script>
+  <script src="/events/js/countries.js"></script>
+  <script src="/events/js/dob-picker.js"></script>
+  <script>
+    if (ZEAuth.isLoggedIn()) location.replace("/");
+
+    const DOB_IDS = { dayId: "dobDay", monthId: "dobMonth", yearId: "dobYear" };
+    document.getElementById("country").innerHTML = NexusCountries.optionsHtml();
+    document.getElementById("dobPickerWrap").innerHTML = dobPickerMarkup(DOB_IDS);
+    populateDobPicker(DOB_IDS);
+
+    const banner = document.getElementById("banner");
+    const submitBtn = document.getElementById("submitBtn");
+
+    function showError(msg) {
+      banner.hidden = false;
+      banner.className = "banner error";
+      banner.textContent = msg;
+    }
+
+    function isValidDateOfBirth(dob) {
+      if (!dob) return false;
+      const birth = new Date(dob + "T00:00:00");
+      if (Number.isNaN(birth.getTime())) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (birth >= today) return false;
+      const minAgeDate = new Date(today);
+      minAgeDate.setFullYear(minAgeDate.getFullYear() - 18);
+      return birth <= minAgeDate;
+    }
+
+    submitBtn.addEventListener("click", async () => {
+      banner.hidden = true;
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const country = document.getElementById("country").value;
+      const date_of_birth = getDobPickerValue(DOB_IDS);
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirm").value;
+
+      if (!name || !email || !country || !date_of_birth || !password || !confirmPassword) {
+        showError("Please fill in all fields.");
+        return;
+      }
+      if (!isValidDateOfBirth(date_of_birth)) {
+        showError("Enter a valid date of birth. You must be at least 18.");
+        return;
+      }
+      if (password.length < 8) {
+        showError("Password must be at least 8 characters.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        showError("Passwords do not match.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Creating…";
+      try {
+        const data = await ZE.api("/auth/signup-email", {
+          method: "POST",
+          body: JSON.stringify({ name, email, password, confirmPassword, country, date_of_birth }),
+        });
+        ZEAuth.setSession(data.token, data.user);
+        location.replace("/");
+      } catch (err) {
+        showError(err.message || "Could not create account.");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Create account";
+      }
+    });
+  </script>
+</body>
+</html>

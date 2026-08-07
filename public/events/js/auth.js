@@ -33,8 +33,8 @@
 
   function requireLogin(redirectTo) {
     if (!getToken()) {
-      const next = encodeURIComponent(eventsPath(redirectTo || location.pathname + location.search));
-      location.href = `/events/login.html?next=${next}`;
+      const next = encodeURIComponent(redirectTo || location.pathname + location.search);
+      location.href = `/login.html?next=${next}`;
       return false;
     }
     return true;

@@ -72,14 +72,13 @@
     <input class="field-input" id="nameInput" placeholder="e.g. Robert Banda" autocomplete="name" />
 
     <div class="label">Phone Number</div>
-    <div class="phone-row">
-      <div class="phone-prefix"><span>???? +260</span></div>
-      <input class="phone-input" id="phoneInput" placeholder="Phone number" maxlength="10" inputmode="tel" autocomplete="tel" />
-    </div>
-    <div class="phone-hint">Airtel and Zamtel only</div>
+    <input class="field-input" id="phoneInput" placeholder="+260 97ù / +27ù / +1ù (include country code)" inputmode="tel" autocomplete="tel" />
+    <div class="phone-hint">Include your country code. SMS codes work best where our SMS provider covers.</div>
 
     <div class="label">Referral Code (optional)</div>
     <input class="field-input" id="referralInput" placeholder="Have a friend's code? Enter it here" style="text-transform:uppercase;" />
+
+    <p class="phone-hint" style="margin-top:-6px;margin-bottom:14px;">Prefer email? <a href="/register.html" style="color:var(--orange);font-weight:600;">Join Nexus with email</a> ù no SMS needed.</p>
 
     <button type="button" class="submit-btn" id="next1Btn">Next</button>
   </div>
@@ -106,7 +105,7 @@
     <div class="label">Your Location</div>
     <div class="loc-hint">This helps show nearby services. You can change it later.</div>
     <button type="button" class="loc-button" id="locButton">Use my current location</button>
-    <input class="field-input" id="locationInput" placeholder="Or type your area (e.g. Lusaka, Kabulonga)" />
+    <input class="field-input" id="locationInput" placeholder="Or type your city / area" />
 
     <div class="checkbox-row" id="ageConfirmRow">
       <div class="checkbox" id="ageConfirmBox"></div>
@@ -206,13 +205,13 @@
   document.getElementById("next1Btn").addEventListener("click", () => {
     clearError();
     const name = document.getElementById("nameInput").value.trim();
-    const phone = normalizeZambianPhone(document.getElementById("phoneInput").value);
+    const phone = normalizePhone(document.getElementById("phoneInput").value);
     if (!name || !phone) {
       showError("Please enter your name and phone number.");
       return;
     }
-    if (!isValidZambianPhone(phone)) {
-      showError("Airtel and Zamtel only.");
+    if (!isValidPhone(phone)) {
+      showError("Enter a valid phone with country code (e.g. +260ù).");
       return;
     }
     step = 2; updateStepUI();
@@ -247,7 +246,7 @@
       return;
     }
     const name = document.getElementById("nameInput").value.trim();
-    const phone = normalizeZambianPhone(document.getElementById("phoneInput").value);
+    const phone = normalizePhone(document.getElementById("phoneInput").value);
     const password = document.getElementById("passwordInput").value;
     const confirmPassword = document.getElementById("confirmPasswordInput").value;
     const referral = document.getElementById("referralInput").value.trim();
