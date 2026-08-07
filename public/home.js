@@ -35,7 +35,8 @@
   let start = 'events';
   try {
     const saved = localStorage.getItem('nexus_cat') || localStorage.getItem('zedhub_cat');
-    if (saved === 'events' || saved === 'market' || saved === 'games') start = saved;
+    if (saved === 'events' || saved === 'games') start = saved;
+    if (saved === 'market') start = 'events';
     if (saved === 'online' || saved === 'offline') start = 'games';
   } catch (_) {}
 

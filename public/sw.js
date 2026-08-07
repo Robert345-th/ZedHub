@@ -1,4 +1,4 @@
-const CACHE = "nexus-v52";
+const CACHE = "nexus-v53";
 
 // Everything users need offline after installing Nexus once.
 const PRECACHE = [
@@ -12,7 +12,6 @@ const PRECACHE = [
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/savanna-splash.png",
-  "/icons/zedmarket.png",
   "/icons/zedevents.png",
   "/icons/fruits.png",
   "/icons/words.png",

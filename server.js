@@ -102,7 +102,6 @@ app.get('/api/health', (req, res) => {
     eventsApi: ZEDEVENTS_API,
     eventsUi: '/events/',
     games: ['ludo', 'fruits', 'words'],
-    market: 'link-only',
     statuses: true,
   });
 });

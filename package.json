@@ -2,7 +2,7 @@
   "name": "nexus",
   "version": "1.0.0",
   "private": true,
-  "description": "Nexus — one home for apps, games, events, market, and more.",
+  "description": "Nexus — one home for apps, games, events, and more.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Nexus",
   "short_name": "Nexus",
-  "description": "Install once — Events, Market, Fruits, and Words.",
+  "description": "Install once — Events, Fruits, and Words.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
